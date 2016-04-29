@@ -11,28 +11,24 @@ body {
   width: 100%;
   height: 100%; }
 
-ul {
-  list-style: none;
-  margin: 0;
-  padding: 0; }
-
 nav {
   position: fixed;
   bottom: 0;
   right: 0; }
-  nav ul li {
-    float: left; }
-    nav ul li a {
-      border-radius: 4px;
-      margin-right: 10px;
-      margin-bottom: 10px;
-      padding: 10px 20px;
-      display: block;
-      text-decoration: none;
-      background-color: #252526; }
-      nav ul li a:hover {
-        background-color: #2a2d2e;
-        cursor: pointer; }
+  nav ul {
+    list-style: none;
+    font-size: 12px; }
+    nav ul li {
+      float: left; }
+      nav ul li a {
+        border-radius: 4px;
+        margin-right: 10px;
+        margin-bottom: 10px;
+        padding: 6px 16px;
+        display: block;
+        text-decoration: none; }
+        nav ul li a:hover {
+          cursor: pointer; }
 
 .clear::after {
   content: '.';
@@ -42,38 +38,38 @@ nav {
   font-size: 0;
   clear: both; }
 
+.chain-default {
+  background-color: #2a2d2e;
+  outline: none;
+  border: 1px solid transparent;
+  padding: 6px 16px; }
+  .chain-default:focus {
+    border: 1px solid rgba(14, 99, 156, 0.6); }
+
 .chain {
   width: 100%;
   height: 100%;
   -webkit-user-select: none; }
-  .chain .col {
-    float: left; }
-  .chain .left-col {
-    width: 18%;
-    height: 100%;
-    background-color: #252526; }
-    .chain .left-col ul li {
-      padding: 15px 30px; }
-      .chain .left-col ul li:hover {
-        background-color: #2a2d2e;
-        cursor: pointer; }
-      .chain .left-col ul li p {
-        font-size: 14px;
-        margin: 0; }
-      .chain .left-col ul li input[type="text"] {
-        font-size: 14px;
-        background-color: #333333;
-        padding: 2px;
-        width: 100%;
-        display: block;
-        box-sizing: border-box;
-        outline: none;
-        border: 1px solid transparent; }
-        .chain .left-col ul li input[type="text"]:focus {
-          border: 1px solid rgba(14, 99, 156, 0.6); }
-  .chain .right-col {
-    width: 82%;
-    height: 100%; }
+  .chain .new-block {
+    width: 200px;
+    background-color: #252526;
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding: 10px;
+    text-align: right; }
+    .chain .new-block * {
+      font-size: 12px; }
+    .chain .new-block select {
+      width: 100%;
+      margin-bottom: 10px; }
+    .chain .new-block input[type="text"] {
+      width: 100%;
+      display: block;
+      box-sizing: border-box;
+      margin-bottom: 10px; }
+    .chain .new-block button {
+      border-radius: 4px; }
   .chain canvas {
     display: block;
     cursor: none; }

@@ -14,36 +14,35 @@ body{
 	height: 100%;
 }
 
-ul{
-	list-style: none;
-	margin: 0;
-	padding: 0;
-}
+$gray: rgb(37, 37, 38);
+$light-gray: rgb(42, 45, 46);
+$clear-border: 1px solid transparent;
+$blue-border: 1px solid rgba(14, 99, 156, 0.6);
+$font-size: 12px;
 
 nav{
 	position: fixed;
 	bottom: 0;
 	right: 0;
 	ul{
+		list-style: none;
+		font-size: $font-size;
 		li{
 			float: left;
 			a{
 				border-radius: 4px;
 				margin-right: 10px;
 				margin-bottom: 10px;
-				padding: 10px 20px;
+				padding: 6px 16px;
 				display: block;
 				text-decoration: none;
-				background-color: #252526;
 				&:hover{
-					background-color: #2a2d2e;
 					cursor: pointer;
 				}
 			}
 		}
 	}
 }
-
 
 .clear::after{
 	content: '.';
@@ -54,47 +53,45 @@ nav{
 	clear: both;
 }
 
+.chain-default{
+	background-color: $light-gray;
+	outline: none;
+	border: $clear-border;
+	padding: 6px 16px;
+	&:focus{
+		border: $blue-border;
+	}
+}
+
+
 .chain{
 	width: 100%;
 	height: 100%;
 	-webkit-user-select: none;
-	.col{
-		float: left;
-	}
-	.left-col{
-		width: 18%;
-		height: 100%;
-		background-color: #252526;
-		ul{
-			li{
-				padding: 15px 30px;
-				&:hover{
-					background-color: #2a2d2e;
-					cursor: pointer;
-				}
-				p{
-					font-size: 14px;
-					margin: 0;
-				}
-				input[type="text"]{
-					font-size: 14px;
-					background-color: rgb(51, 51, 51);
-					padding: 2px;
-					width: 100%;
-					display: block;
-					box-sizing: border-box;
-					outline: none;
-					border: 1px solid transparent;
-					&:focus{
-						border: 1px solid rgba(14, 99, 156, 0.6);
-					}
-				}
-			}
+	.new-block{
+		width: 200px;
+		background-color: $gray;
+		position: absolute;
+		left: 0;
+		top: 0;
+		padding: 10px;
+		text-align: right;
+		*{
+			font-size: $font-size;
 		}
-	}
-	.right-col{
-		width: 82%;
-		height: 100%;
+		select{
+			width: 100%;
+			margin-bottom: 10px;
+		}
+		input[type="text"]{
+			width: 100%;
+			display: block;
+			box-sizing: border-box;
+			margin-bottom: 10px;
+		}
+		button{
+			border-radius: 4px;
+		}
 	}
 	canvas{
 		display: block;

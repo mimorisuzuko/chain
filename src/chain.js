@@ -449,6 +449,14 @@ class ChainBlock extends ChainBox {
 			dw += button.width + 1;
 		});
 	}
+
+	set value(value) {
+		this.id.text = value;
+	}
+
+	get value() {
+		return this.id.text;
+	}
 }
 
 class ChainLink extends ChainRope {
@@ -569,7 +577,7 @@ class ChainFunctionBlock extends ChainBlock {
 		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
 			const self = this.self.value;
 			const params = this.params.map((param) => param.value);
-			return (self) ? `${self}["${this.name}"](${params.join(',')})` : `${this.name}(${params.join(',')})`;
+			return (self) ? `${self}["${this.value}"](${params.join(',')})` : `${this.value}(${params.join(',')})`;
 		});
 		this.returns.color = ChainColor.purple;
 		this.self = new ChainPin(this.chain, this, ChainPin.INPUT);
@@ -607,10 +615,6 @@ class ChainFunctionBlock extends ChainBlock {
 		this.returns.position(this.returns.radius * 2 + this.width, this.height / 2);
 		this.self.position(-this.self.radius * 2, this.height / 2);
 	}
-
-	get name() {
-		return this.id.text;
-	}
 }
 
 class ChainValueBlock extends ChainBlock {
@@ -634,10 +638,6 @@ class ChainValueBlock extends ChainBlock {
 		super.adjustChildren();
 		this.pin.position(this.width + this.pin.radius * 2, this.height / 2);
 	}
-
-	get value() {
-		return this.id.text;
-	}
 }
 
 class ChainPropertyBlock extends ChainBlock {
@@ -654,7 +654,7 @@ class ChainPropertyBlock extends ChainBlock {
 		this.self.color = ChainColor.blue;
 		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
 			const self = this.self.value;
-			return `${self}["${this.property}"]`;
+			return `${self}["${this.value}"]`;
 		});
 		this.returns.color = ChainColor.purple;
 		this.pins = this.pins.concat([this.self, this.returns]);
@@ -665,10 +665,6 @@ class ChainPropertyBlock extends ChainBlock {
 		super.adjustChildren();
 		this.self.position(-this.self.radius * 2, this.height / 2);
 		this.returns.position(this.width + this.self.radius * 2, this.height / 2);
-	}
-
-	get property() {
-		return this.id.text;
 	}
 }
 
@@ -684,7 +680,7 @@ class ChainOperatorBlock extends ChainBlock {
 		this.width = 180;
 		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
 			const params = this.params.map((param) => param.value);
-			return params.join(this.operator);
+			return params.join(this.value);
 		});
 		this.returns.color = ChainColor.purple;
 		this.params = Array(2).fill().map(() => new ChainPin(this.chain, this, ChainPin.INPUT));
@@ -706,14 +702,6 @@ class ChainOperatorBlock extends ChainBlock {
 			param.position(dx + interval * i, - param.radius * 2);
 		});
 		this.returns.position(this.returns.radius * 2 + this.width, this.height / 2);
-	}
-
-	get operator() {
-		return this.id.text;
-	}
-
-	set operator(operator) {
-		this.id.text = operator;
 	}
 
 	static get PLUS() {
@@ -780,20 +768,21 @@ class ChainViewBlock extends ChainBlock {
 
 class Chain {
 	constructor() {
-		// create menu
-		document.querySelector('.chain .function').addEventListener('dragstart', this.dragstartBlock.bind(this));
-		document.querySelector('.chain .value').addEventListener('dragstart', this.dragstartBlock.bind(this));
-		document.querySelector('.chain .property').addEventListener('dragstart', this.dragstartBlock.bind(this));
-		document.querySelector('.chain .operator').addEventListener('dragstart', this.dragstartBlock.bind(this));
-		document.querySelector('.chain .view').addEventListener('dragstart', this.dragstartBlock.bind(this));
+		// setup add-block
+		this.newBlockArea = document.querySelector('.chain .new-block');
+		this.newBlockArea.style.display = 'none';
+		this.newBlockText = this.newBlockArea.querySelector('input');
+		this.newBlockText.addEventListener('keydown', this.addBlockByKey.bind(this));
+		this.newBlockSelect = this.newBlockArea.querySelector('select');
+		this.newBlockSelect.addEventListener('change', this.hideNewBlockText.bind(this));
+		this.newBlockArea.querySelector('button').addEventListener('click', this.addBlockByClick.bind(this));
 
 		// create canvas
 		const canvas = document.querySelector('#chain-canvas');
 		canvas.addEventListener('mousemove', this.mousemove.bind(this));
 		canvas.addEventListener('mousedown', this.mousedown.bind(this));
 		canvas.addEventListener('mouseup', this.mouseup.bind(this));
-		canvas.addEventListener('dragover', this.dragoverBlock.bind(this));
-		canvas.addEventListener('drop', this.dropBlock.bind(this));
+		canvas.addEventListener('contextmenu', () => event.preventDefault());
 
 		// set properties
 		this.canvas = canvas;
@@ -840,50 +829,62 @@ class Chain {
 		this.canvas.height = rect.height;
 	}
 
-	dragstartBlock() {
-		const target = event.target;
-		const input = target.querySelector('input');
-		const value = (input) ? input.value.trim() : '';
-		const className = target.className;
-		
-		//　if value is blank, stop dragging
-		if (['function', 'value', 'property'].map((a) => target.classList.contains(a)).includes(true) && value === '') {
-			event.preventDefault();
-		}
-		event.dataTransfer.setData('text/plain', JSON.stringify({ className: className, value: value }));
+	hideNewBlockText() {
+		this.newBlockText.style.display = (['function', 'value', 'property'].includes(event.target.value)) ? '' : 'none';
 	}
 
-	dragoverBlock() {
-		event.preventDefault();
-	}
-
-	dropBlock() {
-		const rect = this.canvas.getBoundingClientRect();
-		const data = JSON.parse(event.dataTransfer.getData('text/plain'));
-		const x = event.clientX - rect.left;
-		const y = event.clientY - rect.top;
+	/**
+	 * @param {String} type
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {String} value
+	 * @returns {ChainBlock}
+	 */
+	createBlock(type, value, x, y) {
 		let block;
-		switch (data.className) {
+		switch (type) {
 			case 'function':
-				block = new ChainFunctionBlock(this, data.value);
+				block = new ChainFunctionBlock(this, value);
 				break;
 			case 'value':
-				block = new ChainValueBlock(this, data.value);
+				block = new ChainValueBlock(this, value);
 				break;
 			case 'property':
-				block = new ChainPropertyBlock(this, data.value);
+				block = new ChainPropertyBlock(this, value);
 				break;
 			case 'operator':
 				block = new ChainOperatorBlock(this);
 				break;
 			case 'view':
-				block = new ChainViewBlock(this);
+				block = new ChainValueBlock(this);
 				break;
 			default:
 				break;
 		}
-		block.position(x - block.width / 2, y - block.height / 2);
-		this.blocks.push(block);
+		block.position(x, y);
+		return block;
+	}
+
+	addBlockByKey() {
+		const value = this.newBlockText.value.trim();
+		if (event.keyCode !== 13 || value === '') {
+			return;
+		}
+		const x = parseInt(this.newBlockArea.style.left, 10);
+		const y = parseInt(this.newBlockArea.style.top, 10);
+		this.blocks.push(this.createBlock(this.newBlockSelect.value, value, x, y));
+		this.newBlockArea.style.display = 'none';
+	}
+
+	addBlockByClick() {
+		const value = this.newBlockText.value.trim();
+		if (value === '') {
+			return;
+		}
+		const x = parseInt(this.newBlockArea.style.left, 10);
+		const y = parseInt(this.newBlockArea.style.top, 10);
+		this.blocks.push(this.createBlock(this.newBlockSelect.value, value, x, y));
+		this.newBlockArea.style.display = 'none';
 	}
 
 	mousemove() {
@@ -922,6 +923,7 @@ class Chain {
 		const x = event.clientX - rect.left;
 		const y = event.clientY - rect.top;
 		this.mousedowing = true;
+		this.newBlockArea.style.display = 'none';
 
 		// select one of circle or box(function, value)
 		this.blocks.reverse().every((block) => {
@@ -959,6 +961,13 @@ class Chain {
 		const rect = this.canvas.getBoundingClientRect();
 		const x = event.clientX - rect.left;
 		const y = event.clientY - rect.top;
+		// right click
+		if (event.button === 2) {
+			this.newBlockArea.style.display = '';
+			this.newBlockArea.style.left = x + 'px';
+			this.newBlockArea.style.top = y + 'px';
+			return;
+		}
 		switch (this.status) {
 			case Chain.LINK:
 				this.target.linked = false;
@@ -1055,8 +1064,8 @@ class Chain {
 	static get LINK() {
 		return 2;
 	}
-	
-	static get PAD(){
+
+	static get PAD() {
 		return 7;
 	}
 }
