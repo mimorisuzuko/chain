@@ -1,0 +1,32 @@
+doctype html
+html
+	head
+		meta(charset='utf-8')
+		link(rel='stylesheet', href='index.css')
+	body
+		main.chain.clear
+			div.col.left-col
+				ul
+					li
+						p Function Block
+						input.function(type='text')
+					li
+						p Value Block
+						input.value(type='text')
+					li
+						p Property Block
+						input.property(type='text')
+					li.operator
+						p Operator Block
+					li.view
+						p View Block
+			div.col.right-col
+				canvas#chain-canvas
+				div#chain-code
+		nav
+			ul.clear
+				li
+					a(href='#chain-canvas') Chain
+				li
+					a(href='#chain-code') Code
+		script(src='index.js')

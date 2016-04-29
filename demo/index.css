@@ -1,0 +1,81 @@
+html {
+  width: 100%;
+  height: 100%;
+  background-color: #1e1e1e; }
+  html * {
+    color: #ccc;
+    font-family: Menlo, Monaco, Consolas, Droid Sans Mono, Courier New, monospace; }
+
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%; }
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0; }
+
+nav {
+  position: fixed;
+  bottom: 0;
+  right: 0; }
+  nav ul li {
+    float: left; }
+    nav ul li a {
+      border-radius: 4px;
+      margin-right: 10px;
+      margin-bottom: 10px;
+      padding: 10px 20px;
+      display: block;
+      text-decoration: none;
+      background-color: #252526; }
+      nav ul li a:hover {
+        background-color: #2a2d2e;
+        cursor: pointer; }
+
+.clear::after {
+  content: '.';
+  display: block;
+  visibility: hidden;
+  height: 0;
+  font-size: 0;
+  clear: both; }
+
+.chain {
+  width: 100%;
+  height: 100%; }
+  .chain .col {
+    float: left; }
+  .chain .left-col {
+    width: 18%;
+    height: 100%;
+    background-color: #252526; }
+    .chain .left-col ul li {
+      padding: 15px 30px; }
+      .chain .left-col ul li:hover {
+        background-color: #2a2d2e;
+        cursor: pointer; }
+      .chain .left-col ul li p {
+        font-size: 14px;
+        margin: 0; }
+      .chain .left-col ul li input[type="text"] {
+        font-size: 14px;
+        background-color: #333333;
+        padding: 2px;
+        width: 100%;
+        display: block;
+        box-sizing: border-box;
+        outline: none;
+        border: 1px solid transparent; }
+        .chain .left-col ul li input[type="text"]:focus {
+          border: 1px solid rgba(14, 99, 156, 0.6); }
+  .chain .right-col {
+    width: 82%;
+    height: 100%; }
+  .chain canvas {
+    display: block;
+    cursor: none; }
+
+#chain-code {
+  height: 100%; }
