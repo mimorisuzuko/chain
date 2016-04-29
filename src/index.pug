@@ -7,18 +7,18 @@ html
 		main.chain.clear
 			div.col.left-col
 				ul
-					li
+					li.function(draggable='true')
 						p Function Block
-						input.function(type='text')
-					li
+						input(type='text')
+					li.value(draggable='true')
 						p Value Block
-						input.value(type='text')
-					li
+						input(type='text')
+					li.property(draggable='true')
 						p Property Block
-						input.property(type='text')
-					li.operator
+						input(type='text')
+					li.operator(draggable='true')
 						p Operator Block
-					li.view
+					li.view(draggable='true')
 						p View Block
 			div.col.right-col
 				canvas#chain-canvas
