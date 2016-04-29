@@ -326,7 +326,7 @@ class ChainButton extends ChainBox {
 	/**
 	 * @param {Chain} chain
 	 * @param {String} text
-	 * @param {Function} click
+	 * @param {Function} clicker
 	 */
 	constructor(chain, text = '', click = () => { }) {
 		super(chain);
@@ -334,23 +334,14 @@ class ChainButton extends ChainBox {
 		this.text = new ChainText(this.chain, text);
 		this.text.align('center', 'middle');
 		this.size(this.context.measureText(text).width + ChainButton.PAD * 2, ChainButton.PAD * 2);
-
-		// for click
 		this.click = click
-		this.mousedowntime = 0;
-		this.pmousedowing = false;
 
 		this.adjustText();
 	}
 
 	draw() {
-		if (!this.chain.mousedowing && this.pmousedowing && this.mousedowntime > 0) {
-			this.click();
-		}
 		super.draw();
 		this.text.draw();
-		this.mousedowntime = (this.chain.mousedowing && this.contains(this.chain.mousex, this.chain.mousey)) ? this.mousedowntime + 1 : 0;
-		this.pmousedowing = this.chain.mousedowing;
 	}
 
 	/**
@@ -438,6 +429,16 @@ class ChainBlock extends ChainBox {
 	getPinContains(x, y) {
 		const pin = this.pins.filter((a) => a.contains(x, y))[0];
 		return (pin) ? pin : null;
+	}
+
+	/**
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @returns {ChainButton}
+	 */
+	getButtonContains(x, y) {
+		const button = this.buttons.filter((a) => a.contains(x, y))[0];
+		return (button) ? button : null;
 	}
 
 	adjustWidth() {
@@ -901,6 +902,9 @@ class Chain {
 					this.rope.end(this.mousex, this.mousey);
 					break;
 				default:
+					if (this.target && this.target.constructor === ChainButton && !this.target.contains(this.mousex, this.mousey)) {
+						this.target = null;
+					}
 					break;
 			}
 		}
@@ -915,6 +919,7 @@ class Chain {
 		// select one of circle or box(function, value)
 		this.blocks.reverse().every((block) => {
 			const pin = block.getPinContains(this.mousex, this.mousey);
+			const button = block.getButtonContains(this.mousex, this.mousey);
 			switch (true) {
 				case pin !== null:
 					this.deleteLink(pin);
@@ -926,6 +931,9 @@ class Chain {
 					this.rope.end(this.target.x, this.target.y);
 
 					this.sortBlocks(block);
+					return false;
+				case button !== null:
+					this.target = button;
 					return false;
 				case block.contains(this.mousex, this.mousey):
 					// select box
@@ -944,34 +952,35 @@ class Chain {
 		const rect = this.canvas.getBoundingClientRect();
 		const x = event.clientX - rect.left;
 		const y = event.clientY - rect.top;
-		if (this.target) {
-			if (this.target.constructor === ChainPin) {
+		switch (this.status) {
+			case Chain.LINK:
 				this.target.linked = false;
-			}
-			this.blocks.every((block) => {
-				const pin = block.getPinContains(this.mousex, this.mousey);
-				switch (true) {
-					case pin !== null && this.status == Chain.LINK:
-						this.deleteLink(pin);
-						this.target.linked = false;
-						const pins = [this.target, pin].sort((a, b) => a.type - b.type);
-						const pinTypes = pins.map((a) => a.type);
-						switch (true) {
-							case pinTypes.includes(ChainPin.OUTPUT) && pinTypes.includes(ChainPin.INPUT):
-								this.links.push(this.createLink(pins[0], pins[1]));
-								break;
-							default:
-								break;
-						}
-						return false;
-					default:
-						return true;
+				this.blocks.every((block) => {
+					const pin = block.getPinContains(this.mousex, this.mousey);
+					if (!pin) {
+						return;
+					}
+					this.target.linked = false;
+					const pins = [this.target, pin].sort((a, b) => a.type - b.type);
+					const pinTypes = pins.map((a) => a.type);
+					if (!pinTypes.includes(ChainPin.OUTPUT) || !pinTypes.includes(ChainPin.INPUT)) {
+						return;
+					}
+					this.deleteLink(pin);
+					this.links.push(this.createLink(pins[0], pins[1]));
+				});
+				break;
+			case Chain.MOVE_BLOCK:
+				break;
+			default:
+				if(this.target && this.target.constructor === ChainButton){
+					this.target.click();
 				}
-			});
-			this.target = null;
+				break;
 		}
 		// reset properties
 		this.mousedowing = false;
+		this.target = null;
 		this.status = Chain.DEFAULT;
 	}
 
