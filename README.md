@@ -12,4 +12,6 @@ Chain is a visual programming language that allows user to use methods of JavaSc
 
 ![!dlroW ,olleH](images/01.png)
 
-## Play Chain!
+## Play Chain
+
+You can play Chain [here](play/).
