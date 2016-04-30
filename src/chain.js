@@ -326,31 +326,22 @@ class ChainButton extends ChainBox {
 	/**
 	 * @param {Chain} chain
 	 * @param {String} text
-	 * @param {Function} click
+	 * @param {Function} clicker
 	 */
 	constructor(chain, text = '', click = () => { }) {
 		super(chain);
 		this.fillStyle = ChainColor.lightgray;
 		this.text = new ChainText(this.chain, text);
 		this.text.align('center', 'middle');
-		this.size(this.context.measureText(text).width + ChainButton.PAD * 2, ChainButton.PAD * 2);
-
-		// for click
+		this.size(this.context.measureText(text).width + Chain.PAD * 2, Chain.PAD * 2);
 		this.click = click
-		this.mousedowntime = 0;
-		this.pmousedowing = false;
 
 		this.adjustText();
 	}
 
 	draw() {
-		if (!this.chain.mousedowing && this.pmousedowing && this.mousedowntime > 0) {
-			this.click();
-		}
 		super.draw();
 		this.text.draw();
-		this.mousedowntime = (this.chain.mousedowing && this.contains(this.chain.mousex, this.chain.mousey)) ? this.mousedowntime + 1 : 0;
-		this.pmousedowing = this.chain.mousedowing;
 	}
 
 	/**
@@ -373,10 +364,6 @@ class ChainButton extends ChainBox {
 
 	adjustText() {
 		this.text.position(this.x + this.width / 2, this.y + this.height / 2);
-	}
-
-	static get PAD() {
-		return 7;
 	}
 }
 
@@ -440,12 +427,22 @@ class ChainBlock extends ChainBox {
 		return (pin) ? pin : null;
 	}
 
+	/**
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @returns {ChainButton}
+	 */
+	getButtonContains(x, y) {
+		const button = this.buttons.filter((a) => a.contains(x, y))[0];
+		return (button) ? button : null;
+	}
+
 	adjustWidth() {
-		this.width = Math.max(100, this.context.measureText(this.id.text).width + ChainBlock.PAD * 2);
+		this.width = Math.max(100, this.context.measureText(this.id.text).width + Chain.PAD * 2);
 	}
 
 	adjustChildren() {
-		this.id.position(this.x + ChainBlock.PAD, this.y + this.height / 2);
+		this.id.position(this.x + Chain.PAD, this.y + this.height / 2);
 		let dw = 0;
 		this.buttons.forEach((button) => {
 			button.position(this.x + this.width - button.width - dw, this.y);
@@ -453,8 +450,12 @@ class ChainBlock extends ChainBox {
 		});
 	}
 
-	static get PAD() {
-		return 10;
+	set value(value) {
+		this.id.text = value;
+	}
+
+	get value() {
+		return this.id.text;
 	}
 }
 
@@ -509,13 +510,13 @@ class ChainPin extends ChainOutlineCircle {
 		this.type = type;
 		this.sender = sender;
 		this.value = null;
-		this.toPin = null;
+		this.toPins = [];
 		this.linked = false;
 	}
 
 	draw() {
 		this.outline = this.contains(this.chain.mousex, this.chain.mousey) || this.linked;
-		if (this.toPin && this.sender) {
+		if (this.toPins.length > 0 && this.sender) {
 			this.send();
 		}
 		super.draw();
@@ -533,21 +534,24 @@ class ChainPin extends ChainOutlineCircle {
 	/**
 	 * @param {ChainPin} targetPin
 	 */
-	to(targetPin) {
-		this.toPin = targetPin;
-	}
-
-	send() {
-		this.toPin.value = this.sender();
+	addLink(targetPin) {
+		this.toPins.push(targetPin);
 	}
 
 	/**
-	 * set properties as default
+	 * @param {ChainPin} targetPin
 	 */
-	clear() {
-		this.value = null;
-		this.topin = null;
-		this.linked = false;
+	deleteLink(targetPin) {
+		this.toPins = this.toPins.filter((a) => a !== targetPin);
+		if (this.toPins.length === 0) {
+			this.linked = false;
+		}
+	}
+
+	send() {
+		this.toPins.forEach((pin) => {
+			pin.value = this.sender();
+		});
 	}
 
 	static get OUTPUT() {
@@ -576,7 +580,7 @@ class ChainFunctionBlock extends ChainBlock {
 		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
 			const self = this.self.value;
 			const params = this.params.map((param) => param.value);
-			return (self) ? `${self}["${this.name}"](${params.join(',')})` : `${this.name}(${params.join(',')})`;
+			return (self) ? `${self}["${this.value}"](${params.join(',')})` : `${this.value}(${params.join(',')})`;
 		});
 		this.returns.color = ChainColor.purple;
 		this.self = new ChainPin(this.chain, this, ChainPin.INPUT);
@@ -605,7 +609,7 @@ class ChainFunctionBlock extends ChainBlock {
 
 	adjustChildren() {
 		super.adjustChildren();
-		const dx = ChainBlock.PAD * 4;
+		const dx = Chain.PAD * 4;
 		const interval = (this.width - dx * 2) / (this.params.length - 1);
 		this.params.forEach((param, i) => {
 			const x = (this.params.length === 1) ? this.width / 2 : dx + interval * i;
@@ -613,10 +617,6 @@ class ChainFunctionBlock extends ChainBlock {
 		});
 		this.returns.position(this.returns.radius * 2 + this.width, this.height / 2);
 		this.self.position(-this.self.radius * 2, this.height / 2);
-	}
-
-	get name() {
-		return this.id.text;
 	}
 }
 
@@ -641,10 +641,6 @@ class ChainValueBlock extends ChainBlock {
 		super.adjustChildren();
 		this.pin.position(this.width + this.pin.radius * 2, this.height / 2);
 	}
-
-	get value() {
-		return this.id.text;
-	}
 }
 
 class ChainPropertyBlock extends ChainBlock {
@@ -661,7 +657,7 @@ class ChainPropertyBlock extends ChainBlock {
 		this.self.color = ChainColor.blue;
 		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
 			const self = this.self.value;
-			return `${self}["${this.property}"]`;
+			return `${self}["${this.value}"]`;
 		});
 		this.returns.color = ChainColor.purple;
 		this.pins = this.pins.concat([this.self, this.returns]);
@@ -673,10 +669,6 @@ class ChainPropertyBlock extends ChainBlock {
 		this.self.position(-this.self.radius * 2, this.height / 2);
 		this.returns.position(this.width + this.self.radius * 2, this.height / 2);
 	}
-
-	get property() {
-		return this.id.text;
-	}
 }
 
 class ChainOperatorBlock extends ChainBlock {
@@ -686,19 +678,20 @@ class ChainOperatorBlock extends ChainBlock {
 	 * @param {Number} y
 	 */
 	constructor(chain, x = 0, y = 0) {
-		super(chain, ChainOperatorBlock.PLUS, x, y);
+		const operators = ['+', '-', '*', '/', '%', '='];
+		super(chain, operators[0], x, y);
 		this.strokeStyle = ChainColor.white;
 		this.width = 180;
 		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
-			const params = this.params.map((param) => param.data.value);
-			return params.join(this.operator);
+			const params = this.params.map((param) => param.value);
+			return params.join(this.value);
 		});
 		this.returns.color = ChainColor.purple;
 		this.params = Array(2).fill().map(() => new ChainPin(this.chain, this, ChainPin.INPUT));
 		this.pins = [this.returns].concat(this.params);
-		[ChainOperatorBlock.EQUAL, ChainOperatorBlock.PERCENT, ChainOperatorBlock.SLASH, ChainOperatorBlock.ASTERISK, ChainOperatorBlock.MINUS, ChainOperatorBlock.PLUS].forEach((a) => {
+		operators.reverse().forEach((a) => {
 			const button = new ChainButton(this.chain, a, () => {
-				this.operator = a;
+				this.value = a;
 			});
 			this.buttons.push(button);
 		});
@@ -707,44 +700,12 @@ class ChainOperatorBlock extends ChainBlock {
 
 	adjustChildren() {
 		super.adjustChildren();
-		const dx = ChainBlock.PAD * 4;
+		const dx = Chain.PAD * 2;
 		const interval = (this.width - dx * 2) / (this.params.length - 1);
 		this.params.forEach((param, i) => {
 			param.position(dx + interval * i, - param.radius * 2);
 		});
 		this.returns.position(this.returns.radius * 2 + this.width, this.height / 2);
-	}
-
-	get operator() {
-		return this.id.text;
-	}
-
-	set operator(operator) {
-		this.id.text = operator;
-	}
-
-	static get PLUS() {
-		return '+';
-	}
-
-	static get MINUS() {
-		return '-';
-	}
-
-	static get ASTERISK() {
-		return '*';
-	}
-
-	static get SLASH() {
-		return '/';
-	}
-
-	static get PERCENT() {
-		return '%';
-	}
-
-	static get EQUAL() {
-		return '=';
 	}
 }
 
@@ -765,7 +726,11 @@ class ChainViewBlock extends ChainBlock {
 
 	draw() {
 		const value = this.pin.value;
-		this.value = String(this.chain.exec(value));
+		try {
+			this.value = String(this.chain.exec(value));
+		} catch (e) {
+			this.value = e;
+		}
 		super.draw();
 	}
 
@@ -783,23 +748,29 @@ class ChainViewBlock extends ChainBlock {
 
 class Chain {
 	constructor() {
-		// create menu
-		document.querySelector('.chain .function').addEventListener('keydown', this.addFunctionBlock.bind(this));
-		document.querySelector('.chain .value').addEventListener('keydown', this.addValueBlock.bind(this));
-		document.querySelector('.chain .property').addEventListener('keydown', this.addPropertyBlock.bind(this));
-		document.querySelector('.chain .operator').addEventListener('click', this.addOperatorBlock.bind(this));
-		document.querySelector('.chain .view').addEventListener('click', this.addViewBlock.bind(this));
+		// setup add-block
+		const blockMenu = document.querySelector('.chain .block-menu');
+		blockMenu.style.display = 'none';
+		const blockMenuText = blockMenu.querySelector('input');
+		blockMenuText.addEventListener('keydown', this.addBlockByKey.bind(this));
+		const blockMenuSelect = blockMenu.querySelector('select');
+		blockMenuSelect.addEventListener('change', this.hideMenuText.bind(this));
+		blockMenu.querySelector('button').addEventListener('click', this.addBlockByClick.bind(this));
+		this.blockMenu = blockMenu;
+		this.blockMenuText = blockMenuText;
+		this.blockMenuSelect = blockMenuSelect;
 
 		// create canvas
 		const canvas = document.querySelector('#chain-canvas');
 		canvas.addEventListener('mousemove', this.mousemove.bind(this));
 		canvas.addEventListener('mousedown', this.mousedown.bind(this));
 		canvas.addEventListener('mouseup', this.mouseup.bind(this));
+		canvas.addEventListener('contextmenu', () => event.preventDefault());
 
 		// set properties
 		this.canvas = canvas;
 		this.context = canvas.getContext('2d');
-		this.status = Chain.NORMAL;
+		this.status = Chain.DEFAULT;
 		this.plugin = '';
 		this.target = null;
 		this.pmousex = 0;
@@ -841,41 +812,65 @@ class Chain {
 		this.canvas.height = rect.height;
 	}
 
-	addFunctionBlock() {
-		if (event.keyCode !== 13 || event.target.value === '') {
+	hideMenuText() {
+		this.blockMenuText.style.display = (['function', 'value', 'property'].includes(event.target.value)) ? '' : 'none';
+		this.blockMenuText.focus();
+	}
+
+	/**
+	 * @param {String} type
+	 * @param {Number} x
+	 * @param {Number} y
+	 * @param {String} value
+	 * @returns {ChainBlock}
+	 */
+	createBlock(type, value, x, y) {
+		let block;
+		switch (type) {
+			case 'function':
+				block = new ChainFunctionBlock(this, value);
+				break;
+			case 'value':
+				block = new ChainValueBlock(this, value);
+				break;
+			case 'property':
+				block = new ChainPropertyBlock(this, value);
+				break;
+			case 'operator':
+				block = new ChainOperatorBlock(this);
+				break;
+			case 'view':
+				block = new ChainViewBlock(this);
+				break;
+			default:
+				break;
+		}
+		block.position(x, y);
+		return block;
+	}
+
+	addBlockByKey() {
+		const value = this.blockMenuText.value.trim();
+		const select = this.blockMenuSelect.value;
+		if (event.keyCode !== 13 || value === '') {
 			return;
 		}
-		const block = new ChainFunctionBlock(this, event.target.value, 25 + Math.random() * 25, 25 + Math.random() * 25);
-		this.blocks.push(block);
-		event.target.value = '';
+		const x = parseInt(this.blockMenu.style.left, 10);
+		const y = parseInt(this.blockMenu.style.top, 10);
+		this.blocks.push(this.createBlock(select, value, x, y));
+		this.blockMenu.style.display = 'none';
 	}
 
-	addValueBlock() {
-		if (event.keyCode !== 13 || event.target.value === '') {
+	addBlockByClick() {
+		const value = this.blockMenuText.value.trim();
+		const select = this.blockMenuSelect.value;
+		if (value === '' && (['function', 'value', 'property'].includes(select))) {
 			return;
 		}
-		const block = new ChainValueBlock(this, event.target.value, 25 + Math.random() * 25, 25 + Math.random() * 25);
-		this.blocks.push(block);
-		event.target.value = '';
-	}
-
-	addPropertyBlock() {
-		if (event.keyCode !== 13 || event.target.value === '') {
-			return;
-		}
-		const block = new ChainPropertyBlock(this, event.target.value, 25 + Math.random() * 25, 25 + Math.random() * 25);
-		this.blocks.push(block);
-		event.target.value = '';
-	}
-
-	addOperatorBlock() {
-		const block = new ChainOperatorBlock(this, 25 + Math.random() * 25, 25 + Math.random() * 25);
-		this.blocks.push(block);
-	}
-
-	addViewBlock() {
-		const block = new ChainViewBlock(this, 25 + Math.random() * 25, 25 + Math.random() * 25);
-		this.blocks.push(block);
+		const x = parseInt(this.blockMenu.style.left, 10);
+		const y = parseInt(this.blockMenu.style.top, 10);
+		this.blocks.push(this.createBlock(select, value, x, y));
+		this.blockMenu.style.display = 'none';
 	}
 
 	mousemove() {
@@ -901,6 +896,9 @@ class Chain {
 					this.rope.end(this.mousex, this.mousey);
 					break;
 				default:
+					if (this.target && this.target.constructor === ChainButton && !this.target.contains(this.mousex, this.mousey)) {
+						this.target = null;
+					}
 					break;
 			}
 		}
@@ -911,13 +909,18 @@ class Chain {
 		const x = event.clientX - rect.left;
 		const y = event.clientY - rect.top;
 		this.mousedowing = true;
+		this.blockMenu.style.display = 'none';
 
 		// select one of circle or box(function, value)
 		this.blocks.reverse().every((block) => {
 			const pin = block.getPinContains(this.mousex, this.mousey);
+			const button = block.getButtonContains(this.mousex, this.mousey);
 			switch (true) {
 				case pin !== null:
-					this.deleteLink(pin);
+					// Input pin has only one link. So, if already has link, delete its link.
+					if (pin.type === ChainPin.INPUT) {
+						this.deleteLink(pin);
+					}
 
 					this.status = Chain.LINK
 					this.target = pin;
@@ -926,6 +929,9 @@ class Chain {
 					this.rope.end(this.target.x, this.target.y);
 
 					this.sortBlocks(block);
+					return false;
+				case button !== null:
+					this.target = button;
 					return false;
 				case block.contains(this.mousex, this.mousey):
 					// select box
@@ -944,34 +950,50 @@ class Chain {
 		const rect = this.canvas.getBoundingClientRect();
 		const x = event.clientX - rect.left;
 		const y = event.clientY - rect.top;
-		if (this.target) {
-			if (this.target.constructor === ChainPin) {
-				this.target.linked = false;
-			}
-			this.blocks.every((block) => {
-				const pin = block.getPinContains(this.mousex, this.mousey);
-				switch (true) {
-					case pin !== null && this.status == Chain.LINK:
-						this.deleteLink(pin);
-						this.target.linked = false;
-						const pins = [this.target, pin].sort((a, b) => a.type - b.type);
-						const pinTypes = pins.map((a) => a.type);
-						switch (true) {
-							case pinTypes.includes(ChainPin.OUTPUT) && pinTypes.includes(ChainPin.INPUT):
-								this.links.push(this.createLink(pins[0], pins[1]));
-								break;
-							default:
-								break;
-						}
-						return false;
-					default:
-						return true;
+		// right click
+		if (event.button === 2) {
+			this.blockMenu.style.display = '';
+			this.blockMenuSelect.focus();
+			this.blockMenuText.value = '';
+			this.blockMenu.style.left = x + 'px';
+			this.blockMenu.style.top = y + 'px';
+			return;
+		}
+		switch (this.status) {
+			case Chain.LINK:
+				if (this.target.type === ChainPin.INPUT || (this.target.type === ChainPin.OUTPUT && this.target.toPins.length === 0)) {
+					this.target.linked = false;
 				}
-			});
-			this.target = null;
+				this.blocks.every((block) => {
+					const pin = block.getPinContains(this.mousex, this.mousey);
+					if (!pin) {
+
+						return true;
+					}
+					const pins = [this.target, pin].sort((a, b) => a.type - b.type);
+
+					// if two pins isn't output and input, don't link.
+					if (pins.map((a) => a.type).join('') !== '01') {
+						return false;
+					}
+
+					// delete link that has input.
+					this.deleteLink(pins[1]);
+					this.links.push(this.createLink(pins[0], pins[1]));
+					return false;
+				});
+				break;
+			case Chain.MOVE_BLOCK:
+				break;
+			default:
+				if (this.target && this.target.constructor === ChainButton) {
+					this.target.click();
+				}
+				break;
 		}
 		// reset properties
 		this.mousedowing = false;
+		this.target = null;
 		this.status = Chain.DEFAULT;
 	}
 
@@ -982,7 +1004,10 @@ class Chain {
 	deleteLink(targetPin) {
 		this.links = this.links.filter((link) => {
 			if (link.linkedPins.includes(targetPin)) {
-				link.linkedPins.forEach((pin) => pin.clear());
+				const pins = link.linkedPins.sort((a, b) => a.type - b.type);
+				pins[0].deleteLink(pins[1]);
+				pins[1].value = null;
+				pins[1].linked = false;
 				return false;
 			}
 			return true;
@@ -996,7 +1021,7 @@ class Chain {
 	 */
 	createLink(outputPin, inputPin) {
 		const link = new ChainLink(this, outputPin, inputPin);
-		outputPin.to(inputPin);
+		outputPin.addLink(inputPin);
 		return link;
 	}
 
@@ -1035,6 +1060,10 @@ class Chain {
 
 	static get LINK() {
 		return 2;
+	}
+
+	static get PAD() {
+		return 7;
 	}
 }
 
