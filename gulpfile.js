@@ -4,6 +4,7 @@ const plumber = require('gulp-plumber');
 const notify = require('gulp-notify');
 const browserify = require('gulp-browserify');
 const pug = require('gulp-pug');
+const babel = require('gulp-babel');
 
 gulp.task('sass', () => {
 	gulp.src('src/*.scss')
@@ -18,6 +19,9 @@ gulp.task('scripts', () => {
 		.pipe(browserify({
 			insertGlobals: true,
 			debug: !gulp.env.production
+		}))
+		.pipe(babel({
+			presets: ['es2015']
 		}))
 		.pipe(gulp.dest('./play'));
 });
