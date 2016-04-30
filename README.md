@@ -12,14 +12,4 @@ Chain is a visual programming language that allows user to use methods of JavaSc
 
 ![!dlroW ,olleH](images/01.png)
 
-### Plugin
-
-Selecting "Code" from the two buttons on bottom, user can write JavaScript.
-
-![plugin code](images/02.png)
-
-Then, user can use the code in Chain.
-
-![plugin chain](images/03.png)
-
 ## Play Chain!

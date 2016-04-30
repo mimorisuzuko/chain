@@ -14,6 +14,10 @@
 
 ![link pin](../images/05.gif)
 
+## Plugin
+
+ユーザは下部のボタンから**Code**を選択するとJavaScriptを記述することができます．記述した後，Chain上でも記述した変数や関数を使用することができます．
+
 ## Block & Pin
 
 それぞれのBlockとそれに付随するPinの説明です．
