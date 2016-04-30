@@ -20,26 +20,20 @@ $clear-border: 1px solid transparent;
 $blue-border: 1px solid rgba(14, 99, 156, 0.6);
 $font-size: 12px;
 
-nav{
+ul{
 	position: fixed;
 	bottom: 0;
 	right: 0;
-	ul{
-		list-style: none;
-		font-size: $font-size;
-		li{
-			float: left;
-			a{
-				border-radius: 4px;
-				margin-right: 10px;
-				margin-bottom: 10px;
-				padding: 6px 16px;
-				display: block;
-				text-decoration: none;
-				&:hover{
-					cursor: pointer;
-				}
-			}
+	list-style: none;
+	font-size: $font-size;
+	li{
+		float: left;
+		a{	
+			border-radius: 4px;
+			margin-right: 10px;
+			margin-bottom: 10px;
+			display: block;
+			text-decoration: none;
 		}
 	}
 }
@@ -53,11 +47,9 @@ nav{
 	clear: both;
 }
 
-.chain-default{
-	background-color: $light-gray;
+%chain-default{
 	outline: none;
 	border: $clear-border;
-	padding: 6px 16px;
 	&:focus{
 		border: $blue-border;
 	}
@@ -68,7 +60,30 @@ nav{
 	width: 100%;
 	height: 100%;
 	-webkit-user-select: none;
-	.new-block{
+	
+	.btn{
+		@extend %chain-default;
+		background-color: $light-gray;
+		padding: 6px 16px;
+		border-radius: 4px;
+		&:hover{
+			cursor: pointer;
+		}
+	}
+	
+	select{
+		@extend %chain-default;
+		background-color: $light-gray;
+		height: calc(#{$font-size} + 6px * 2);
+	}
+	
+	input{
+		@extend %chain-default;
+		background-color: $light-gray;
+		padding: 6px 10px;
+	}
+	
+	.block-menu{
 		width: 200px;
 		background-color: $gray;
 		position: absolute;
@@ -81,6 +96,7 @@ nav{
 		}
 		select{
 			width: 100%;
+			display: block;
 			margin-bottom: 10px;
 		}
 		input[type="text"]{
@@ -88,9 +104,6 @@ nav{
 			display: block;
 			box-sizing: border-box;
 			margin-bottom: 10px;
-		}
-		button{
-			border-radius: 4px;
 		}
 	}
 	canvas{

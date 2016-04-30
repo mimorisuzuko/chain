@@ -537,7 +537,7 @@ class ChainPin extends ChainOutlineCircle {
 	to(targetPin) {
 		this.toPin = targetPin;
 	}
-
+	
 	send() {
 		this.toPin.value = this.sender();
 	}
@@ -769,13 +769,16 @@ class ChainViewBlock extends ChainBlock {
 class Chain {
 	constructor() {
 		// setup add-block
-		this.newBlockArea = document.querySelector('.chain .new-block');
-		this.newBlockArea.style.display = 'none';
-		this.newBlockText = this.newBlockArea.querySelector('input');
-		this.newBlockText.addEventListener('keydown', this.addBlockByKey.bind(this));
-		this.newBlockSelect = this.newBlockArea.querySelector('select');
-		this.newBlockSelect.addEventListener('change', this.hideNewBlockText.bind(this));
-		this.newBlockArea.querySelector('button').addEventListener('click', this.addBlockByClick.bind(this));
+		const blockMenu = document.querySelector('.chain .block-menu');
+		blockMenu.style.display = 'none';
+		const blockMenuText = blockMenu.querySelector('input');
+		blockMenuText.addEventListener('keydown', this.addBlockByKey.bind(this));
+		const blockMenuSelect = blockMenu.querySelector('select');
+		blockMenuSelect.addEventListener('change', this.hideMenuText.bind(this));
+		blockMenu.querySelector('button').addEventListener('click', this.addBlockByClick.bind(this));
+		this.blockMenu = blockMenu;
+		this.blockMenuText = blockMenuText;
+		this.blockMenuSelect = blockMenuSelect;
 
 		// create canvas
 		const canvas = document.querySelector('#chain-canvas');
@@ -829,8 +832,8 @@ class Chain {
 		this.canvas.height = rect.height;
 	}
 
-	hideNewBlockText() {
-		this.newBlockText.style.display = (['function', 'value', 'property'].includes(event.target.value)) ? '' : 'none';
+	hideMenuText() {
+		this.blockMenuText.style.display = (['function', 'value', 'property'].includes(event.target.value)) ? '' : 'none';
 	}
 
 	/**
@@ -856,7 +859,7 @@ class Chain {
 				block = new ChainOperatorBlock(this);
 				break;
 			case 'view':
-				block = new ChainValueBlock(this);
+				block = new ChainViewBlock(this);
 				break;
 			default:
 				break;
@@ -866,25 +869,27 @@ class Chain {
 	}
 
 	addBlockByKey() {
-		const value = this.newBlockText.value.trim();
+		const value = this.blockMenuText.value.trim();
+		const select = this.blockMenuSelect.value;
 		if (event.keyCode !== 13 || value === '') {
 			return;
 		}
-		const x = parseInt(this.newBlockArea.style.left, 10);
-		const y = parseInt(this.newBlockArea.style.top, 10);
-		this.blocks.push(this.createBlock(this.newBlockSelect.value, value, x, y));
-		this.newBlockArea.style.display = 'none';
+		const x = parseInt(this.blockMenu.style.left, 10);
+		const y = parseInt(this.blockMenu.style.top, 10);
+		this.blocks.push(this.createBlock(select, value, x, y));
+		this.blockMenu.style.display = 'none';
 	}
 
 	addBlockByClick() {
-		const value = this.newBlockText.value.trim();
-		if (value === '') {
+		const value = this.blockMenuText.value.trim();
+		const select = this.blockMenuSelect.value;
+		if (value === '' && (['function', 'value', 'property'].includes(select))) {
 			return;
 		}
-		const x = parseInt(this.newBlockArea.style.left, 10);
-		const y = parseInt(this.newBlockArea.style.top, 10);
-		this.blocks.push(this.createBlock(this.newBlockSelect.value, value, x, y));
-		this.newBlockArea.style.display = 'none';
+		const x = parseInt(this.blockMenu.style.left, 10);
+		const y = parseInt(this.blockMenu.style.top, 10);
+		this.blocks.push(this.createBlock(select, value, x, y));
+		this.blockMenu.style.display = 'none';
 	}
 
 	mousemove() {
@@ -923,7 +928,7 @@ class Chain {
 		const x = event.clientX - rect.left;
 		const y = event.clientY - rect.top;
 		this.mousedowing = true;
-		this.newBlockArea.style.display = 'none';
+		this.blockMenu.style.display = 'none';
 
 		// select one of circle or box(function, value)
 		this.blocks.reverse().every((block) => {
@@ -963,9 +968,9 @@ class Chain {
 		const y = event.clientY - rect.top;
 		// right click
 		if (event.button === 2) {
-			this.newBlockArea.style.display = '';
-			this.newBlockArea.style.left = x + 'px';
-			this.newBlockArea.style.top = y + 'px';
+			this.blockMenu.style.display = '';
+			this.blockMenu.style.left = x + 'px';
+			this.blockMenu.style.top = y + 'px';
 			return;
 		}
 		switch (this.status) {
@@ -1000,7 +1005,7 @@ class Chain {
 		this.target = null;
 		this.status = Chain.DEFAULT;
 	}
-
+	
 	/**
 	 * if a link contains targetPin, delete its link
 	 * @param {ChainPin} targetPin
@@ -1016,7 +1021,7 @@ class Chain {
 			return true;
 		});
 	}
-
+	
 	/**
 	 * @param {ChainPin} outputPin
 	 * @param {ChainPin} inputPin

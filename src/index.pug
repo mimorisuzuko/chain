@@ -7,19 +7,19 @@ html
 		main.chain
 			canvas#chain-canvas
 			div#chain-code
-			div.new-block
-				select.chain-default
+			div.block-menu
+				select
 					option(value='function') Function Block
 					option(value='value') Value Block
 					option(value='property') Property Block
 					option(value='operator') Operator Block
 					option(value='view') View Block
-				input.chain-default(type='text')
-				button.chain-default add
-		nav
-			ul.clear
-				li
-					a.chain-default(href='#chain-canvas') Chain
-				li
-					a.chain-default(href='#chain-code') Code
+				input(type='text')
+				button.btn add
+			nav
+				ul.clear
+					li
+						a.btn(href='#chain-canvas') Chain
+					li
+						a.btn(href='#chain-code') Code
 		script(src='index.js')
