@@ -510,13 +510,13 @@ class ChainPin extends ChainOutlineCircle {
 		this.type = type;
 		this.sender = sender;
 		this.value = null;
-		this.toPin = null;
+		this.toPins = [];
 		this.linked = false;
 	}
 
 	draw() {
 		this.outline = this.contains(this.chain.mousex, this.chain.mousey) || this.linked;
-		if (this.toPin && this.sender) {
+		if (this.toPins.length > 0 && this.sender) {
 			this.send();
 		}
 		super.draw();
@@ -534,21 +534,24 @@ class ChainPin extends ChainOutlineCircle {
 	/**
 	 * @param {ChainPin} targetPin
 	 */
-	to(targetPin) {
-		this.toPin = targetPin;
-	}
-	
-	send() {
-		this.toPin.value = this.sender();
+	addLink(targetPin) {
+		this.toPins.push(targetPin);
 	}
 
 	/**
-	 * set properties as default
+	 * @param {ChainPin} targetPin
 	 */
-	clear() {
-		this.value = null;
-		this.toPin = null;
-		this.linked = false;
+	deleteLink(targetPin) {
+		this.toPins = this.toPins.filter((a) => a !== targetPin);
+		if (this.toPins.length === 0) {
+			this.linked = false;
+		}
+	}
+
+	send() {
+		this.toPins.forEach((pin) => {
+			pin.value = this.sender();
+		});
 	}
 
 	static get OUTPUT() {
@@ -675,7 +678,8 @@ class ChainOperatorBlock extends ChainBlock {
 	 * @param {Number} y
 	 */
 	constructor(chain, x = 0, y = 0) {
-		super(chain, ChainOperatorBlock.PLUS, x, y);
+		const operators = ['+', '-', '*', '/', '%', '='];
+		super(chain, operators[0], x, y);
 		this.strokeStyle = ChainColor.white;
 		this.width = 180;
 		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
@@ -685,9 +689,9 @@ class ChainOperatorBlock extends ChainBlock {
 		this.returns.color = ChainColor.purple;
 		this.params = Array(2).fill().map(() => new ChainPin(this.chain, this, ChainPin.INPUT));
 		this.pins = [this.returns].concat(this.params);
-		[ChainOperatorBlock.EQUAL, ChainOperatorBlock.PERCENT, ChainOperatorBlock.SLASH, ChainOperatorBlock.ASTERISK, ChainOperatorBlock.MINUS, ChainOperatorBlock.PLUS].forEach((a) => {
+		operators.reverse().forEach((a) => {
 			const button = new ChainButton(this.chain, a, () => {
-				this.operator = a;
+				this.value = a;
 			});
 			this.buttons.push(button);
 		});
@@ -702,30 +706,6 @@ class ChainOperatorBlock extends ChainBlock {
 			param.position(dx + interval * i, - param.radius * 2);
 		});
 		this.returns.position(this.returns.radius * 2 + this.width, this.height / 2);
-	}
-
-	static get PLUS() {
-		return '+';
-	}
-
-	static get MINUS() {
-		return '-';
-	}
-
-	static get ASTERISK() {
-		return '*';
-	}
-
-	static get SLASH() {
-		return '/';
-	}
-
-	static get PERCENT() {
-		return '%';
-	}
-
-	static get EQUAL() {
-		return '=';
 	}
 }
 
@@ -834,6 +814,7 @@ class Chain {
 
 	hideMenuText() {
 		this.blockMenuText.style.display = (['function', 'value', 'property'].includes(event.target.value)) ? '' : 'none';
+		this.blockMenuText.focus();
 	}
 
 	/**
@@ -936,7 +917,10 @@ class Chain {
 			const button = block.getButtonContains(this.mousex, this.mousey);
 			switch (true) {
 				case pin !== null:
-					this.deleteLink(pin);
+					// Input pin has only one link. So, if already has link, delete its link.
+					if (pin.type === ChainPin.INPUT) {
+						this.deleteLink(pin);
+					}
 
 					this.status = Chain.LINK
 					this.target = pin;
@@ -969,25 +953,32 @@ class Chain {
 		// right click
 		if (event.button === 2) {
 			this.blockMenu.style.display = '';
+			this.blockMenuSelect.focus();
+			this.blockMenuText.value = '';
 			this.blockMenu.style.left = x + 'px';
 			this.blockMenu.style.top = y + 'px';
 			return;
 		}
 		switch (this.status) {
 			case Chain.LINK:
-				this.target.linked = false;
+				if (this.target.type === ChainPin.INPUT || (this.target.type === ChainPin.OUTPUT && this.target.toPins.length === 0)) {
+					this.target.linked = false;
+				}
 				this.blocks.every((block) => {
 					const pin = block.getPinContains(this.mousex, this.mousey);
 					if (!pin) {
+
 						return true;
 					}
-					this.target.linked = false;
 					const pins = [this.target, pin].sort((a, b) => a.type - b.type);
-					const pinTypes = pins.map((a) => a.type);
-					if (!pinTypes.includes(ChainPin.OUTPUT) || !pinTypes.includes(ChainPin.INPUT)) {
+
+					// if two pins isn't output and input, don't link.
+					if (pins.map((a) => a.type).join('') !== '01') {
 						return false;
 					}
-					this.deleteLink(pin);
+
+					// delete link that has input.
+					this.deleteLink(pins[1]);
 					this.links.push(this.createLink(pins[0], pins[1]));
 					return false;
 				});
@@ -1005,7 +996,7 @@ class Chain {
 		this.target = null;
 		this.status = Chain.DEFAULT;
 	}
-	
+
 	/**
 	 * if a link contains targetPin, delete its link
 	 * @param {ChainPin} targetPin
@@ -1013,15 +1004,16 @@ class Chain {
 	deleteLink(targetPin) {
 		this.links = this.links.filter((link) => {
 			if (link.linkedPins.includes(targetPin)) {
-				link.linkedPins.forEach((pin) => {
-					pin.clear();
-				});
+				const pins = link.linkedPins.sort((a, b) => a.type - b.type);
+				pins[0].deleteLink(pins[1]);
+				pins[1].value = null;
+				pins[1].linked = false;
 				return false;
 			}
 			return true;
 		});
 	}
-	
+
 	/**
 	 * @param {ChainPin} outputPin
 	 * @param {ChainPin} inputPin
@@ -1029,7 +1021,7 @@ class Chain {
 	 */
 	createLink(outputPin, inputPin) {
 		const link = new ChainLink(this, outputPin, inputPin);
-		outputPin.to(inputPin);
+		outputPin.addLink(inputPin);
 		return link;
 	}
 

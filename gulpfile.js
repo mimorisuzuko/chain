@@ -9,7 +9,7 @@ gulp.task('sass', () => {
 	gulp.src('src/*.scss')
 		.pipe(plumber({ errorHandler: notify.onError('<%= error.message %>') }))
 		.pipe(sass.sync())
-		.pipe(gulp.dest('./demo'));
+		.pipe(gulp.dest('./play'));
 });
 
 gulp.task('scripts', () => {
@@ -19,14 +19,14 @@ gulp.task('scripts', () => {
 			insertGlobals: true,
 			debug: !gulp.env.production
 		}))
-		.pipe(gulp.dest('./demo'));
+		.pipe(gulp.dest('./play'));
 });
 
 gulp.task('pug', () => {
 	gulp.src('src/*.pug')
 		.pipe(plumber({ errorHandler: notify.onError('<%= error.message %>') }))
 		.pipe(pug({}))
-		.pipe(gulp.dest('./demo'));
+		.pipe(gulp.dest('./play'));
 });
 
 gulp.task('watch', () => {
