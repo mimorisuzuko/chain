@@ -385,7 +385,7 @@ class ChainBlock extends ChainBox {
 		this.adjustWidth();
 		this.pins = [];
 		const close = new ChainButton(this.chain, '×', () => {
-			this.chain.blocks = this.chain.blocks.filter((a) => a !== this);
+			this.chain.displayedBlocks = this.chain.displayedBlocks.filter((a) => a !== this);
 			this.pins.forEach((a) => this.chain.deleteLink(a));
 		});
 		close.fillStyle = ChainColor.red;
@@ -516,9 +516,6 @@ class ChainPin extends ChainOutlineCircle {
 
 	draw() {
 		this.outline = this.contains(this.chain.mousex, this.chain.mousey) || this.linked;
-		if (this.toPins.length > 0 && this.sender) {
-			this.send();
-		}
 		super.draw();
 	}
 
@@ -580,7 +577,11 @@ class ChainFunctionBlock extends ChainBlock {
 		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
 			const self = this.self.value;
 			const params = this.params.map((param) => (param.value) ? param.value : 'null').join(',');
-			return (self) ? `${self}['${this.value}'](${params})` : `${this.value}(${params})`;
+			try {
+				return eval((self) ? `${self}['${this.value}'](${params})` : `${this.value}(${params})`);
+			} catch (e) {
+				return e;
+			}
 		});
 		this.returns.color = ChainColor.purple;
 		this.self = new ChainPin(this.chain, this, ChainPin.INPUT);
@@ -657,7 +658,7 @@ class ChainPropertyBlock extends ChainBlock {
 		this.self.color = ChainColor.blue;
 		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
 			const self = this.self.value;
-			return `${self}["${this.value}"]`;
+			return `${self}['${this.value}']`;
 		});
 		this.returns.color = ChainColor.purple;
 		this.pins = this.pins.concat([this.self, this.returns]);
@@ -684,7 +685,11 @@ class ChainOperatorBlock extends ChainBlock {
 		this.width = 180;
 		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
 			const params = this.params.map((param) => param.value);
-			return params.join(this.value);
+			try {
+				return eval(params.join(this.value));
+			} catch (e) {
+				return e;
+			}
 		});
 		this.returns.color = ChainColor.purple;
 		this.params = Array(2).fill().map(() => new ChainPin(this.chain, this, ChainPin.INPUT));
@@ -725,12 +730,7 @@ class ChainViewBlock extends ChainBlock {
 	}
 
 	draw() {
-		const value = this.pin.value;
-		try {
-			this.value = String(this.chain.exec(value));
-		} catch (e) {
-			this.value = e;
-		}
+		this.value = this.pin.value;
 		super.draw();
 	}
 
@@ -783,7 +783,8 @@ class Chain {
 
 		// set blocks, links
 		this.rope = new ChainRope(this);
-		this.blocks = [];
+		this.displayedBlocks = [];
+		this.linkedBlocks = [];
 		this.links = [];
 
 		// When window is resized, canvas fits parent element.
@@ -796,8 +797,7 @@ class Chain {
 
 	draw() {
 		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-		this.blocks.forEach((a) => a.draw());
+		this.displayedBlocks.forEach((a) => a.draw());
 		this.links.forEach((a) => a.draw());
 		this.mouse.draw();
 		if (this.status === Chain.LINK) {
@@ -857,7 +857,7 @@ class Chain {
 		}
 		const x = parseInt(this.blockMenu.style.left, 10);
 		const y = parseInt(this.blockMenu.style.top, 10);
-		this.blocks.push(this.createBlock(select, value, x, y));
+		this.displayedBlocks.push(this.createBlock(select, value, x, y));
 		this.blockMenu.style.display = 'none';
 	}
 
@@ -869,7 +869,7 @@ class Chain {
 		}
 		const x = parseInt(this.blockMenu.style.left, 10);
 		const y = parseInt(this.blockMenu.style.top, 10);
-		this.blocks.push(this.createBlock(select, value, x, y));
+		this.displayedBlocks.push(this.createBlock(select, value, x, y));
 		this.blockMenu.style.display = 'none';
 	}
 
@@ -912,7 +912,7 @@ class Chain {
 		this.blockMenu.style.display = 'none';
 
 		// select one of circle or box(function, value)
-		this.blocks.reverse().every((block) => {
+		this.displayedBlocks.reverse().every((block) => {
 			const pin = block.getPinContains(this.mousex, this.mousey);
 			const button = block.getButtonContains(this.mousex, this.mousey);
 			switch (true) {
@@ -964,7 +964,7 @@ class Chain {
 				if (this.target.type === ChainPin.INPUT || (this.target.type === ChainPin.OUTPUT && this.target.toPins.length === 0)) {
 					this.target.linked = false;
 				}
-				this.blocks.every((block) => {
+				this.displayedBlocks.every((block) => {
 					const pin = block.getPinContains(this.mousex, this.mousey);
 					if (!pin) {
 
@@ -991,6 +991,17 @@ class Chain {
 				}
 				break;
 		}
+
+		// send all
+		this.linkedBlocks.forEach((block) => {
+			block.pins.forEach((pin) => {
+				if (!pin.linked || pin.type === ChainPin.INPUT) {
+					return;
+				}
+				pin.send();
+			});
+		});
+
 		// reset properties
 		this.mousedowing = false;
 		this.target = null;
@@ -1004,10 +1015,19 @@ class Chain {
 	deleteLink(targetPin) {
 		this.links = this.links.filter((link) => {
 			if (link.linkedPins.includes(targetPin)) {
-				const pins = link.linkedPins.sort((a, b) => a.type - b.type);
-				pins[0].deleteLink(pins[1]);
-				pins[1].value = null;
-				pins[1].linked = false;
+				const outputPin = link.linkedPins[0];
+				const inputPin = link.linkedPins[1];
+				outputPin.deleteLink(inputPin);
+				inputPin.value = null;
+				inputPin.linked = false;
+
+				// if parent doesn't have any link, delete it from linkedBlocks.
+				[outputPin.parent, inputPin.parent].forEach((parent) => {
+					if (parent.pins.filter((pin) => pin.linked).length > 0) {
+						return;
+					}
+					this.linkedBlocks = this.linkedBlocks.filter((a) => a !== parent);
+				});
 				return false;
 			}
 			return true;
@@ -1022,6 +1042,14 @@ class Chain {
 	createLink(outputPin, inputPin) {
 		const link = new ChainLink(this, outputPin, inputPin);
 		outputPin.addLink(inputPin);
+		if (!this.linkedBlocks.includes(inputPin.parent)) {
+			this.linkedBlocks.push(inputPin.parent);
+		}
+
+		const inputIndex = this.linkedBlocks.indexOf(inputPin.parent);
+		// if linkedBlocks has parent of outputPin, delete it.
+		this.linkedBlocks = this.linkedBlocks.filter((a) => a !== outputPin.parent);
+		this.linkedBlocks.splice(0, 0, outputPin.parent);
 		return link;
 	}
 
@@ -1039,7 +1067,7 @@ class Chain {
 	 * @param {ChainBlock} targetBlock
 	 */
 	sortBlocks(targetBlock) {
-		this.blocks = this.blocks.sort((a, b) => (a === targetBlock) ? 1 : 0);
+		this.displayedBlocks = this.displayedBlocks.sort((a, b) => (a === targetBlock) ? 1 : 0);
 	}
 
 	/**
