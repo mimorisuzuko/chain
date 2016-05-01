@@ -24,6 +24,7 @@ ul{
 	position: fixed;
 	bottom: 0;
 	right: 0;
+	margin: 0;
 	list-style: none;
 	font-size: $font-size;
 	li{
@@ -114,4 +115,13 @@ ul{
 
 #chain-code{
 	height: 100%;
+}
+
+#chain-window{
+	width: 100%;
+	height: 100%;
+	box-sizing: border-box;
+	border: none;
+	background: #fff;
+	display: block;
 }

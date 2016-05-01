@@ -7,6 +7,7 @@ html
 		main.chain
 			canvas#chain-canvas
 			div#chain-code
+			iframe#chain-window
 			div.block-menu
 				select
 					option(value='function') Function Block
@@ -16,10 +17,11 @@ html
 					option(value='view') View Block
 				input(type='text')
 				button.btn add
-			nav
-				ul.clear
-					li
-						a.btn(href='#chain-canvas') Chain
-					li
-						a.btn(href='#chain-code') Code
+			ul.clear
+				li
+					a.btn(href='#chain-canvas') Chain
+				li
+					a.btn(href='#chain-code') Code
+				li
+					a.btn(href='#chain-window') Window
 		script(src='index.js')

@@ -579,8 +579,8 @@ class ChainFunctionBlock extends ChainBlock {
 		this.strokeStyle = ChainColor.blue;
 		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
 			const self = this.self.value;
-			const params = this.params.map((param) => param.value);
-			return (self) ? `${self}["${this.value}"](${params.join(',')})` : `${this.value}(${params.join(',')})`;
+			const params = this.params.map((param) => (param.value) ? param.value : 'null').join(',');
+			return (self) ? `${self}['${this.value}'](${params})` : `${this.value}(${params})`;
 		});
 		this.returns.color = ChainColor.purple;
 		this.self = new ChainPin(this.chain, this, ChainPin.INPUT);

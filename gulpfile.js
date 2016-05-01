@@ -20,9 +20,11 @@ gulp.task('scripts', () => {
 			insertGlobals: true,
 			debug: !gulp.env.production
 		}))
+		/*
 		.pipe(babel({
 			presets: ['es2015']
 		}))
+		*/
 		.pipe(gulp.dest('./play'));
 });
 
