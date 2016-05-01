@@ -575,13 +575,7 @@ class ChainFunctionBlock extends ChainBlock {
 		super(chain, id, x, y);
 		this.strokeStyle = ChainColor.blue;
 		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
-			const self = this.self.value;
-			const params = this.params.map((param) => (param.value) ? param.value : 'null').join(',');
-			try {
-				return eval((self) ? `${self}['${this.value}'](${params})` : `${this.value}(${params})`);
-			} catch (e) {
-				return e;
-			}
+			return this.expression;
 		});
 		this.returns.color = ChainColor.purple;
 		this.self = new ChainPin(this.chain, this, ChainPin.INPUT);
@@ -618,6 +612,12 @@ class ChainFunctionBlock extends ChainBlock {
 		});
 		this.returns.position(this.returns.radius * 2 + this.width, this.height / 2);
 		this.self.position(-this.self.radius * 2, this.height / 2);
+	}
+
+	get expression() {
+		const self = this.self.value;
+		const params = this.params.map((param) => (param.value) ? param.value : 'null').join(',');
+		return (self) ? `${self}['${this.value}'](${params})` : `${this.value}(${params})`;
 	}
 }
 
@@ -684,12 +684,7 @@ class ChainOperatorBlock extends ChainBlock {
 		this.strokeStyle = ChainColor.white;
 		this.width = 180;
 		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
-			const params = this.params.map((param) => param.value);
-			try {
-				return eval(params.join(this.value));
-			} catch (e) {
-				return e;
-			}
+			return this.expression;
 		});
 		this.returns.color = ChainColor.purple;
 		this.params = Array(2).fill().map(() => new ChainPin(this.chain, this, ChainPin.INPUT));
@@ -711,6 +706,11 @@ class ChainOperatorBlock extends ChainBlock {
 			param.position(dx + interval * i, - param.radius * 2);
 		});
 		this.returns.position(this.returns.radius * 2 + this.width, this.height / 2);
+	}
+
+	get expression() {
+		const params = this.params.map((param) => param.value);
+		return params.join(this.value);
 	}
 }
 
@@ -747,7 +747,11 @@ class ChainViewBlock extends ChainBlock {
 }
 
 class Chain {
-	constructor() {
+	/**
+	 * @param {} editor
+	 * @param {HTMLIFrameElement} iframe
+	 */
+	constructor(editor, iframe) {
 		// setup add-block
 		const blockMenu = document.querySelector('.chain .block-menu');
 		blockMenu.style.display = 'none';
@@ -768,6 +772,8 @@ class Chain {
 		canvas.addEventListener('contextmenu', () => event.preventDefault());
 
 		// set properties
+		this.editor = editor;
+		this.iframe = iframe;
 		this.canvas = canvas;
 		this.context = canvas.getContext('2d');
 		this.status = Chain.DEFAULT;
@@ -780,6 +786,7 @@ class Chain {
 		this.mousedowing = false;
 		this.mouse = new ChainCircle(this, 0, 0, 10);
 		this.mouse.fillStyle = 'rgba(255, 255, 255, 0.2)';
+		this.expressions = [];
 
 		// set blocks, links
 		this.rope = new ChainRope(this);
@@ -992,16 +999,28 @@ class Chain {
 				break;
 		}
 
+		this.expressions = [];
 		// send all
 		this.linkedBlocks.forEach((block) => {
 			block.pins.forEach((pin) => {
-				if (!pin.linked || pin.type === ChainPin.INPUT) {
+				if (pin.type === ChainPin.INPUT) {
 					return;
 				}
-				pin.send();
+				const isFunctionOrOperator = block.constructor === ChainFunctionBlock || block.constructor === ChainOperatorBlock;
+				switch (true) {
+					case pin.linked:
+						pin.send();
+						break;
+					case !pin.linked && isFunctionOrOperator:
+						console.log(block.expression);
+						this.expressions.push(block.expression);
+						break;
+					default:
+						break;
+				}
 			});
 		});
-
+		this.updateFrame();
 		// reset properties
 		this.mousedowing = false;
 		this.target = null;
@@ -1045,11 +1064,10 @@ class Chain {
 		if (!this.linkedBlocks.includes(inputPin.parent)) {
 			this.linkedBlocks.push(inputPin.parent);
 		}
-
 		const inputIndex = this.linkedBlocks.indexOf(inputPin.parent);
 		// if linkedBlocks has parent of outputPin, delete it.
 		this.linkedBlocks = this.linkedBlocks.filter((a) => a !== outputPin.parent);
-		this.linkedBlocks.splice(0, 0, outputPin.parent);
+		this.linkedBlocks.splice(inputIndex - 1, 0, outputPin.parent);
 		return link;
 	}
 
@@ -1071,11 +1089,16 @@ class Chain {
 	}
 
 	/**
-	 * @param {String} code
-	 * @returns {undefined}
+	 * set new code to iframe
 	 */
-	exec(code) {
-		return eval(this.plugin + '\n' + code);
+	updateFrame() {
+		const d = new DOMParser().parseFromString(this.editor.getValue(), 'text/html');
+		const s = document.createElement('script');
+		s.innerText = this.expressions.join('\n');
+		d.body.appendChild(s);
+		const node = d.doctype;
+		const doctype = `<!DOCTYPE ${node.name}${(node.publicId ? ' PUBLIC "' + node.publicId + '"' : '')}${(!node.publicId && node.systemId ? ' SYSTEM' : '')}${(node.systemId ? ' "' + node.systemId + '"' : '')}>`;
+		this.iframe.src = `data:text/html, ${[doctype, d.documentElement.outerHTML].join('')}`;
 	}
 
 	static get DEFAULT() {
