@@ -632,7 +632,7 @@ class ChainValueBlock extends ChainBlock {
 		super(chain, id, x, y);
 		this.strokeStyle = ChainColor.white;
 		this.pin = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
-			return this.value;
+			return this.expression;
 		});
 		this.pins.push(this.pin);
 		this.adjustChildren();
@@ -641,6 +641,10 @@ class ChainValueBlock extends ChainBlock {
 	adjustChildren() {
 		super.adjustChildren();
 		this.pin.position(this.width + this.pin.radius * 2, this.height / 2);
+	}
+
+	get expression() {
+		return this.value;
 	}
 }
 
@@ -657,8 +661,7 @@ class ChainPropertyBlock extends ChainBlock {
 		this.self = new ChainPin(this.chain, this, ChainPin.INPUT);
 		this.self.color = ChainColor.blue;
 		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
-			const self = this.self.value;
-			return `${self}['${this.value}']`;
+			return this.expression;
 		});
 		this.returns.color = ChainColor.purple;
 		this.pins = this.pins.concat([this.self, this.returns]);
@@ -669,6 +672,11 @@ class ChainPropertyBlock extends ChainBlock {
 		super.adjustChildren();
 		this.self.position(-this.self.radius * 2, this.height / 2);
 		this.returns.position(this.width + this.self.radius * 2, this.height / 2);
+	}
+
+	get expression() {
+		const self = this.self.value;
+		return `${self}['${this.value}']`;
 	}
 }
 
@@ -722,6 +730,7 @@ class ChainViewBlock extends ChainBlock {
 	 */
 	constructor(chain, x = 0, y = 0) {
 		super(chain, '', x, y);
+		this.index = -1;
 		this.strokeStyle = ChainColor.purple;
 		this.pin = new ChainPin(this.chain, this, ChainPin.INPUT);
 		this.pin.color = ChainColor.purple;
@@ -730,7 +739,6 @@ class ChainViewBlock extends ChainBlock {
 	}
 
 	draw() {
-		this.value = this.pin.value;
 		super.draw();
 	}
 
@@ -748,7 +756,7 @@ class ChainViewBlock extends ChainBlock {
 
 class Chain {
 	/**
-	 * @param {} editor
+	 * @param {AceEditor} editor
 	 * @param {HTMLIFrameElement} iframe
 	 */
 	constructor(editor, iframe) {
@@ -797,6 +805,9 @@ class Chain {
 		// When window is resized, canvas fits parent element.
 		this.fit();
 		window.addEventListener('resize', this.fit.bind(this));
+
+		// Receiving message, set message to View Blocks
+		window.addEventListener('message', this.updateViewBlocks.bind(this));
 
 		// draw is main loop
 		this.draw();
@@ -1001,18 +1012,30 @@ class Chain {
 
 		this.expressions = [];
 		// send all
+		let viewIndex = 0;
+		// reset index of view
+		this.linkedBlocks.forEach((block) => {
+			if (block.constructor === ChainViewBlock) {
+				block.index = -1;
+				block.value = '';
+			}
+		});
 		this.linkedBlocks.forEach((block) => {
 			block.pins.forEach((pin) => {
 				if (pin.type === ChainPin.INPUT) {
 					return;
 				}
 				const isFunctionOrOperator = block.constructor === ChainFunctionBlock || block.constructor === ChainOperatorBlock;
+				const viewBlocks = pin.toPins.map(((a) => a.parent)).filter((a) => a.constructor === ChainViewBlock);
 				switch (true) {
-					case pin.linked:
+					case pin.linked && viewBlocks.length === 0:
 						pin.send();
 						break;
+					case pin.linked && viewBlocks.length > 0:
+						// set index of view
+						viewBlocks.forEach((a) => a.index = viewIndex);
+						viewIndex += 1;
 					case !pin.linked && isFunctionOrOperator:
-						console.log(block.expression);
 						this.expressions.push(block.expression);
 						break;
 					default:
@@ -1094,11 +1117,25 @@ class Chain {
 	updateFrame() {
 		const d = new DOMParser().parseFromString(this.editor.getValue(), 'text/html');
 		const s = document.createElement('script');
-		s.innerText = this.expressions.join('\n');
+		s.innerText = `window.parent.postMessage(${JSON.stringify(this.expressions)}.map((a) =>  { try { return String(eval(a)); } catch (e) { return String(e); } }), '*')`;
 		d.body.appendChild(s);
 		const node = d.doctype;
 		const doctype = `<!DOCTYPE ${node.name}${(node.publicId ? ' PUBLIC "' + node.publicId + '"' : '')}${(!node.publicId && node.systemId ? ' SYSTEM' : '')}${(node.systemId ? ' "' + node.systemId + '"' : '')}>`;
 		this.iframe.src = `data:text/html, ${[doctype, d.documentElement.outerHTML].join('')}`;
+	}
+
+	/**
+	 * set a return value to View Block
+	 */
+	updateViewBlocks() {
+		const data = event.data;
+		this.linkedBlocks.forEach((block) => {
+			if (block.constructor !== ChainViewBlock) {
+				return;
+			}
+			const index = block.index;
+			block.value = data[index];
+		});
 	}
 
 	static get DEFAULT() {
