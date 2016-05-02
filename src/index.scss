@@ -107,6 +107,16 @@ ul{
 			margin-bottom: 10px;
 		}
 	}
+	.rename-area{
+		position: absolute;
+		left: 0;
+		top: 0;
+		input[type="text"]{
+			width: 100%;
+			display: block;
+			box-sizing: border-box;
+		}
+	}
 	canvas{
 		display: block;
 		cursor: none;

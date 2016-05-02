@@ -424,7 +424,7 @@ class ChainBlock extends ChainBox {
 	 */
 	getPinContains(x, y) {
 		const pin = this.pins.filter((a) => a.contains(x, y))[0];
-		return (pin) ? pin : null;
+		return pin;
 	}
 
 	/**
@@ -434,7 +434,7 @@ class ChainBlock extends ChainBox {
 	 */
 	getButtonContains(x, y) {
 		const button = this.buttons.filter((a) => a.contains(x, y))[0];
-		return (button) ? button : null;
+		return button;
 	}
 
 	/**
@@ -807,6 +807,14 @@ class Chain {
 		this.blockMenuText = blockMenuText;
 		this.blockMenuSelect = blockMenuSelect;
 
+		// setup rename
+		const renameArea = document.querySelector('.chain .rename-area');
+		renameArea.style.display = 'none';
+		const renameText = renameArea.querySelector('input');
+		renameText.addEventListener('keydown', this.renameBlock.bind(this));
+		this.renameArea = renameArea;
+		this.renameText = renameText;
+
 		// create canvas
 		const canvas = document.querySelector('#chain-canvas');
 		canvas.addEventListener('mousemove', this.mousemove.bind(this));
@@ -821,7 +829,8 @@ class Chain {
 		this.context = canvas.getContext('2d');
 		this.status = Chain.DEFAULT;
 		this.plugin = '';
-		this.target = null;
+		this.mainTarget = null;
+		this.renameTarget = null;
 		this.pmousex = 0;
 		this.pmousey = 0;
 		this.mousex = 0;
@@ -843,6 +852,9 @@ class Chain {
 
 		// Receiving message, set message to View Blocks
 		window.addEventListener('message', this.updateViewBlocks.bind(this));
+
+		// contextmenu don't be shown
+		window.addEventListener('contextmenu', () => event.preventDefault());
 
 		// draw is main loop
 		this.draw();
@@ -946,14 +958,14 @@ class Chain {
 			switch (this.status) {
 				case Chain.MOVE_BLOCK:
 					// if there is selected function, move it
-					this.target.position(this.target.x + dx, this.target.y + dy);
+					this.mainTarget.position(this.mainTarget.x + dx, this.mainTarget.y + dy);
 					break;
 				case Chain.LINK:
 					this.rope.end(this.mousex, this.mousey);
 					break;
 				default:
-					if (this.target && this.target.constructor === ChainButton && !this.target.contains(this.mousex, this.mousey)) {
-						this.target = null;
+					if (this.mainTarget && this.mainTarget.constructor === ChainButton && !this.mainTarget.contains(this.mousex, this.mousey)) {
+						this.mainTarget = null;
 					}
 					break;
 			}
@@ -961,37 +973,35 @@ class Chain {
 	}
 
 	mousedown() {
-		const rect = this.canvas.getBoundingClientRect();
-		const x = event.clientX - rect.left;
-		const y = event.clientY - rect.top;
 		this.mousedowing = true;
 		this.blockMenu.style.display = 'none';
+		this.renameArea.style.display = 'none';
 
 		// select one of circle or box(function, value)
 		this.displayedBlocks.reverse().every((block) => {
 			const pin = block.getPinContains(this.mousex, this.mousey);
 			const button = block.getButtonContains(this.mousex, this.mousey);
 			switch (true) {
-				case pin !== null:
+				case pin && event.button === 0:
 					// Input pin has only one link. So, if already has link, delete its link.
 					if (pin.type === ChainPin.INPUT) {
 						this.deleteLink(pin);
 					}
 
 					this.status = Chain.LINK
-					this.target = pin;
+					this.mainTarget = pin;
 					pin.linked = true;
-					this.rope.begin(this.target.x, this.target.y);
-					this.rope.end(this.target.x, this.target.y);
+					this.rope.begin(this.mainTarget.x, this.mainTarget.y);
+					this.rope.end(this.mainTarget.x, this.mainTarget.y);
 
 					this.sortBlocks(block);
 					return false;
-				case button !== null:
-					this.target = button;
+				case button && event.button === 0:
+					this.mainTarget = button;
 					return false;
-				case block.contains(this.mousex, this.mousey):
+				case block.contains(this.mousex, this.mousey) && event.button === 0:
 					// select box
-					this.target = block;
+					this.mainTarget = block;
 					this.status = Chain.MOVE_BLOCK
 
 					this.sortBlocks(block);
@@ -1003,29 +1013,18 @@ class Chain {
 	}
 
 	mouseup() {
-		const rect = this.canvas.getBoundingClientRect();
-		const x = event.clientX - rect.left;
-		const y = event.clientY - rect.top;
-		// right click
-		if (event.button === 2) {
-			this.blockMenu.style.display = '';
-			this.blockMenuSelect.focus();
-			this.blockMenuText.value = '';
-			this.blockMenu.style.left = x + 'px';
-			this.blockMenu.style.top = y + 'px';
-			return;
-		}
-		switch (this.status) {
-			case Chain.LINK:
-				if (this.target.type === ChainPin.INPUT || (this.target.type === ChainPin.OUTPUT && this.target.toPins.length === 0)) {
-					this.target.linked = false;
+		const block = this.displayedBlocks.reverse().filter((a) => a.contains(this.mousex, this.mousey))[0];
+		switch (true) {
+			case this.status === Chain.LINK:
+				if (this.mainTarget.type === ChainPin.INPUT || (this.mainTarget.type === ChainPin.OUTPUT && this.mainTarget.toPins.length === 0)) {
+					this.mainTarget.linked = false;
 				}
 				this.displayedBlocks.every((block) => {
 					const pin = block.getPinContains(this.mousex, this.mousey);
 					if (!pin) {
 						return true;
 					}
-					const pins = [this.target, pin].sort((a, b) => a.type - b.type);
+					const pins = [this.mainTarget, pin].sort((a, b) => a.type - b.type);
 
 					// if two pins isn't output and input, don't link.
 					if (pins.map((a) => a.type).join('') !== '01') {
@@ -1038,54 +1037,48 @@ class Chain {
 					return false;
 				});
 				break;
-			case Chain.MOVE_BLOCK:
+			case this.status === Chain.MOVE_BLOCK:
+				break;
+			case this.status === Chain.DEFAULT && event.button === 0:
+				if (this.mainTarget && this.mainTarget.constructor === ChainButton) {
+					this.mainTarget.click();
+				}
+				break;
+			case block && this.status === Chain.DEFAULT && event.button === 2:
+				this.renameTarget = block;
+				this.renameArea.style.display = '';
+				this.renameText.value = this.renameTarget.value;
+				this.renameText.focus();
+				this.renameArea.style.left = `${this.mousex}px`;
+				this.renameArea.style.top = `${this.mousey}px`;
+				break;
+			case !block && this.status === Chain.DEFAULT && event.button === 2:
+				this.blockMenu.style.display = '';
+				this.blockMenuSelect.focus();
+				this.blockMenuText.value = '';
+				this.blockMenu.style.left = this.mousex + 'px';
+				this.blockMenu.style.top = this.mousey + 'px';
 				break;
 			default:
-				if (this.target && this.target.constructor === ChainButton) {
-					this.target.click();
-				}
 				break;
 		}
-
-		// send all
-		this.expressions = [];
-		let viewIndex = 0;
-		this.linkedBlocks.forEach((block) => {
-			block.pins.forEach((pin) => {
-				if (pin.type === ChainPin.INPUT) {
-					return;
-				}
-				const isFunctionOrOperator = block.constructor === ChainFunctionBlock || block.constructor === ChainOperatorBlock;
-				const viewBlocks = pin.toPins.map(((a) => a.parent)).filter((a) => {
-					// reset index of view
-					if (a.constructor === ChainViewBlock) {
-						a.index = -1;
-						a.value = '';
-						return true;
-					}
-					return false;
-				});
-				switch (true) {
-					case pin.linked && viewBlocks.length === 0:
-						pin.send();
-						break;
-					case pin.linked && viewBlocks.length > 0:
-						// set index of view
-						viewBlocks.forEach((a) => a.index = viewIndex);
-					case !pin.linked && isFunctionOrOperator:
-						this.expressions.push(block.expression);
-						viewIndex += 1;
-						break;
-					default:
-						break;
-				}
-			});
-		});
+		
 		this.updateFrame();
+
 		// reset properties
 		this.mousedowing = false;
-		this.target = null;
+		this.mainTarget = null;
 		this.status = Chain.DEFAULT;
+	}
+
+	renameBlock() {
+		const value = this.renameText.value.trim();
+		if (event.keyCode !== 13 || value === '') {
+			return;
+		}
+		this.renameTarget.value = value;
+		this.renameArea.style.display = 'none';
+		this.updateFrame();
 	}
 
 	/**
@@ -1138,7 +1131,7 @@ class Chain {
 	 */
 	getLink(targetPin) {
 		const link = this.links.filter((link) => link.linkedPins.includes(targetPin))[0];
-		return (link) ? link : null;
+		return link;
 	}
 
 	/**
@@ -1153,6 +1146,43 @@ class Chain {
 	 * set new code to iframe
 	 */
 	updateFrame() {
+		// send all
+		this.expressions = [];
+		let viewIndex = 0;
+
+		// reset index of view
+		this.displayedBlocks.forEach((a) => {
+			if (a.constructor === ChainViewBlock) {
+				a.index = -1;
+				a.value = '';
+			}
+		});
+
+		// set expressions to iframe
+		this.linkedBlocks.forEach((block) => {
+			block.pins.forEach((pin) => {
+				if (pin.type === ChainPin.INPUT) {
+					return;
+				}
+				const isFunctionOrOperator = block.constructor === ChainFunctionBlock || block.constructor === ChainOperatorBlock;
+				const viewBlocks = pin.toPins.map(((a) => a.parent)).filter((a) => a.constructor === ChainViewBlock);
+				switch (true) {
+					case pin.linked && viewBlocks.length === 0:
+						pin.send();
+						break;
+					case pin.linked && viewBlocks.length > 0:
+						// set index of view
+						viewBlocks.forEach((a) => a.index = viewIndex);
+					case !pin.linked && isFunctionOrOperator:
+						this.expressions.push(block.expression);
+						viewIndex += 1;
+						break;
+					default:
+						break;
+				}
+			});
+		});
+
 		const d = new DOMParser().parseFromString(this.editor.getValue(), 'text/html');
 		const s = document.createElement('script');
 		s.innerText = `window.parent.postMessage(${JSON.stringify(this.expressions)}.map((a) =>  { try { return String((0, eval)(a)); } catch (e) { return String(e); } }), '*')`;
