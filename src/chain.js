@@ -577,10 +577,10 @@ class ChainFunctionBlock extends ChainBlock {
 	constructor(chain, id, x = 0, y = 0) {
 		super(chain, id, x, y);
 		this.strokeStyle = ChainColor.blue;
-		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
 			return this.expression;
 		});
-		this.returns.color = ChainColor.purple;
+		this.result.color = ChainColor.purple;
 		this.self = new ChainPin(this.chain, this, ChainPin.INPUT);
 		this.self.color = ChainColor.blue;
 		this.params = Array(1).fill().map(() => new ChainPin(this.chain, this, ChainPin.INPUT));
@@ -602,7 +602,7 @@ class ChainFunctionBlock extends ChainBlock {
 	}
 
 	updatePins() {
-		this.pins = [this.returns, this.self].concat(this.params);
+		this.pins = [this.result, this.self].concat(this.params);
 	}
 
 	adjustChildren() {
@@ -613,7 +613,7 @@ class ChainFunctionBlock extends ChainBlock {
 			const x = (this.params.length === 1) ? this.width / 2 : dx + interval * i;
 			param.position(x, - param.radius * 2);
 		});
-		this.returns.position(this.returns.radius * 2 + this.width, this.height / 2);
+		this.result.position(this.result.radius * 2 + this.width, this.height / 2);
 		this.self.position(-this.self.radius * 2, this.height / 2);
 	}
 
@@ -663,18 +663,18 @@ class ChainPropertyBlock extends ChainBlock {
 		this.strokeStyle = ChainColor.white;
 		this.self = new ChainPin(this.chain, this, ChainPin.INPUT);
 		this.self.color = ChainColor.blue;
-		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
 			return this.expression;
 		});
-		this.returns.color = ChainColor.purple;
-		this.pins = this.pins.concat([this.self, this.returns]);
+		this.result.color = ChainColor.purple;
+		this.pins = this.pins.concat([this.self, this.result]);
 		this.adjustChildren();
 	}
 
 	adjustChildren() {
 		super.adjustChildren();
 		this.self.position(-this.self.radius * 2, this.height / 2);
-		this.returns.position(this.width + this.self.radius * 2, this.height / 2);
+		this.result.position(this.width + this.self.radius * 2, this.height / 2);
 	}
 
 	get expression() {
@@ -695,12 +695,12 @@ class ChainOperatorBlock extends ChainBlock {
 		this.id.align('center', 'middle');
 		this.strokeStyle = ChainColor.white;
 		this.width = 180;
-		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
 			return this.expression;
 		});
-		this.returns.color = ChainColor.purple;
+		this.result.color = ChainColor.purple;
 		this.params = Array(2).fill().map(() => new ChainPin(this.chain, this, ChainPin.INPUT));
-		this.pins = [this.returns].concat(this.params);
+		this.pins = [this.result].concat(this.params);
 		this.adjustWidth(50);
 		this.adjustChildren();
 	}
@@ -708,12 +708,9 @@ class ChainOperatorBlock extends ChainBlock {
 	adjustChildren() {
 		super.adjustChildren();
 		this.id.position(this.x + this.width / 2, this.y + this.height / 2);
-		const dx = Chain.PAD * 2;
-		const interval = (this.width - dx * 2) / (this.params.length - 1);
-		this.params.forEach((param, i) => {
-			param.position(dx + interval * i, - param.radius * 2);
-		});
-		this.returns.position(this.returns.radius * 2 + this.width, this.height / 2);
+		this.params[0].position(this.params[0].radius, -this.params[0].radius * 2);
+		this.params[1].position(this.width - this.params[1].radius, -this.params[1].radius * 2);
+		this.result.position(this.result.radius * 2 + this.width, this.height / 2);
 	}
 
 	get expression() {
@@ -738,10 +735,6 @@ class ChainViewBlock extends ChainBlock {
 		this.adjustChildren();
 	}
 
-	draw() {
-		super.draw();
-	}
-
 	adjustChildren() {
 		super.adjustChildren();
 		this.pin.position(-this.pin.radius * 2, this.height / 2);
@@ -751,6 +744,35 @@ class ChainViewBlock extends ChainBlock {
 		this.id.text = value;
 		this.adjustWidth(100);
 		this.adjustChildren();
+	}
+}
+
+class ChainIfBlock extends ChainBlock {
+	constructor(chain, x = 0, y = 0) {
+		super(chain, 'if', x, y);
+		this.id.align('center', 'middle');
+		this.strokeStyle = ChainColor.purple;
+		this.params = Array(3).fill().map((param) => new ChainPin(this.chain, this, ChainPin.INPUT));
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
+			return this.expression;
+		});
+		this.pins = this.pins.concat(this.params, this.result);
+	}
+
+	adjustChildren() {
+		super.adjustChildren();
+		this.id.position(this.x + this.width / 2, this.y + this.height / 2);
+		const dx = Chain.PAD * 4;
+		const interval = (this.width - dx * 2) / (this.params.length - 1);
+		this.params.forEach((param, i) => {
+			const x = dx + interval * i;
+			param.position(x, - param.radius * 2);
+		});
+		this.result.position(this.width + this.result.radius * 2, this.height / 2);
+	}
+
+	get expression() {
+		return `${this.params[0].value} ? ${this.params[1].value} : ${this.params[2].value}`
 	}
 }
 
@@ -765,11 +787,11 @@ class ChainFunctionizeBlock extends ChainBlock {
 		this.id.align('center', 'middle');
 		this.strokeStyle = ChainColor.blue;
 		this.param = new ChainPin(this.chain, this, ChainPin.INPUT);
-		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
 			return this.expression;
 		});
-		this.returns.color = ChainColor.purple;
-		this.pins = this.pins.concat(this.param, this.returns);
+		this.result.color = ChainColor.purple;
+		this.pins = this.pins.concat(this.param, this.result);
 		this.adjustChildren();
 	}
 
@@ -781,7 +803,7 @@ class ChainFunctionizeBlock extends ChainBlock {
 		super.adjustChildren();
 		this.id.position(this.x + this.width / 2, this.y + this.height / 2);
 		this.param.position(-this.param.radius * 2, this.height / 2);
-		this.returns.position(this.width + this.returns.radius * 2, this.height / 2);
+		this.result.position(this.width + this.result.radius * 2, this.height / 2);
 	}
 
 	get expression() {
@@ -907,6 +929,9 @@ class Chain {
 			case 'view':
 				block = new ChainViewBlock(this);
 				break;
+			case 'if':
+				block = new ChainIfBlock(this);
+				break;
 			case 'functionize':
 				block = new ChainFunctionizeBlock(this);
 				break;
@@ -977,7 +1002,7 @@ class Chain {
 		this.blockMenu.style.display = 'none';
 		this.renameArea.style.display = 'none';
 
-		// select one of circle or box(function, value)
+		// select one of pin or block
 		this.displayedBlocks.reverse().every((block) => {
 			const pin = block.getPinContains(this.mousex, this.mousey);
 			const button = block.getButtonContains(this.mousex, this.mousey);
@@ -1044,7 +1069,7 @@ class Chain {
 					this.mainTarget.click();
 				}
 				break;
-			case block && this.status === Chain.DEFAULT && event.button === 2:
+			case block && this.status === Chain.DEFAULT && event.button === 2 && block.constructor !== ChainViewBlock:
 				this.renameTarget = block;
 				this.renameArea.style.display = '';
 				this.renameText.value = this.renameTarget.value;
@@ -1062,7 +1087,7 @@ class Chain {
 			default:
 				break;
 		}
-		
+
 		this.updateFrame();
 
 		// reset properties
@@ -1164,7 +1189,7 @@ class Chain {
 				if (pin.type === ChainPin.INPUT) {
 					return;
 				}
-				const isFunctionOrOperator = block.constructor === ChainFunctionBlock || block.constructor === ChainOperatorBlock;
+				const isOrFunctionOperatorIf = [ChainFunctionBlock, ChainOperatorBlock, ChainIfBlock].includes(block.constructor);
 				const viewBlocks = pin.toPins.map(((a) => a.parent)).filter((a) => a.constructor === ChainViewBlock);
 				switch (true) {
 					case pin.linked && viewBlocks.length === 0:
@@ -1173,7 +1198,7 @@ class Chain {
 					case pin.linked && viewBlocks.length > 0:
 						// set index of view
 						viewBlocks.forEach((a) => a.index = viewIndex);
-					case !pin.linked && isFunctionOrOperator:
+					case !pin.linked && isOrFunctionOperatorIf:
 						this.expressions.push(block.expression);
 						viewIndex += 1;
 						break;
@@ -1183,11 +1208,15 @@ class Chain {
 			});
 		});
 
+		// for debug
+		console.log(this.expressions);
+		console.log('-------------------------');
+
 		const d = new DOMParser().parseFromString(this.editor.getValue(), 'text/html');
 		const s = document.createElement('script');
 		s.innerText = `window.parent.postMessage(${JSON.stringify(this.expressions)}.map((a) =>  { try { return String((0, eval)(a)); } catch (e) { return String(e); } }), '*')`;
 		d.body.appendChild(s);
-		this.iframe.src = `data:text/html, ${[new XMLSerializer().serializeToString(d.doctype), d.documentElement.outerHTML].join('')}`;
+		this.iframe.src = `data:text/html, ${[d.doctype ? new XMLSerializer().serializeToString(d.doctype) : '', d.documentElement.outerHTML].join('')}`;
 	}
 
 	/**
