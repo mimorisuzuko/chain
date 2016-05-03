@@ -135,7 +135,7 @@ class ChainOutlineCircle extends ChainCircle {
 	 */
 	constructor(chain, x = 0, y = 0, radius = 0) {
 		super(chain, x, y, radius);
-		this.lineWidth = 2;
+		this.lineWidth = 1;
 		this.center = new ChainCircle(chain);
 		this.outline = true;
 		this.color = ChainColor.white;
@@ -334,8 +334,7 @@ class ChainButton extends ChainBox {
 		this.text = new ChainText(this.chain, text);
 		this.text.align('center', 'middle');
 		this.size(this.context.measureText(text).width + Chain.PAD * 2, Chain.PAD * 2);
-		this.click = click
-
+		this.click = click;
 		this.adjustText();
 	}
 
@@ -376,13 +375,12 @@ class ChainBlock extends ChainBox {
 	 * @param {Number} width
 	 * @param {Number} height
 	 */
-	constructor(chain, id = '', x = 0, y = 0, width = 200, height = 50) {
-		super(chain, x, y, width, height);
+	constructor(chain, id = '', x = 0, y = 0) {
+		super(chain, x, y);
 		this.strokeStyle = ChainColor.lightgray;
 		this.fillStyle = ChainColor.gray;
 		this.id = new ChainText(this.chain, id);
 		this.id.align('left', 'middle');
-		this.adjustWidth(100);
 		this.pins = [];
 		const close = new ChainButton(this.chain, '×', () => {
 			this.chain.displayedBlocks = this.chain.displayedBlocks.filter((a) => a !== this);
@@ -390,6 +388,8 @@ class ChainBlock extends ChainBox {
 		});
 		close.fillStyle = ChainColor.red;
 		this.buttons = [close];
+		this.adjustWidth(100);
+		this.adjustHeightByRate(2);
 	}
 
 	draw() {
@@ -444,13 +444,16 @@ class ChainBlock extends ChainBox {
 		this.width = Math.max(minWidth, this.context.measureText(this.id.text).width + Chain.PAD * 2);
 	}
 
+	/**
+	 * @param {Number} rate
+	 */
+	adjustHeightByRate(rate) {
+		this.height = ChainPin.RADIUS * 2 + (ChainPin.RADIUS * 2.5) * (rate - 1);
+	}
+
 	adjustChildren() {
-		this.id.position(this.x + Chain.PAD, this.y + this.height / 2);
-		let dw = 0;
-		this.buttons.forEach((button) => {
-			button.position(this.x + this.width - button.width - dw, this.y);
-			dw += button.width + 1;
-		});
+		this.id.position(this.x + Chain.PAD, this.y + Chain.PAD * 2 + (this.height - Chain.PAD * 2) / 2);
+		this.buttons.forEach((button, i) => button.position(this.x + (button.width + 1) * i, this.y));
 	}
 
 	set value(value) {
@@ -583,19 +586,15 @@ class ChainFunctionBlock extends ChainBlock {
 		this.result.color = ChainColor.purple;
 		this.self = new ChainPin(this.chain, this, ChainPin.INPUT);
 		this.self.color = ChainColor.blue;
-		this.params = Array(1).fill().map(() => new ChainPin(this.chain, this, ChainPin.INPUT));
+		this.params = [];
+		this.addParam();
 		this.updatePins();
 		this.buttons = this.buttons.concat([
-			new ChainButton(this.chain, '-', () => {
-				const pin = this.params.pop();
-				this.updatePins();
-				this.chain.deleteLink(pin);
-				this.adjustChildren();
-			}),
 			new ChainButton(this.chain, '+', () => {
-				this.params.push(new ChainPin(this.chain, this, ChainPin.INPUT));
-				this.updatePins();
-				this.adjustChildren();
+				this.addParam();
+			}),
+			new ChainButton(this.chain, '-', () => {
+				this.deleteParam();
 			})
 		]);
 		this.adjustChildren();
@@ -603,18 +602,27 @@ class ChainFunctionBlock extends ChainBlock {
 
 	updatePins() {
 		this.pins = [this.result, this.self].concat(this.params);
+		this.adjustHeightByRate(Math.max(this.params.length, 2));
+		this.adjustChildren();
+	}
+
+	addParam() {
+		this.params.push(new ChainPin(this.chain, this, ChainPin.INPUT));
+		this.updatePins();
+	}
+
+	deleteParam() {
+		const param = this.params.pop();
+		this.chain.deleteLink(param);
+		this.updatePins();
 	}
 
 	adjustChildren() {
 		super.adjustChildren();
-		const dx = Chain.PAD * 4;
-		const interval = (this.width - dx * 2) / (this.params.length - 1);
-		this.params.forEach((param, i) => {
-			const x = (this.params.length === 1) ? this.width / 2 : dx + interval * i;
-			param.position(x, - param.radius * 2);
-		});
-		this.result.position(this.result.radius * 2 + this.width, this.height / 2);
-		this.self.position(-this.self.radius * 2, this.height / 2);
+		const r = ChainPin.RADIUS;
+		this.params.forEach((param, i) => param.position(-r * 2, r + (r * 2.5) * i));
+		this.result.position(r * 2 + this.width, r);
+		this.self.position(r, -r * 2);
 	}
 
 	get expression() {
@@ -634,16 +642,17 @@ class ChainValueBlock extends ChainBlock {
 	constructor(chain, id, x = 0, y = 0) {
 		super(chain, id, x, y);
 		this.strokeStyle = ChainColor.white;
-		this.pin = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
 			return this.expression;
 		});
-		this.pins.push(this.pin);
+		this.pins.push(this.result);
 		this.adjustChildren();
 	}
 
 	adjustChildren() {
 		super.adjustChildren();
-		this.pin.position(this.width + this.pin.radius * 2, this.height / 2);
+		const r = ChainPin.RADIUS;
+		this.result.position(this.width + r * 2, r);
 	}
 
 	get expression() {
@@ -673,8 +682,9 @@ class ChainPropertyBlock extends ChainBlock {
 
 	adjustChildren() {
 		super.adjustChildren();
-		this.self.position(-this.self.radius * 2, this.height / 2);
-		this.result.position(this.width + this.self.radius * 2, this.height / 2);
+		const r = ChainPin.RADIUS;
+		this.self.position(-r * 2, r);
+		this.result.position(this.width + r * 2, r);
 	}
 
 	get expression() {
@@ -692,7 +702,6 @@ class ChainOperatorBlock extends ChainBlock {
 	 */
 	constructor(chain, id, x = 0, y = 0) {
 		super(chain, id, x, y);
-		this.id.align('center', 'middle');
 		this.strokeStyle = ChainColor.white;
 		this.width = 180;
 		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
@@ -707,10 +716,9 @@ class ChainOperatorBlock extends ChainBlock {
 
 	adjustChildren() {
 		super.adjustChildren();
-		this.id.position(this.x + this.width / 2, this.y + this.height / 2);
-		this.params[0].position(this.params[0].radius, -this.params[0].radius * 2);
-		this.params[1].position(this.width - this.params[1].radius, -this.params[1].radius * 2);
-		this.result.position(this.result.radius * 2 + this.width, this.height / 2);
+		const r = ChainPin.RADIUS;
+		this.params.forEach((param, i) => param.position(-r * 2, r + (r * 2.5) * i));
+		this.result.position(this.width + r * 2, r);
 	}
 
 	get expression() {
@@ -729,15 +737,16 @@ class ChainViewBlock extends ChainBlock {
 		super(chain, '', x, y);
 		this.index = -1;
 		this.strokeStyle = ChainColor.purple;
-		this.pin = new ChainPin(this.chain, this, ChainPin.INPUT);
-		this.pin.color = ChainColor.purple;
-		this.pins.push(this.pin);
+		this.view = new ChainPin(this.chain, this, ChainPin.INPUT);
+		this.view.color = ChainColor.purple;
+		this.pins.push(this.view);
 		this.adjustChildren();
 	}
 
 	adjustChildren() {
 		super.adjustChildren();
-		this.pin.position(-this.pin.radius * 2, this.height / 2);
+		const r = ChainPin.RADIUS;
+		this.view.position(-r * 2, r * 2);
 	}
 
 	set value(value) {
@@ -750,25 +759,22 @@ class ChainViewBlock extends ChainBlock {
 class ChainIfBlock extends ChainBlock {
 	constructor(chain, x = 0, y = 0) {
 		super(chain, 'if', x, y);
-		this.id.align('center', 'middle');
 		this.strokeStyle = ChainColor.purple;
 		this.params = Array(3).fill().map((param) => new ChainPin(this.chain, this, ChainPin.INPUT));
 		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
 			return this.expression;
 		});
+		this.result.color = ChainColor.purple;
 		this.pins = this.pins.concat(this.params, this.result);
+		this.adjustHeightByRate(3);
+		this.adjustChildren();
 	}
 
 	adjustChildren() {
 		super.adjustChildren();
-		this.id.position(this.x + this.width / 2, this.y + this.height / 2);
-		const dx = Chain.PAD * 4;
-		const interval = (this.width - dx * 2) / (this.params.length - 1);
-		this.params.forEach((param, i) => {
-			const x = dx + interval * i;
-			param.position(x, - param.radius * 2);
-		});
-		this.result.position(this.width + this.result.radius * 2, this.height / 2);
+		const r = ChainPin.RADIUS;
+		this.params.forEach((param, i) => param.position(-r * 2, r + (r * 2.5) * i));
+		this.result.position(r * 2 + this.width, r);
 	}
 
 	get expression() {
@@ -784,14 +790,13 @@ class ChainFunctionizeBlock extends ChainBlock {
 	 */
 	constructor(chain, x = 0, y = 0) {
 		super(chain, 'Functionize', x, y);
-		this.id.align('center', 'middle');
 		this.strokeStyle = ChainColor.blue;
-		this.param = new ChainPin(this.chain, this, ChainPin.INPUT);
+		this.params = [new ChainPin(this.chain, this, ChainPin.INPUT)];
 		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
 			return this.expression;
 		});
 		this.result.color = ChainColor.purple;
-		this.pins = this.pins.concat(this.param, this.result);
+		this.pins = this.pins.concat(this.params, this.result);
 		this.adjustChildren();
 	}
 
@@ -801,9 +806,9 @@ class ChainFunctionizeBlock extends ChainBlock {
 
 	adjustChildren() {
 		super.adjustChildren();
-		this.id.position(this.x + this.width / 2, this.y + this.height / 2);
-		this.param.position(-this.param.radius * 2, this.height / 2);
-		this.result.position(this.width + this.result.radius * 2, this.height / 2);
+		const r = ChainPin.RADIUS;
+		this.params.forEach((param, i) => param.position(-r * 2, r + (r * 2.5) * i));
+		this.result.position(r * 2 + this.width, r);
 	}
 
 	get expression() {
@@ -843,6 +848,19 @@ class Chain {
 		canvas.addEventListener('mousedown', this.mousedown.bind(this));
 		canvas.addEventListener('mouseup', this.mouseup.bind(this));
 		canvas.addEventListener('contextmenu', () => event.preventDefault());
+
+		// set infomation of block
+		this.constantIDBlockConstructors = [ChainViewBlock, ChainIfBlock, ChainFunctionizeBlock];
+		this.constantIDBlockValues = ['view', 'if', 'functionize'];
+		this.tableValueToConstructor = {
+			function: ChainFunctionBlock,
+			value: ChainValueBlock,
+			property: ChainPropertyBlock,
+			operator: ChainOperatorBlock,
+			view: ChainViewBlock,
+			if: ChainIfBlock,
+			functionize: ChainFunctionizeBlock
+		};
 
 		// set properties
 		this.editor = editor;
@@ -900,7 +918,7 @@ class Chain {
 	}
 
 	hideMenuText() {
-		this.blockMenuText.style.display = (['function', 'value', 'property', 'operator'].includes(event.target.value)) ? '' : 'none';
+		this.blockMenuText.style.display = (!this.constantIDBlockValues.includes(event.target.value)) ? '' : 'none';
 		this.blockMenuText.focus();
 	}
 
@@ -912,33 +930,9 @@ class Chain {
 	 * @returns {ChainBlock}
 	 */
 	createBlock(type, value, x, y) {
-		let block;
-		switch (type) {
-			case 'function':
-				block = new ChainFunctionBlock(this, value);
-				break;
-			case 'value':
-				block = new ChainValueBlock(this, value);
-				break;
-			case 'property':
-				block = new ChainPropertyBlock(this, value);
-				break;
-			case 'operator':
-				block = new ChainOperatorBlock(this, value);
-				break;
-			case 'view':
-				block = new ChainViewBlock(this);
-				break;
-			case 'if':
-				block = new ChainIfBlock(this);
-				break;
-			case 'functionize':
-				block = new ChainFunctionizeBlock(this);
-				break;
-			default:
-				break;
-		}
-		block.position(x, y);
+		const Block = this.tableValueToConstructor[type];
+		const block = this.constantIDBlockValues.includes(type) ? new Block(this, x, y) : new Block(this, value, x, y);
+		console.log(block);
 		return block;
 	}
 
@@ -957,7 +951,7 @@ class Chain {
 	addBlockByClick() {
 		const value = this.blockMenuText.value.trim();
 		const select = this.blockMenuSelect.value;
-		if (value === '' && (['function', 'value', 'property', 'operator'].includes(select))) {
+		if (value === '' && (!this.constantIDBlockValues.includes(select))) {
 			return;
 		}
 		const x = parseInt(this.blockMenu.style.left, 10);
@@ -1069,7 +1063,7 @@ class Chain {
 					this.mainTarget.click();
 				}
 				break;
-			case block && this.status === Chain.DEFAULT && event.button === 2 && block.constructor !== ChainViewBlock:
+			case block && this.status === Chain.DEFAULT && event.button === 2 && !this.constantIDBlockConstructors.includes(block.constructor):
 				this.renameTarget = block;
 				this.renameArea.style.display = '';
 				this.renameText.value = this.renameTarget.value;
