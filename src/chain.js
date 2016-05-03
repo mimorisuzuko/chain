@@ -381,21 +381,23 @@ class ChainBlock extends ChainBox {
 		this.fillStyle = ChainColor.gray;
 		this.id = new ChainText(this.chain, id);
 		this.id.align('left', 'middle');
-		this.pins = [];
+		this.topPins = [];
+		this.rightPins = [];
+		this.bottomPins = [];
+		this.leftPins = [];
 		const close = new ChainButton(this.chain, '×', () => {
 			this.chain.displayedBlocks = this.chain.displayedBlocks.filter((a) => a !== this);
-			this.pins.forEach((a) => this.chain.deleteLink(a));
+			this.allPins.forEach((a) => this.chain.deleteLink(a));
 		});
 		close.fillStyle = ChainColor.red;
 		this.buttons = [close];
 		this.adjustWidth(100);
-		this.adjustHeightByRate(2);
 	}
 
 	draw() {
 		super.draw();
 		this.id.draw();
-		this.pins.forEach((a) => a.draw());
+		this.allPins.forEach((a) => a.draw());
 		this.buttons.forEach((a) => a.draw());
 	}
 
@@ -423,7 +425,7 @@ class ChainBlock extends ChainBox {
 	 * @returns {ChainOutlineCircle}
 	 */
 	getPinContains(x, y) {
-		const pin = this.pins.filter((a) => a.contains(x, y))[0];
+		const pin = this.allPins.filter((a) => a.contains(x, y))[0];
 		return pin;
 	}
 
@@ -452,8 +454,14 @@ class ChainBlock extends ChainBox {
 	}
 
 	adjustChildren() {
+		const r = ChainPin.RADIUS;
+		this.adjustHeightByRate(Math.max(2, this.leftPins.length, this.rightPins.length));
 		this.id.position(this.x + Chain.PAD, this.y + Chain.PAD * 2 + (this.height - Chain.PAD * 2) / 2);
-		this.buttons.forEach((button, i) => button.position(this.x + (button.width + 1) * i, this.y));
+		this.buttons.forEach((a, i) => a.position(this.x + (a.width + 1) * i, this.y));
+		this.topPins.forEach((a, i) => a.position(r + (r * 2.5) * i, -r * 2));
+		this.rightPins.forEach((a, i) => a.position(this.width + r * 2, r + (r * 2.5) * i));
+		this.bottomPins.forEach((a, i) => a.position(r + (r * 2.5) * i, this.height + r * 2));
+		this.leftPins.forEach((a, i) => a.position(-r * 2, r + (r * 2.5) * i));
 	}
 
 	set value(value) {
@@ -462,6 +470,10 @@ class ChainBlock extends ChainBox {
 
 	get value() {
 		return this.id.text;
+	}
+
+	get allPins() {
+		return [].concat(this.topPins, this.rightPins, this.bottomPins, this.leftPins);
 	}
 }
 
@@ -557,12 +569,16 @@ class ChainPin extends ChainOutlineCircle {
 		});
 	}
 
-	static get OUTPUT() {
+	static get OUTPUT_RESULT() {
 		return 0;
 	}
 
-	static get INPUT() {
+	static get OUTPUT_SELF() {
 		return 1;
+	}
+
+	static get INPUT() {
+		return 2;
 	}
 
 	static get RADIUS() {
@@ -580,15 +596,15 @@ class ChainFunctionBlock extends ChainBlock {
 	constructor(chain, id, x = 0, y = 0) {
 		super(chain, id, x, y);
 		this.strokeStyle = ChainColor.blue;
-		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT_RESULT, () => {
 			return this.expression;
 		});
 		this.result.color = ChainColor.purple;
+		this.rightPins.push(this.result);
 		this.self = new ChainPin(this.chain, this, ChainPin.INPUT);
 		this.self.color = ChainColor.blue;
-		this.params = [];
-		this.addParam();
-		this.updatePins();
+		this.params = [new ChainPin(this.chain, this, ChainPin.INPUT)];
+		this.leftPins = [].concat(this.self, this.params);
 		this.buttons = this.buttons.concat([
 			new ChainButton(this.chain, '+', () => {
 				this.addParam();
@@ -600,29 +616,17 @@ class ChainFunctionBlock extends ChainBlock {
 		this.adjustChildren();
 	}
 
-	updatePins() {
-		this.pins = [this.result, this.self].concat(this.params);
-		this.adjustHeightByRate(Math.max(this.params.length, 2));
-		this.adjustChildren();
-	}
-
 	addParam() {
 		this.params.push(new ChainPin(this.chain, this, ChainPin.INPUT));
-		this.updatePins();
+		this.leftPins = [].concat(this.self, this.params);
+		this.adjustChildren();
 	}
 
 	deleteParam() {
 		const param = this.params.pop();
 		this.chain.deleteLink(param);
-		this.updatePins();
-	}
-
-	adjustChildren() {
-		super.adjustChildren();
-		const r = ChainPin.RADIUS;
-		this.params.forEach((param, i) => param.position(-r * 2, r + (r * 2.5) * i));
-		this.result.position(r * 2 + this.width, r);
-		this.self.position(r, -r * 2);
+		this.leftPins = [].concat(this.self, this.params);
+		this.adjustChildren();
 	}
 
 	get expression() {
@@ -642,17 +646,11 @@ class ChainValueBlock extends ChainBlock {
 	constructor(chain, id, x = 0, y = 0) {
 		super(chain, id, x, y);
 		this.strokeStyle = ChainColor.white;
-		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT_RESULT, () => {
 			return this.expression;
 		});
-		this.pins.push(this.result);
+		this.rightPins.push(this.result);
 		this.adjustChildren();
-	}
-
-	adjustChildren() {
-		super.adjustChildren();
-		const r = ChainPin.RADIUS;
-		this.result.position(this.width + r * 2, r);
 	}
 
 	get expression() {
@@ -672,19 +670,13 @@ class ChainPropertyBlock extends ChainBlock {
 		this.strokeStyle = ChainColor.white;
 		this.self = new ChainPin(this.chain, this, ChainPin.INPUT);
 		this.self.color = ChainColor.blue;
-		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
+		this.leftPins.push(this.self);
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT_RESULT, () => {
 			return this.expression;
 		});
 		this.result.color = ChainColor.purple;
-		this.pins = this.pins.concat([this.self, this.result]);
+		this.rightPins.push(this.result);
 		this.adjustChildren();
-	}
-
-	adjustChildren() {
-		super.adjustChildren();
-		const r = ChainPin.RADIUS;
-		this.self.position(-r * 2, r);
-		this.result.position(this.width + r * 2, r);
 	}
 
 	get expression() {
@@ -704,21 +696,15 @@ class ChainOperatorBlock extends ChainBlock {
 		super(chain, id, x, y);
 		this.strokeStyle = ChainColor.white;
 		this.width = 180;
-		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT_RESULT, () => {
 			return this.expression;
 		});
+		this.rightPins.push(this.result);
 		this.result.color = ChainColor.purple;
 		this.params = Array(2).fill().map(() => new ChainPin(this.chain, this, ChainPin.INPUT));
-		this.pins = [this.result].concat(this.params);
+		this.leftPins = this.params;
 		this.adjustWidth(50);
 		this.adjustChildren();
-	}
-
-	adjustChildren() {
-		super.adjustChildren();
-		const r = ChainPin.RADIUS;
-		this.params.forEach((param, i) => param.position(-r * 2, r + (r * 2.5) * i));
-		this.result.position(this.width + r * 2, r);
 	}
 
 	get expression() {
@@ -739,14 +725,8 @@ class ChainViewBlock extends ChainBlock {
 		this.strokeStyle = ChainColor.purple;
 		this.view = new ChainPin(this.chain, this, ChainPin.INPUT);
 		this.view.color = ChainColor.purple;
-		this.pins.push(this.view);
+		this.leftPins.push(this.view);
 		this.adjustChildren();
-	}
-
-	adjustChildren() {
-		super.adjustChildren();
-		const r = ChainPin.RADIUS;
-		this.view.position(-r * 2, r * 2);
 	}
 
 	set value(value) {
@@ -757,28 +737,55 @@ class ChainViewBlock extends ChainBlock {
 }
 
 class ChainIfBlock extends ChainBlock {
+	/**
+	 * @param {Chain} chain
+	 * @param {Number} x
+	 * @param {Number} y
+	 */
 	constructor(chain, x = 0, y = 0) {
 		super(chain, 'if', x, y);
 		this.strokeStyle = ChainColor.purple;
 		this.params = Array(3).fill().map((param) => new ChainPin(this.chain, this, ChainPin.INPUT));
-		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
+		this.leftPins = this.params;
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT_RESULT, () => {
 			return this.expression;
 		});
 		this.result.color = ChainColor.purple;
-		this.pins = this.pins.concat(this.params, this.result);
-		this.adjustHeightByRate(3);
+		this.rightPins.push(this.result);
 		this.adjustChildren();
 	}
 
-	adjustChildren() {
-		super.adjustChildren();
-		const r = ChainPin.RADIUS;
-		this.params.forEach((param, i) => param.position(-r * 2, r + (r * 2.5) * i));
-		this.result.position(r * 2 + this.width, r);
+	get expression() {
+		return `${this.params[0].value} ? ${this.params[1].value} : ${this.params[2].value}`;
+	}
+}
+
+class ChainRepeatBlock extends ChainBlock {
+	/**
+	 * @param {Chain} chain
+	 * @param {Number} x
+	 * @param {Number} y
+	 */
+	constructor(chain, x = 0, y = 0) {
+		super(chain, 'repeat', x, y);
+		this.strokeStyle = ChainColor.purple;
+		this.repeatCounterIndex = new Date().getTime();
+		this.params = Array(2).fill().map((param) => new ChainPin(this.chain, this, ChainPin.INPUT));
+		this.index = new ChainPin(this.chain, this, ChainPin.OUTPUT_SELF, () => {
+			return `_${this.repeatCounterIndex}`;
+		});
+		this.params.splice(1, 0, this.index);
+		this.leftPins = this.params;
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT_RESULT, () => {
+			return this.expression;
+		});
+		this.result.color = ChainColor.purple;
+		this.rightPins = [this.result];
+		this.adjustChildren();
 	}
 
 	get expression() {
-		return `${this.params[0].value} ? ${this.params[1].value} : ${this.params[2].value}`
+		return `for (let _${this.repeatCounterIndex} = 0; _${this.repeatCounterIndex} < ${this.params[0].value}; _${this.repeatCounterIndex} += 1) ${this.params[2].value}`;
 	}
 }
 
@@ -792,23 +799,17 @@ class ChainFunctionizeBlock extends ChainBlock {
 		super(chain, 'Functionize', x, y);
 		this.strokeStyle = ChainColor.blue;
 		this.params = [new ChainPin(this.chain, this, ChainPin.INPUT)];
-		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
+		this.leftPins = this.params;
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT_RESULT, () => {
 			return this.expression;
 		});
 		this.result.color = ChainColor.purple;
-		this.pins = this.pins.concat(this.params, this.result);
+		this.rightPins.push(this.result);
 		this.adjustChildren();
 	}
 
 	draw() {
 		super.draw();
-	}
-
-	adjustChildren() {
-		super.adjustChildren();
-		const r = ChainPin.RADIUS;
-		this.params.forEach((param, i) => param.position(-r * 2, r + (r * 2.5) * i));
-		this.result.position(r * 2 + this.width, r);
 	}
 
 	get expression() {
@@ -818,7 +819,7 @@ class ChainFunctionizeBlock extends ChainBlock {
 
 class Chain {
 	/**
-	 * @param {AceEditor} editor
+	 * @param {undefined} editor
 	 * @param {HTMLIFrameElement} iframe
 	 */
 	constructor(editor, iframe) {
@@ -850,8 +851,7 @@ class Chain {
 		canvas.addEventListener('contextmenu', () => event.preventDefault());
 
 		// set infomation of block
-		this.constantIDBlockConstructors = [ChainViewBlock, ChainIfBlock, ChainFunctionizeBlock];
-		this.constantIDBlockValues = ['view', 'if', 'functionize'];
+		this.constantIDBlockValues = ['view', 'if', 'repeat', 'functionize'];
 		this.tableValueToConstructor = {
 			function: ChainFunctionBlock,
 			value: ChainValueBlock,
@@ -859,8 +859,10 @@ class Chain {
 			operator: ChainOperatorBlock,
 			view: ChainViewBlock,
 			if: ChainIfBlock,
+			repeat: ChainRepeatBlock,
 			functionize: ChainFunctionizeBlock
 		};
+		this.constantIDBlockConstructors = this.constantIDBlockValues.map((a) => this.tableValueToConstructor[a]);
 
 		// set properties
 		this.editor = editor;
@@ -932,7 +934,6 @@ class Chain {
 	createBlock(type, value, x, y) {
 		const Block = this.tableValueToConstructor[type];
 		const block = this.constantIDBlockValues.includes(type) ? new Block(this, x, y) : new Block(this, value, x, y);
-		console.log(block);
 		return block;
 	}
 
@@ -1035,7 +1036,7 @@ class Chain {
 		const block = this.displayedBlocks.reverse().filter((a) => a.contains(this.mousex, this.mousey))[0];
 		switch (true) {
 			case this.status === Chain.LINK:
-				if (this.mainTarget.type === ChainPin.INPUT || (this.mainTarget.type === ChainPin.OUTPUT && this.mainTarget.toPins.length === 0)) {
+				if (this.mainTarget.type === ChainPin.INPUT || ([ChainPin.OUTPUT_RESULT, ChainPin.OUTPUT_SELF].includes(this.mainTarget.type) && this.mainTarget.toPins.length === 0)) {
 					this.mainTarget.linked = false;
 				}
 				this.displayedBlocks.every((block) => {
@@ -1046,7 +1047,7 @@ class Chain {
 					const pins = [this.mainTarget, pin].sort((a, b) => a.type - b.type);
 
 					// if two pins isn't output and input, don't link.
-					if (pins.map((a) => a.type).join('') !== '01') {
+					if (!['02', '12'].includes(pins.map((a) => a.type).join(''))) {
 						return false;
 					}
 
@@ -1115,7 +1116,7 @@ class Chain {
 
 				// if parent doesn't have any link, delete it from linkedBlocks.
 				[outputPin.parent, inputPin.parent].forEach((parent) => {
-					if (parent.pins.filter((pin) => pin.linked).length > 0) {
+					if (parent.allPins.filter((pin) => pin.linked).length > 0) {
 						return;
 					}
 					this.linkedBlocks = this.linkedBlocks.filter((a) => a !== parent);
@@ -1137,10 +1138,10 @@ class Chain {
 		if (!this.linkedBlocks.includes(inputPin.parent)) {
 			this.linkedBlocks.push(inputPin.parent);
 		}
-		const inputIndex = this.linkedBlocks.indexOf(inputPin.parent);
+		const outputIndex = this.linkedBlocks.indexOf(inputPin.parent) - 1;
 		// if linkedBlocks has parent of outputPin, delete it.
 		this.linkedBlocks = this.linkedBlocks.filter((a) => a !== outputPin.parent);
-		this.linkedBlocks.splice(inputIndex - 1, 0, outputPin.parent);
+		outputIndex > -1 ? this.linkedBlocks.splice(outputIndex, 0, outputPin.parent) : this.linkedBlocks.unshift(outputPin.parent);
 		return link;
 	}
 
@@ -1165,10 +1166,6 @@ class Chain {
 	 * set new code to iframe
 	 */
 	updateFrame() {
-		// send all
-		this.expressions = [];
-		let viewIndex = 0;
-
 		// reset index of view
 		this.displayedBlocks.forEach((a) => {
 			if (a.constructor === ChainViewBlock) {
@@ -1177,13 +1174,16 @@ class Chain {
 			}
 		});
 
+		// send all
+		this.expressions = [];
+		let viewIndex = 0;
 		// set expressions to iframe
 		this.linkedBlocks.forEach((block) => {
-			block.pins.forEach((pin) => {
+			block.allPins.forEach((pin) => {
 				if (pin.type === ChainPin.INPUT) {
 					return;
 				}
-				const isOrFunctionOperatorIf = [ChainFunctionBlock, ChainOperatorBlock, ChainIfBlock].includes(block.constructor);
+				const isExecutableBlock = [ChainFunctionBlock, ChainOperatorBlock, ChainIfBlock, ChainRepeatBlock].includes(block.constructor);
 				const viewBlocks = pin.toPins.map(((a) => a.parent)).filter((a) => a.constructor === ChainViewBlock);
 				switch (true) {
 					case pin.linked && viewBlocks.length === 0:
@@ -1192,7 +1192,7 @@ class Chain {
 					case pin.linked && viewBlocks.length > 0:
 						// set index of view
 						viewBlocks.forEach((a) => a.index = viewIndex);
-					case !pin.linked && isOrFunctionOperatorIf:
+					case !pin.linked && isExecutableBlock && pin.type === ChainPin.OUTPUT_RESULT:
 						this.expressions.push(block.expression);
 						viewIndex += 1;
 						break;
