@@ -977,7 +977,7 @@ class Chain {
 		this.blockMenu.style.display = 'none';
 		this.renameArea.style.display = 'none';
 
-		// select one of circle or box(function, value)
+		// select one of pin or block
 		this.displayedBlocks.reverse().every((block) => {
 			const pin = block.getPinContains(this.mousex, this.mousey);
 			const button = block.getButtonContains(this.mousex, this.mousey);
@@ -1044,7 +1044,7 @@ class Chain {
 					this.mainTarget.click();
 				}
 				break;
-			case block && this.status === Chain.DEFAULT && event.button === 2:
+			case block && this.status === Chain.DEFAULT && event.button === 2 && block.constructor !== ChainViewBlock:
 				this.renameTarget = block;
 				this.renameArea.style.display = '';
 				this.renameText.value = this.renameTarget.value;
@@ -1062,7 +1062,7 @@ class Chain {
 			default:
 				break;
 		}
-		
+
 		this.updateFrame();
 
 		// reset properties
