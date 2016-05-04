@@ -8,7 +8,7 @@ html
 			canvas#chain-canvas
 			div#chain-code
 			iframe#chain-window
-			div.block-menu
+			div.block-menu(style='display:none;')
 				select
 					option(value='function') Function Block
 					option(value='value') Value Block
@@ -20,7 +20,7 @@ html
 					option(value='functionize') Functionize Block
 				input(type='text')
 				button.btn add
-			div.rename-area
+			div.rename-area(style='display:none;')
 				input(type='text')
 			ul.clear
 				li

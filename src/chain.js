@@ -2,13 +2,15 @@
 
 const ChainColor = {
 	blue: 'rgb(86, 156, 214)',
+	lightblue: 'rgb(156, 220, 254)',
 	clear: 'rgba(0, 0, 0, 0)',
 	gray: 'rgb(37, 37, 38)',
 	lightgray: 'rgb(51, 51, 51)',
 	white: 'rgb(212, 212, 212)',
 	purple: 'rgb(197, 134, 192)',
 	green: 'rgb(78, 201, 176)',
-	red: 'rgb(252, 70, 66)'
+	red: 'rgb(252, 70, 66)',
+	yellow: 'rgb(220, 220, 170)'
 };
 
 class ChainChild {
@@ -530,6 +532,7 @@ class ChainPin extends ChainOutlineCircle {
 		this.value = null;
 		this.toPins = [];
 		this.linked = false;
+		this.color = ChainColor.white;
 	}
 
 	draw() {
@@ -569,6 +572,23 @@ class ChainPin extends ChainOutlineCircle {
 		});
 	}
 
+	set color(color) {
+		this.strokeStyle = color;
+		switch (this.type) {
+			case ChainPin.INPUT:
+				this.center.fillStyle = ChainColor.clear;
+				this.center.strokeStyle = color;
+				break;
+			case ChainPin.OUTPUT_RESULT:
+			case ChainPin.OUTPUT_SELF:
+				this.center.fillStyle = color;
+				this.center.strokeStyle = ChainColor.clear;
+				break;
+			default:
+				break;
+		}
+	}
+
 	static get OUTPUT_RESULT() {
 		return 0;
 	}
@@ -603,8 +623,8 @@ class ChainFunctionBlock extends ChainBlock {
 		this.rightPins.push(this.result);
 		this.self = new ChainPin(this.chain, this, ChainPin.INPUT);
 		this.self.color = ChainColor.blue;
-		this.params = [new ChainPin(this.chain, this, ChainPin.INPUT)];
-		this.leftPins = [].concat(this.self, this.params);
+		this.params = [];
+		this.addParam();
 		this.buttons = this.buttons.concat([
 			new ChainButton(this.chain, '+', () => {
 				this.addParam();
@@ -617,7 +637,9 @@ class ChainFunctionBlock extends ChainBlock {
 	}
 
 	addParam() {
-		this.params.push(new ChainPin(this.chain, this, ChainPin.INPUT));
+		const param = new ChainPin(this.chain, this, ChainPin.INPUT);
+		param.color = ChainColor.lightblue;
+		this.params.push(param);
 		this.leftPins = [].concat(this.self, this.params);
 		this.adjustChildren();
 	}
@@ -649,6 +671,7 @@ class ChainValueBlock extends ChainBlock {
 		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT_RESULT, () => {
 			return this.expression;
 		});
+		this.result.color = ChainColor.purple;
 		this.rightPins.push(this.result);
 		this.adjustChildren();
 	}
@@ -722,9 +745,8 @@ class ChainViewBlock extends ChainBlock {
 	constructor(chain, x = 0, y = 0) {
 		super(chain, '', x, y);
 		this.index = -1;
-		this.strokeStyle = ChainColor.purple;
+		this.strokeStyle = ChainColor.white;
 		this.view = new ChainPin(this.chain, this, ChainPin.INPUT);
-		this.view.color = ChainColor.purple;
 		this.leftPins.push(this.view);
 		this.adjustChildren();
 	}
@@ -774,8 +796,7 @@ class ChainRepeatBlock extends ChainBlock {
 		this.index = new ChainPin(this.chain, this, ChainPin.OUTPUT_SELF, () => {
 			return `_${this.repeatCounterIndex}`;
 		});
-		this.params.splice(1, 0, this.index);
-		this.leftPins = this.params;
+		this.leftPins = this.params.concat(this.index);
 		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT_RESULT, () => {
 			return this.expression;
 		});
@@ -785,7 +806,7 @@ class ChainRepeatBlock extends ChainBlock {
 	}
 
 	get expression() {
-		return `for (let _${this.repeatCounterIndex} = 0; _${this.repeatCounterIndex} < ${this.params[0].value}; _${this.repeatCounterIndex} += 1) ${this.params[2].value}`;
+		return `for (let _${this.repeatCounterIndex} = 0; _${this.repeatCounterIndex} < ${this.params[0].value}; _${this.repeatCounterIndex} += 1) ${this.params[1].value}`;
 	}
 }
 
@@ -825,7 +846,6 @@ class Chain {
 	constructor(editor, iframe) {
 		// setup add-block
 		const blockMenu = document.querySelector('.chain .block-menu');
-		blockMenu.style.display = 'none';
 		const blockMenuText = blockMenu.querySelector('input');
 		blockMenuText.addEventListener('keydown', this.addBlockByKey.bind(this));
 		const blockMenuSelect = blockMenu.querySelector('select');
@@ -837,7 +857,6 @@ class Chain {
 
 		// setup rename
 		const renameArea = document.querySelector('.chain .rename-area');
-		renameArea.style.display = 'none';
 		const renameText = renameArea.querySelector('input');
 		renameText.addEventListener('keydown', this.renameBlock.bind(this));
 		this.renameArea = renameArea;
