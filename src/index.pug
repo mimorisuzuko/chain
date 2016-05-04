@@ -2,11 +2,12 @@ doctype html
 html
 	head
 		meta(charset='utf-8')
+		title Chain
 		link(rel='stylesheet', href='index.css')
 	body
 		main.chain
 			canvas#chain-canvas
-			div#chain-code
+			div#chain-html
 			iframe#chain-window
 			div.block-menu(style='display:none;')
 				select
@@ -26,7 +27,7 @@ html
 				li
 					a.btn(href='#chain-canvas') Chain
 				li
-					a.btn(href='#chain-code') Code
+					a.btn(href='#chain-html') HTML
 				li
 					a.btn(href='#chain-window') Window
 		script(src='index.js')

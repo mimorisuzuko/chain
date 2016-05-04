@@ -810,6 +810,7 @@ class ChainRepeatBlock extends ChainBlock {
 	}
 }
 
+// In current Chain, Functionize Block is not implemented.
 class ChainFunctionizeBlock extends ChainBlock {
 	/**
 	 * @param {Chain} chain
@@ -1220,10 +1221,6 @@ class Chain {
 				}
 			});
 		});
-
-		// for debug
-		console.log(this.expressions);
-		console.log('-------------------------');
 
 		const d = new DOMParser().parseFromString(this.editor.getValue(), 'text/html');
 		const s = document.createElement('script');

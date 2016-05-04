@@ -5,9 +5,9 @@ const ace = require('brace');
 require('brace/mode/html');
 require('brace/theme/clouds_midnight');
 
-const modes = ['#chain-canvas', '#chain-code', '#chain-window'];
+const modes = ['#chain-canvas', '#chain-html', '#chain-window'];
 const elements = modes.map((a) => document.querySelector(a));
-const editor = ace.edit('chain-code');
+const editor = ace.edit('chain-html');
 const chain = new Chain(editor, elements[2]);
 
 //set default value of editor
@@ -15,9 +15,10 @@ editor.getSession().setValue([
 	'<!doctype html>',
 	'<html>',
 	'<head>',
+	'',
 	'</head>',
 	'<body>',
-	'<h1>Hello, World!</h1>',
+	'	<h1>Hello, World!</h1>',
 	'</body>',
 	'</html>'
 ].join('\n'));
