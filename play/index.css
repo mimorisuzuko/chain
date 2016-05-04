@@ -15,6 +15,7 @@ ul {
   position: fixed;
   bottom: 0;
   right: 0;
+  margin: 0;
   list-style: none;
   font-size: 12px; }
   ul li {
@@ -75,9 +76,25 @@ ul {
       display: block;
       box-sizing: border-box;
       margin-bottom: 10px; }
+  .chain .rename-area {
+    position: absolute;
+    left: 0;
+    top: 0; }
+    .chain .rename-area input[type="text"] {
+      width: 100%;
+      display: block;
+      box-sizing: border-box; }
   .chain canvas {
     display: block;
     cursor: none; }
 
-#chain-code {
+#chain-html {
   height: 100%; }
+
+#chain-window {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border: none;
+  background: #fff;
+  display: block; }

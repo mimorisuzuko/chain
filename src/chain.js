@@ -2,13 +2,15 @@
 
 const ChainColor = {
 	blue: 'rgb(86, 156, 214)',
+	lightblue: 'rgb(156, 220, 254)',
 	clear: 'rgba(0, 0, 0, 0)',
 	gray: 'rgb(37, 37, 38)',
 	lightgray: 'rgb(51, 51, 51)',
 	white: 'rgb(212, 212, 212)',
 	purple: 'rgb(197, 134, 192)',
 	green: 'rgb(78, 201, 176)',
-	red: 'rgb(252, 70, 66)'
+	red: 'rgb(252, 70, 66)',
+	yellow: 'rgb(220, 220, 170)'
 };
 
 class ChainChild {
@@ -135,7 +137,7 @@ class ChainOutlineCircle extends ChainCircle {
 	 */
 	constructor(chain, x = 0, y = 0, radius = 0) {
 		super(chain, x, y, radius);
-		this.lineWidth = 2;
+		this.lineWidth = 1;
 		this.center = new ChainCircle(chain);
 		this.outline = true;
 		this.color = ChainColor.white;
@@ -334,8 +336,7 @@ class ChainButton extends ChainBox {
 		this.text = new ChainText(this.chain, text);
 		this.text.align('center', 'middle');
 		this.size(this.context.measureText(text).width + Chain.PAD * 2, Chain.PAD * 2);
-		this.click = click
-
+		this.click = click;
 		this.adjustText();
 	}
 
@@ -376,26 +377,29 @@ class ChainBlock extends ChainBox {
 	 * @param {Number} width
 	 * @param {Number} height
 	 */
-	constructor(chain, id = '', x = 0, y = 0, width = 200, height = 50) {
-		super(chain, x, y, width, height);
+	constructor(chain, id = '', x = 0, y = 0) {
+		super(chain, x, y);
 		this.strokeStyle = ChainColor.lightgray;
 		this.fillStyle = ChainColor.gray;
 		this.id = new ChainText(this.chain, id);
 		this.id.align('left', 'middle');
-		this.adjustWidth();
-		this.pins = [];
+		this.topPins = [];
+		this.rightPins = [];
+		this.bottomPins = [];
+		this.leftPins = [];
 		const close = new ChainButton(this.chain, '×', () => {
-			this.chain.blocks = this.chain.blocks.filter((a) => a !== this);
-			this.pins.forEach((a) => this.chain.deleteLink(a));
+			this.chain.displayedBlocks = this.chain.displayedBlocks.filter((a) => a !== this);
+			this.allPins.forEach((a) => this.chain.deleteLink(a));
 		});
 		close.fillStyle = ChainColor.red;
 		this.buttons = [close];
+		this.adjustWidth(100);
 	}
 
 	draw() {
 		super.draw();
 		this.id.draw();
-		this.pins.forEach((a) => a.draw());
+		this.allPins.forEach((a) => a.draw());
 		this.buttons.forEach((a) => a.draw());
 	}
 
@@ -423,8 +427,8 @@ class ChainBlock extends ChainBox {
 	 * @returns {ChainOutlineCircle}
 	 */
 	getPinContains(x, y) {
-		const pin = this.pins.filter((a) => a.contains(x, y))[0];
-		return (pin) ? pin : null;
+		const pin = this.allPins.filter((a) => a.contains(x, y))[0];
+		return pin;
 	}
 
 	/**
@@ -434,20 +438,32 @@ class ChainBlock extends ChainBox {
 	 */
 	getButtonContains(x, y) {
 		const button = this.buttons.filter((a) => a.contains(x, y))[0];
-		return (button) ? button : null;
+		return button;
 	}
 
-	adjustWidth() {
-		this.width = Math.max(100, this.context.measureText(this.id.text).width + Chain.PAD * 2);
+	/**
+	 * @param {Number} minWidth
+	 */
+	adjustWidth(minWidth) {
+		this.width = Math.max(minWidth, this.context.measureText(this.id.text).width + Chain.PAD * 2);
+	}
+
+	/**
+	 * @param {Number} rate
+	 */
+	adjustHeightByRate(rate) {
+		this.height = ChainPin.RADIUS * 2 + (ChainPin.RADIUS * 2.5) * (rate - 1);
 	}
 
 	adjustChildren() {
-		this.id.position(this.x + Chain.PAD, this.y + this.height / 2);
-		let dw = 0;
-		this.buttons.forEach((button) => {
-			button.position(this.x + this.width - button.width - dw, this.y);
-			dw += button.width + 1;
-		});
+		const r = ChainPin.RADIUS;
+		this.adjustHeightByRate(Math.max(2, this.leftPins.length, this.rightPins.length));
+		this.id.position(this.x + Chain.PAD, this.y + Chain.PAD * 2 + (this.height - Chain.PAD * 2) / 2);
+		this.buttons.forEach((a, i) => a.position(this.x + (a.width + 1) * i, this.y));
+		this.topPins.forEach((a, i) => a.position(r + (r * 2.5) * i, -r * 2));
+		this.rightPins.forEach((a, i) => a.position(this.width + r * 2, r + (r * 2.5) * i));
+		this.bottomPins.forEach((a, i) => a.position(r + (r * 2.5) * i, this.height + r * 2));
+		this.leftPins.forEach((a, i) => a.position(-r * 2, r + (r * 2.5) * i));
 	}
 
 	set value(value) {
@@ -456,6 +472,10 @@ class ChainBlock extends ChainBox {
 
 	get value() {
 		return this.id.text;
+	}
+
+	get allPins() {
+		return [].concat(this.topPins, this.rightPins, this.bottomPins, this.leftPins);
 	}
 }
 
@@ -512,13 +532,11 @@ class ChainPin extends ChainOutlineCircle {
 		this.value = null;
 		this.toPins = [];
 		this.linked = false;
+		this.color = ChainColor.white;
 	}
 
 	draw() {
 		this.outline = this.contains(this.chain.mousex, this.chain.mousey) || this.linked;
-		if (this.toPins.length > 0 && this.sender) {
-			this.send();
-		}
 		super.draw();
 	}
 
@@ -554,12 +572,33 @@ class ChainPin extends ChainOutlineCircle {
 		});
 	}
 
-	static get OUTPUT() {
+	set color(color) {
+		this.strokeStyle = color;
+		switch (this.type) {
+			case ChainPin.INPUT:
+				this.center.fillStyle = ChainColor.clear;
+				this.center.strokeStyle = color;
+				break;
+			case ChainPin.OUTPUT_RESULT:
+			case ChainPin.OUTPUT_SELF:
+				this.center.fillStyle = color;
+				this.center.strokeStyle = ChainColor.clear;
+				break;
+			default:
+				break;
+		}
+	}
+
+	static get OUTPUT_RESULT() {
 		return 0;
 	}
 
-	static get INPUT() {
+	static get OUTPUT_SELF() {
 		return 1;
+	}
+
+	static get INPUT() {
+		return 2;
 	}
 
 	static get RADIUS() {
@@ -577,46 +616,45 @@ class ChainFunctionBlock extends ChainBlock {
 	constructor(chain, id, x = 0, y = 0) {
 		super(chain, id, x, y);
 		this.strokeStyle = ChainColor.blue;
-		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
-			const self = this.self.value;
-			const params = this.params.map((param) => param.value);
-			return (self) ? `${self}["${this.value}"](${params.join(',')})` : `${this.value}(${params.join(',')})`;
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT_RESULT, () => {
+			return this.expression;
 		});
-		this.returns.color = ChainColor.purple;
+		this.result.color = ChainColor.purple;
+		this.rightPins.push(this.result);
 		this.self = new ChainPin(this.chain, this, ChainPin.INPUT);
 		this.self.color = ChainColor.blue;
-		this.params = Array(1).fill().map(() => new ChainPin(this.chain, this, ChainPin.INPUT));
-		this.updatePins();
+		this.params = [];
+		this.addParam();
 		this.buttons = this.buttons.concat([
-			new ChainButton(this.chain, '-', () => {
-				const pin = this.params.pop();
-				this.updatePins();
-				this.chain.deleteLink(pin);
-				this.adjustChildren();
-			}),
 			new ChainButton(this.chain, '+', () => {
-				this.params.push(new ChainPin(this.chain, this, ChainPin.INPUT));
-				this.updatePins();
-				this.adjustChildren();
+				this.addParam();
+			}),
+			new ChainButton(this.chain, '-', () => {
+				this.deleteParam();
 			})
 		]);
 		this.adjustChildren();
 	}
 
-	updatePins() {
-		this.pins = [this.returns, this.self].concat(this.params);
+	addParam() {
+		const param = new ChainPin(this.chain, this, ChainPin.INPUT);
+		param.color = ChainColor.lightblue;
+		this.params.push(param);
+		this.leftPins = [].concat(this.self, this.params);
+		this.adjustChildren();
 	}
 
-	adjustChildren() {
-		super.adjustChildren();
-		const dx = Chain.PAD * 4;
-		const interval = (this.width - dx * 2) / (this.params.length - 1);
-		this.params.forEach((param, i) => {
-			const x = (this.params.length === 1) ? this.width / 2 : dx + interval * i;
-			param.position(x, - param.radius * 2);
-		});
-		this.returns.position(this.returns.radius * 2 + this.width, this.height / 2);
-		this.self.position(-this.self.radius * 2, this.height / 2);
+	deleteParam() {
+		const param = this.params.pop();
+		this.chain.deleteLink(param);
+		this.leftPins = [].concat(this.self, this.params);
+		this.adjustChildren();
+	}
+
+	get expression() {
+		const self = this.self.value;
+		const params = this.params.map((param) => (param.value) ? param.value : 'null').join(',');
+		return (self) ? `${self}['${this.value}'](${params})` : `${this.value}(${params})`;
 	}
 }
 
@@ -630,16 +668,16 @@ class ChainValueBlock extends ChainBlock {
 	constructor(chain, id, x = 0, y = 0) {
 		super(chain, id, x, y);
 		this.strokeStyle = ChainColor.white;
-		this.pin = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
-			return this.value;
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT_RESULT, () => {
+			return this.expression;
 		});
-		this.pins.push(this.pin);
+		this.result.color = ChainColor.purple;
+		this.rightPins.push(this.result);
 		this.adjustChildren();
 	}
 
-	adjustChildren() {
-		super.adjustChildren();
-		this.pin.position(this.width + this.pin.radius * 2, this.height / 2);
+	get expression() {
+		return this.value;
 	}
 }
 
@@ -655,57 +693,46 @@ class ChainPropertyBlock extends ChainBlock {
 		this.strokeStyle = ChainColor.white;
 		this.self = new ChainPin(this.chain, this, ChainPin.INPUT);
 		this.self.color = ChainColor.blue;
-		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
-			const self = this.self.value;
-			return `${self}["${this.value}"]`;
+		this.leftPins.push(this.self);
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT_RESULT, () => {
+			return this.expression;
 		});
-		this.returns.color = ChainColor.purple;
-		this.pins = this.pins.concat([this.self, this.returns]);
+		this.result.color = ChainColor.purple;
+		this.rightPins.push(this.result);
 		this.adjustChildren();
 	}
 
-	adjustChildren() {
-		super.adjustChildren();
-		this.self.position(-this.self.radius * 2, this.height / 2);
-		this.returns.position(this.width + this.self.radius * 2, this.height / 2);
+	get expression() {
+		const self = this.self.value;
+		return `${self}['${this.value}']`;
 	}
 }
 
 class ChainOperatorBlock extends ChainBlock {
 	/**
 	 * @param {Chain} chain
+	 * @param {String} id
 	 * @param {Number} x
 	 * @param {Number} y
 	 */
-	constructor(chain, x = 0, y = 0) {
-		const operators = ['+', '-', '*', '/', '%', '='];
-		super(chain, operators[0], x, y);
+	constructor(chain, id, x = 0, y = 0) {
+		super(chain, id, x, y);
 		this.strokeStyle = ChainColor.white;
 		this.width = 180;
-		this.returns = new ChainPin(this.chain, this, ChainPin.OUTPUT, () => {
-			const params = this.params.map((param) => param.value);
-			return params.join(this.value);
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT_RESULT, () => {
+			return this.expression;
 		});
-		this.returns.color = ChainColor.purple;
+		this.rightPins.push(this.result);
+		this.result.color = ChainColor.purple;
 		this.params = Array(2).fill().map(() => new ChainPin(this.chain, this, ChainPin.INPUT));
-		this.pins = [this.returns].concat(this.params);
-		operators.reverse().forEach((a) => {
-			const button = new ChainButton(this.chain, a, () => {
-				this.value = a;
-			});
-			this.buttons.push(button);
-		});
+		this.leftPins = this.params;
+		this.adjustWidth(50);
 		this.adjustChildren();
 	}
 
-	adjustChildren() {
-		super.adjustChildren();
-		const dx = Chain.PAD * 2;
-		const interval = (this.width - dx * 2) / (this.params.length - 1);
-		this.params.forEach((param, i) => {
-			param.position(dx + interval * i, - param.radius * 2);
-		});
-		this.returns.position(this.returns.radius * 2 + this.width, this.height / 2);
+	get expression() {
+		const params = this.params.map((param) => param.value);
+		return params.join(this.value);
 	}
 }
 
@@ -717,40 +744,109 @@ class ChainViewBlock extends ChainBlock {
 	 */
 	constructor(chain, x = 0, y = 0) {
 		super(chain, '', x, y);
-		this.strokeStyle = ChainColor.purple;
-		this.pin = new ChainPin(this.chain, this, ChainPin.INPUT);
-		this.pin.color = ChainColor.purple;
-		this.pins.push(this.pin);
+		this.index = -1;
+		this.strokeStyle = ChainColor.white;
+		this.view = new ChainPin(this.chain, this, ChainPin.INPUT);
+		this.leftPins.push(this.view);
 		this.adjustChildren();
-	}
-
-	draw() {
-		const value = this.pin.value;
-		try {
-			this.value = String(this.chain.exec(value));
-		} catch (e) {
-			this.value = e;
-		}
-		super.draw();
-	}
-
-	adjustChildren() {
-		super.adjustChildren();
-		this.pin.position(-this.pin.radius * 2, this.height / 2);
 	}
 
 	set value(value) {
 		this.id.text = value;
-		this.adjustWidth();
+		this.adjustWidth(100);
 		this.adjustChildren();
 	}
 }
 
+class ChainIfBlock extends ChainBlock {
+	/**
+	 * @param {Chain} chain
+	 * @param {Number} x
+	 * @param {Number} y
+	 */
+	constructor(chain, x = 0, y = 0) {
+		super(chain, 'if', x, y);
+		this.strokeStyle = ChainColor.purple;
+		this.params = Array(3).fill().map((param) => new ChainPin(this.chain, this, ChainPin.INPUT));
+		this.leftPins = this.params;
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT_RESULT, () => {
+			return this.expression;
+		});
+		this.result.color = ChainColor.purple;
+		this.rightPins.push(this.result);
+		this.adjustChildren();
+	}
+
+	get expression() {
+		return `${this.params[0].value} ? ${this.params[1].value} : ${this.params[2].value}`;
+	}
+}
+
+class ChainRepeatBlock extends ChainBlock {
+	/**
+	 * @param {Chain} chain
+	 * @param {Number} x
+	 * @param {Number} y
+	 */
+	constructor(chain, x = 0, y = 0) {
+		super(chain, 'repeat', x, y);
+		this.strokeStyle = ChainColor.purple;
+		this.repeatCounterIndex = new Date().getTime();
+		this.params = Array(2).fill().map((param) => new ChainPin(this.chain, this, ChainPin.INPUT));
+		this.index = new ChainPin(this.chain, this, ChainPin.OUTPUT_SELF, () => {
+			return `_${this.repeatCounterIndex}`;
+		});
+		this.leftPins = this.params.concat(this.index);
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT_RESULT, () => {
+			return this.expression;
+		});
+		this.result.color = ChainColor.purple;
+		this.rightPins = [this.result];
+		this.adjustChildren();
+	}
+
+	get expression() {
+		return `for (let _${this.repeatCounterIndex} = 0; _${this.repeatCounterIndex} < ${this.params[0].value}; _${this.repeatCounterIndex} += 1) ${this.params[1].value}`;
+	}
+}
+
+// In current Chain, Functionize Block is not implemented.
+class ChainFunctionizeBlock extends ChainBlock {
+	/**
+	 * @param {Chain} chain
+	 * @param {Number} x
+	 * @param {Number} y
+	 */
+	constructor(chain, x = 0, y = 0) {
+		super(chain, 'Functionize', x, y);
+		this.strokeStyle = ChainColor.blue;
+		this.params = [new ChainPin(this.chain, this, ChainPin.INPUT)];
+		this.leftPins = this.params;
+		this.result = new ChainPin(this.chain, this, ChainPin.OUTPUT_RESULT, () => {
+			return this.expression;
+		});
+		this.result.color = ChainColor.purple;
+		this.rightPins.push(this.result);
+		this.adjustChildren();
+	}
+
+	draw() {
+		super.draw();
+	}
+
+	get expression() {
+		return `(() => { ${this.param.value} })`;
+	}
+}
+
 class Chain {
-	constructor() {
+	/**
+	 * @param {undefined} editor
+	 * @param {HTMLIFrameElement} iframe
+	 */
+	constructor(editor, iframe) {
 		// setup add-block
 		const blockMenu = document.querySelector('.chain .block-menu');
-		blockMenu.style.display = 'none';
 		const blockMenuText = blockMenu.querySelector('input');
 		blockMenuText.addEventListener('keydown', this.addBlockByKey.bind(this));
 		const blockMenuSelect = blockMenu.querySelector('select');
@@ -760,6 +856,13 @@ class Chain {
 		this.blockMenuText = blockMenuText;
 		this.blockMenuSelect = blockMenuSelect;
 
+		// setup rename
+		const renameArea = document.querySelector('.chain .rename-area');
+		const renameText = renameArea.querySelector('input');
+		renameText.addEventListener('keydown', this.renameBlock.bind(this));
+		this.renameArea = renameArea;
+		this.renameText = renameText;
+
 		// create canvas
 		const canvas = document.querySelector('#chain-canvas');
 		canvas.addEventListener('mousemove', this.mousemove.bind(this));
@@ -767,12 +870,29 @@ class Chain {
 		canvas.addEventListener('mouseup', this.mouseup.bind(this));
 		canvas.addEventListener('contextmenu', () => event.preventDefault());
 
+		// set infomation of block
+		this.constantIDBlockValues = ['view', 'if', 'repeat', 'functionize'];
+		this.tableValueToConstructor = {
+			function: ChainFunctionBlock,
+			value: ChainValueBlock,
+			property: ChainPropertyBlock,
+			operator: ChainOperatorBlock,
+			view: ChainViewBlock,
+			if: ChainIfBlock,
+			repeat: ChainRepeatBlock,
+			functionize: ChainFunctionizeBlock
+		};
+		this.constantIDBlockConstructors = this.constantIDBlockValues.map((a) => this.tableValueToConstructor[a]);
+
 		// set properties
+		this.editor = editor;
+		this.iframe = iframe;
 		this.canvas = canvas;
 		this.context = canvas.getContext('2d');
 		this.status = Chain.DEFAULT;
 		this.plugin = '';
-		this.target = null;
+		this.mainTarget = null;
+		this.renameTarget = null;
 		this.pmousex = 0;
 		this.pmousey = 0;
 		this.mousex = 0;
@@ -780,15 +900,23 @@ class Chain {
 		this.mousedowing = false;
 		this.mouse = new ChainCircle(this, 0, 0, 10);
 		this.mouse.fillStyle = 'rgba(255, 255, 255, 0.2)';
+		this.expressions = [];
 
 		// set blocks, links
 		this.rope = new ChainRope(this);
-		this.blocks = [];
+		this.displayedBlocks = [];
+		this.linkedBlocks = [];
 		this.links = [];
 
 		// When window is resized, canvas fits parent element.
 		this.fit();
 		window.addEventListener('resize', this.fit.bind(this));
+
+		// Receiving message, set message to View Blocks
+		window.addEventListener('message', this.updateViewBlocks.bind(this));
+
+		// contextmenu don't be shown
+		window.addEventListener('contextmenu', () => event.preventDefault());
 
 		// draw is main loop
 		this.draw();
@@ -796,8 +924,7 @@ class Chain {
 
 	draw() {
 		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-		this.blocks.forEach((a) => a.draw());
+		this.displayedBlocks.forEach((a) => a.draw());
 		this.links.forEach((a) => a.draw());
 		this.mouse.draw();
 		if (this.status === Chain.LINK) {
@@ -813,7 +940,7 @@ class Chain {
 	}
 
 	hideMenuText() {
-		this.blockMenuText.style.display = (['function', 'value', 'property'].includes(event.target.value)) ? '' : 'none';
+		this.blockMenuText.style.display = (!this.constantIDBlockValues.includes(event.target.value)) ? '' : 'none';
 		this.blockMenuText.focus();
 	}
 
@@ -825,27 +952,8 @@ class Chain {
 	 * @returns {ChainBlock}
 	 */
 	createBlock(type, value, x, y) {
-		let block;
-		switch (type) {
-			case 'function':
-				block = new ChainFunctionBlock(this, value);
-				break;
-			case 'value':
-				block = new ChainValueBlock(this, value);
-				break;
-			case 'property':
-				block = new ChainPropertyBlock(this, value);
-				break;
-			case 'operator':
-				block = new ChainOperatorBlock(this);
-				break;
-			case 'view':
-				block = new ChainViewBlock(this);
-				break;
-			default:
-				break;
-		}
-		block.position(x, y);
+		const Block = this.tableValueToConstructor[type];
+		const block = this.constantIDBlockValues.includes(type) ? new Block(this, x, y) : new Block(this, value, x, y);
 		return block;
 	}
 
@@ -857,19 +965,19 @@ class Chain {
 		}
 		const x = parseInt(this.blockMenu.style.left, 10);
 		const y = parseInt(this.blockMenu.style.top, 10);
-		this.blocks.push(this.createBlock(select, value, x, y));
+		this.displayedBlocks.push(this.createBlock(select, value, x, y));
 		this.blockMenu.style.display = 'none';
 	}
 
 	addBlockByClick() {
 		const value = this.blockMenuText.value.trim();
 		const select = this.blockMenuSelect.value;
-		if (value === '' && (['function', 'value', 'property'].includes(select))) {
+		if (value === '' && (!this.constantIDBlockValues.includes(select))) {
 			return;
 		}
 		const x = parseInt(this.blockMenu.style.left, 10);
 		const y = parseInt(this.blockMenu.style.top, 10);
-		this.blocks.push(this.createBlock(select, value, x, y));
+		this.displayedBlocks.push(this.createBlock(select, value, x, y));
 		this.blockMenu.style.display = 'none';
 	}
 
@@ -890,14 +998,14 @@ class Chain {
 			switch (this.status) {
 				case Chain.MOVE_BLOCK:
 					// if there is selected function, move it
-					this.target.position(this.target.x + dx, this.target.y + dy);
+					this.mainTarget.position(this.mainTarget.x + dx, this.mainTarget.y + dy);
 					break;
 				case Chain.LINK:
 					this.rope.end(this.mousex, this.mousey);
 					break;
 				default:
-					if (this.target && this.target.constructor === ChainButton && !this.target.contains(this.mousex, this.mousey)) {
-						this.target = null;
+					if (this.mainTarget && this.mainTarget.constructor === ChainButton && !this.mainTarget.contains(this.mousex, this.mousey)) {
+						this.mainTarget = null;
 					}
 					break;
 			}
@@ -905,37 +1013,35 @@ class Chain {
 	}
 
 	mousedown() {
-		const rect = this.canvas.getBoundingClientRect();
-		const x = event.clientX - rect.left;
-		const y = event.clientY - rect.top;
 		this.mousedowing = true;
 		this.blockMenu.style.display = 'none';
+		this.renameArea.style.display = 'none';
 
-		// select one of circle or box(function, value)
-		this.blocks.reverse().every((block) => {
+		// select one of pin or block
+		this.displayedBlocks.reverse().every((block) => {
 			const pin = block.getPinContains(this.mousex, this.mousey);
 			const button = block.getButtonContains(this.mousex, this.mousey);
 			switch (true) {
-				case pin !== null:
+				case pin && event.button === 0:
 					// Input pin has only one link. So, if already has link, delete its link.
 					if (pin.type === ChainPin.INPUT) {
 						this.deleteLink(pin);
 					}
 
 					this.status = Chain.LINK
-					this.target = pin;
+					this.mainTarget = pin;
 					pin.linked = true;
-					this.rope.begin(this.target.x, this.target.y);
-					this.rope.end(this.target.x, this.target.y);
+					this.rope.begin(this.mainTarget.x, this.mainTarget.y);
+					this.rope.end(this.mainTarget.x, this.mainTarget.y);
 
 					this.sortBlocks(block);
 					return false;
-				case button !== null:
-					this.target = button;
+				case button && event.button === 0:
+					this.mainTarget = button;
 					return false;
-				case block.contains(this.mousex, this.mousey):
+				case block.contains(this.mousex, this.mousey) && event.button === 0:
 					// select box
-					this.target = block;
+					this.mainTarget = block;
 					this.status = Chain.MOVE_BLOCK
 
 					this.sortBlocks(block);
@@ -947,33 +1053,21 @@ class Chain {
 	}
 
 	mouseup() {
-		const rect = this.canvas.getBoundingClientRect();
-		const x = event.clientX - rect.left;
-		const y = event.clientY - rect.top;
-		// right click
-		if (event.button === 2) {
-			this.blockMenu.style.display = '';
-			this.blockMenuSelect.focus();
-			this.blockMenuText.value = '';
-			this.blockMenu.style.left = x + 'px';
-			this.blockMenu.style.top = y + 'px';
-			return;
-		}
-		switch (this.status) {
-			case Chain.LINK:
-				if (this.target.type === ChainPin.INPUT || (this.target.type === ChainPin.OUTPUT && this.target.toPins.length === 0)) {
-					this.target.linked = false;
+		const block = this.displayedBlocks.reverse().filter((a) => a.contains(this.mousex, this.mousey))[0];
+		switch (true) {
+			case this.status === Chain.LINK:
+				if (this.mainTarget.type === ChainPin.INPUT || ([ChainPin.OUTPUT_RESULT, ChainPin.OUTPUT_SELF].includes(this.mainTarget.type) && this.mainTarget.toPins.length === 0)) {
+					this.mainTarget.linked = false;
 				}
-				this.blocks.every((block) => {
+				this.displayedBlocks.every((block) => {
 					const pin = block.getPinContains(this.mousex, this.mousey);
 					if (!pin) {
-
 						return true;
 					}
-					const pins = [this.target, pin].sort((a, b) => a.type - b.type);
+					const pins = [this.mainTarget, pin].sort((a, b) => a.type - b.type);
 
 					// if two pins isn't output and input, don't link.
-					if (pins.map((a) => a.type).join('') !== '01') {
+					if (!['02', '12'].includes(pins.map((a) => a.type).join(''))) {
 						return false;
 					}
 
@@ -983,18 +1077,48 @@ class Chain {
 					return false;
 				});
 				break;
-			case Chain.MOVE_BLOCK:
+			case this.status === Chain.MOVE_BLOCK:
 				break;
-			default:
-				if (this.target && this.target.constructor === ChainButton) {
-					this.target.click();
+			case this.status === Chain.DEFAULT && event.button === 0:
+				if (this.mainTarget && this.mainTarget.constructor === ChainButton) {
+					this.mainTarget.click();
 				}
 				break;
+			case block && this.status === Chain.DEFAULT && event.button === 2 && !this.constantIDBlockConstructors.includes(block.constructor):
+				this.renameTarget = block;
+				this.renameArea.style.display = '';
+				this.renameText.value = this.renameTarget.value;
+				this.renameText.focus();
+				this.renameArea.style.left = `${this.mousex}px`;
+				this.renameArea.style.top = `${this.mousey}px`;
+				break;
+			case !block && this.status === Chain.DEFAULT && event.button === 2:
+				this.blockMenu.style.display = '';
+				this.blockMenuSelect.focus();
+				this.blockMenuText.value = '';
+				this.blockMenu.style.left = this.mousex + 'px';
+				this.blockMenu.style.top = this.mousey + 'px';
+				break;
+			default:
+				break;
 		}
+
+		this.updateFrame();
+
 		// reset properties
 		this.mousedowing = false;
-		this.target = null;
+		this.mainTarget = null;
 		this.status = Chain.DEFAULT;
+	}
+
+	renameBlock() {
+		const value = this.renameText.value.trim();
+		if (event.keyCode !== 13 || value === '') {
+			return;
+		}
+		this.renameTarget.value = value;
+		this.renameArea.style.display = 'none';
+		this.updateFrame();
 	}
 
 	/**
@@ -1004,10 +1128,19 @@ class Chain {
 	deleteLink(targetPin) {
 		this.links = this.links.filter((link) => {
 			if (link.linkedPins.includes(targetPin)) {
-				const pins = link.linkedPins.sort((a, b) => a.type - b.type);
-				pins[0].deleteLink(pins[1]);
-				pins[1].value = null;
-				pins[1].linked = false;
+				const outputPin = link.linkedPins[0];
+				const inputPin = link.linkedPins[1];
+				outputPin.deleteLink(inputPin);
+				inputPin.value = null;
+				inputPin.linked = false;
+
+				// if parent doesn't have any link, delete it from linkedBlocks.
+				[outputPin.parent, inputPin.parent].forEach((parent) => {
+					if (parent.allPins.filter((pin) => pin.linked).length > 0) {
+						return;
+					}
+					this.linkedBlocks = this.linkedBlocks.filter((a) => a !== parent);
+				});
 				return false;
 			}
 			return true;
@@ -1022,6 +1155,13 @@ class Chain {
 	createLink(outputPin, inputPin) {
 		const link = new ChainLink(this, outputPin, inputPin);
 		outputPin.addLink(inputPin);
+		if (!this.linkedBlocks.includes(inputPin.parent)) {
+			this.linkedBlocks.push(inputPin.parent);
+		}
+		const outputIndex = this.linkedBlocks.indexOf(inputPin.parent) - 1;
+		// if linkedBlocks has parent of outputPin, delete it.
+		this.linkedBlocks = this.linkedBlocks.filter((a) => a !== outputPin.parent);
+		outputIndex > -1 ? this.linkedBlocks.splice(outputIndex, 0, outputPin.parent) : this.linkedBlocks.unshift(outputPin.parent);
 		return link;
 	}
 
@@ -1031,7 +1171,7 @@ class Chain {
 	 */
 	getLink(targetPin) {
 		const link = this.links.filter((link) => link.linkedPins.includes(targetPin))[0];
-		return (link) ? link : null;
+		return link;
 	}
 
 	/**
@@ -1039,15 +1179,68 @@ class Chain {
 	 * @param {ChainBlock} targetBlock
 	 */
 	sortBlocks(targetBlock) {
-		this.blocks = this.blocks.sort((a, b) => (a === targetBlock) ? 1 : 0);
+		this.displayedBlocks = this.displayedBlocks.sort((a, b) => (a === targetBlock) ? 1 : 0);
 	}
 
 	/**
-	 * @param {String} code
-	 * @returns {undefined}
+	 * set new code to iframe
 	 */
-	exec(code) {
-		return eval(this.plugin + '\n' + code);
+	updateFrame() {
+		// reset index of view
+		this.displayedBlocks.forEach((a) => {
+			if (a.constructor === ChainViewBlock) {
+				a.index = -1;
+				a.value = '';
+			}
+		});
+
+		// send all
+		this.expressions = [];
+		let viewIndex = 0;
+		// set expressions to iframe
+		this.linkedBlocks.forEach((block) => {
+			block.allPins.forEach((pin) => {
+				if (pin.type === ChainPin.INPUT) {
+					return;
+				}
+				const isExecutableBlock = [ChainFunctionBlock, ChainOperatorBlock, ChainIfBlock, ChainRepeatBlock].includes(block.constructor);
+				const viewBlocks = pin.toPins.map(((a) => a.parent)).filter((a) => a.constructor === ChainViewBlock);
+				switch (true) {
+					case pin.linked && viewBlocks.length === 0:
+						pin.send();
+						break;
+					case pin.linked && viewBlocks.length > 0:
+						// set index of view
+						viewBlocks.forEach((a) => a.index = viewIndex);
+					case !pin.linked && isExecutableBlock && pin.type === ChainPin.OUTPUT_RESULT:
+						this.expressions.push(block.expression);
+						viewIndex += 1;
+						break;
+					default:
+						break;
+				}
+			});
+		});
+
+		const d = new DOMParser().parseFromString(this.editor.getValue(), 'text/html');
+		const s = document.createElement('script');
+		s.innerText = `window.parent.postMessage(${JSON.stringify(this.expressions)}.map((a) =>  { try { return String((0, eval)(a)); } catch (e) { return String(e); } }), '*')`;
+		d.body.appendChild(s);
+		this.iframe.src = `data:text/html, ${[d.doctype ? new XMLSerializer().serializeToString(d.doctype) : '', d.documentElement.outerHTML].join('')}`;
+	}
+
+	/**
+	 * set a return value to View Block
+	 */
+	updateViewBlocks() {
+		const data = event.data;
+		this.linkedBlocks.forEach((block) => {
+			if (block.constructor !== ChainViewBlock) {
+				return;
+			}
+			const index = block.index;
+			block.value = data[index];
+		});
 	}
 
 	static get DEFAULT() {
