@@ -14,4 +14,4 @@ Chain is a visual programming language that allows user to use methods of JavaSc
 
 ## Play Chain!
 
-You can read [`How to play Chain`](https://github.com/mimorisuzuko/chain/wiki/How-to-play-Chain) and play Chain on the latest Chrome.
+You can read [`How to play Chain`](https://github.com/mimorisuzuko/chain/wiki/How-to-play-Chain-lang=%22ja%22) and play Chain on the latest Chrome.
