@@ -1,11 +1,50 @@
 const React = require('react');
 const Immutable = require('immutable');
 const Radium = require('radium');
+const _ = require('lodash');
 const {black, lblack, red, blue} = require('../color.jsx');
-const {Record} = Immutable;
+const {Record, List} = Immutable;
 const {Component} = React;
 
-class BlockModel extends Record({ x: 0, y: 0, value: 'Hello, World!' }) {
+class PinModel extends Record({ type: 0, connected: false }) {
+	static get RADIUS() {
+		return 8;
+	}
+
+	static get S_RADIUS() {
+		return 4;
+	}
+}
+
+class Pin extends Component {
+	render() {
+		const {props: {model, x, y}} = this;
+		const {RADIUS: r, S_RADIUS: sr} = PinModel;
+		const width = r * 2;
+
+		return (
+			<svg style={{
+				display: 'block',
+				width,
+				height: width,
+				position: 'absolute',
+				left: x,
+				top: y
+			}}>
+				<circle strokeWidth={1} stroke='white' cx={r} cy={r} r={sr} fill={model.get('type') ? 'white' : 'none'} />
+				{model.get('connected') ? <circle strokeWidth={1} stroke='white' cx={r} cy={r} r={r - 1} fill='none' /> : null}
+			</svg>
+		);
+	}
+}
+
+class BlockModel extends Record({
+	x: 0,
+	y: 0,
+	value: 'Hello, World!',
+	inputPins: List([new PinModel({ type: 1 })]),
+	outputPins: List([new PinModel({ type: 0 })])
+}) {
 
 	/**
 	 * @param {number} dx
@@ -15,6 +54,18 @@ class BlockModel extends Record({ x: 0, y: 0, value: 'Hello, World!' }) {
 		const {x, y} = this;
 
 		return this.merge({ x: x + dx, y: y + dy });
+	}
+
+	addOutputPin() {
+		const {outputPins} = this;
+
+		return this.set('outputPins', outputPins.push(new PinModel({ type: 0 })));
+	}
+
+	removeOutputPin() {
+		const {outputPins} = this;
+
+		return this.set('outputPins', outputPins.pop());
 	}
 
 	static get WIDTH() {
@@ -86,8 +137,18 @@ class Block extends Component {
 	}
 
 	render() {
+		const {RADIUS: radius} = PinModel;
+		const diameter = radius * 2;
 		const {WIDTH: width} = BlockModel;
 		const {props: {model, onChange, remove}} = this;
+		const pins = _.map([
+			[model.get('inputPins'), -diameter],
+			[model.get('outputPins'), width]
+		], ([pins, dx]) => pins.map((a, i) => {
+			const cx = dx;
+			const cy = i * diameter;
+			return <Pin model={a} x={cx} y={cy} />;
+		}));
 
 		return (
 			<div data-movable={true} onMouseDown={this.onMouseDown.bind(this)} style={{
@@ -102,14 +163,29 @@ class Block extends Component {
 			}}>
 				<div data-movable={true}>
 					<Button value='×' backgroundColor={red} onClick={remove} />
+					<Button value='-' backgroundColor={lblack} onClick={this.removeOutputPin.bind(this)} />
+					<Button value='+' backgroundColor={lblack} onClick={this.addOutputPin.bind(this)} />
 				</div>
 				<div data-movable={true} style={{
 					padding: '10px 5px 5px'
 				}}>
 					<Textarea value={model.get('value')} onChange={this.onChangeTextarea.bind(this)} />
 				</div>
+				{pins}
 			</div>
 		);
+	}
+
+	removeOutputPin() {
+		const {props: {model, update}} = this;
+
+		update(model.removeOutputPin());
+	}
+
+	addOutputPin() {
+		const {props: {model, update}} = this;
+
+		update(model.addOutputPin());
 	}
 
 	/**
