@@ -275,4 +275,4 @@ class Block extends Component {
 	}
 }
 
-module.exports = { Block, BlockModel };
+module.exports = { Block, BlockModel, Pin, PinModel };
