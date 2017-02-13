@@ -69,8 +69,8 @@ class App extends Component {
 	link(oBlockIndex, oPinIndex, iBlockIndex, iPinIndex) {
 		const {state: {blocks, links}} = this;
 
-		blocks[oBlockIndex] = blocks[oBlockIndex].setOutputPinValue(oPinIndex, 'connected', true);
-		blocks[iBlockIndex] = blocks[iBlockIndex].setIutputPinValue(iPinIndex, 'connected', true);
+		blocks[oBlockIndex] = blocks[oBlockIndex].toggleConnectionPin('output', oPinIndex);
+		blocks[iBlockIndex] = blocks[iBlockIndex].toggleConnectionPin('input', iPinIndex);
 		links.push({ out: [oBlockIndex, oPinIndex], in: [iBlockIndex, iPinIndex] });
 		this.setState({ blocks });
 	}
@@ -90,9 +90,23 @@ class App extends Component {
 	 * @param {number} index
 	 */
 	removeBlock(index) {
-		const {state: {blocks}} = this;
+		const {state: {blocks, links: _links}} = this;
+		const links = _.filter(_links, ({out: [oBlockIndex, oPinIndex], in: [iBlockIndex, iPinIndex]}) => {
+			if (oBlockIndex === index) {
+				blocks[iBlockIndex] = blocks[iBlockIndex].toggleConnectionPin('input', iPinIndex);
+				return false;
+			} else if (iBlockIndex === index) {
+				blocks[oBlockIndex] = blocks[oBlockIndex].toggleConnectionPin('output', oPinIndex);
+				return false;
+			}
 
-		this.setState({ blocks: _.filter(blocks, (a, i) => i !== index) });
+			return true;
+		});
+
+		this.setState({
+			blocks: _.filter(blocks, (a, i) => i !== index),
+			links
+		});
 	}
 }
 

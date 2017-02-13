@@ -57,27 +57,16 @@ class BlockModel extends Record({
 	}
 
 	/**
+	 * @param {string} prefix
 	 * @param {number} index
-	 * @param {string} k
-	 * @param {any} v
 	 */
-	setOutputPinValue(index, k, v) {
-		const {outputPins} = this;
+	toggleConnectionPin(prefix, index) {
+		const k = `${prefix}Pins`;
+		const pins = this.get(k);
+		const pin = pins.get(index);
+		const connected = pin.get('connected');
 
-		const pin = outputPins.get(index);
-		return this.set('outputPins', outputPins.set(index, pin.set(k, v)));
-	}
-
-	/**
-	 * @param {number} index
-	 * @param {string} k
-	 * @param {any} v
-	 */
-	setIutputPinValue(index, k, v) {
-		const {inputPins} = this;
-
-		const pin = inputPins.get(index);
-		return this.set('inputPins', inputPins.set(index, pin.set(k, v)));
+		return this.set(k, pins.set(index, pin.set('connected', !connected)));
 	}
 
 	addOutputPin() {
