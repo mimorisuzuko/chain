@@ -6,7 +6,7 @@ const {black, lblack, red, blue} = require('../color.jsx');
 const {Record, List} = Immutable;
 const {Component} = React;
 
-class PinModel extends Record({ type: 0, connected: false }) {
+class PinModel extends Record({ type: 0, connected: false, index: 0 }) {
 	static get RADIUS() {
 		return 8;
 	}
@@ -59,7 +59,7 @@ class BlockModel extends Record({
 	addOutputPin() {
 		const {outputPins} = this;
 
-		return this.set('outputPins', outputPins.push(new PinModel({ type: 0 })));
+		return this.set('outputPins', outputPins.push(new PinModel({ type: 0, index: outputPins.size })));
 	}
 
 	removeOutputPin() {
@@ -70,6 +70,25 @@ class BlockModel extends Record({
 
 	static get WIDTH() {
 		return 180;
+	}
+
+	/**
+	 * @param {PinModel} pin
+	 */
+	static pinPosition(pin) {
+		const {WIDTH: w} = BlockModel;
+		const {RADIUS: r} = PinModel;
+		const d = r * 2;
+		const type = pin.get('type');
+		const index = pin.get('index');
+
+		if (type === 0) {
+			return [w, d * index];
+		} else if (type === 1) {
+			return [-d, d * index];
+		}
+
+		return [0, 0];
 	}
 }
 
@@ -139,15 +158,14 @@ class Block extends Component {
 	render() {
 		const {RADIUS: radius} = PinModel;
 		const diameter = radius * 2;
-		const {WIDTH: width} = BlockModel;
+		const {WIDTH: width, pinPosition} = BlockModel;
 		const {props: {model, onChange, remove}} = this;
 		const pins = _.map([
 			[model.get('inputPins'), -diameter],
 			[model.get('outputPins'), width]
 		], ([pins, dx]) => pins.map((a, i) => {
-			const cx = dx;
-			const cy = i * diameter;
-			return <Pin model={a} x={cx} y={cy} />;
+			const [x, y] = pinPosition(a);
+			return <Pin model={a} x={x} y={y} />;
 		}));
 
 		return (
