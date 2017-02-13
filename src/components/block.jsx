@@ -31,7 +31,7 @@ class Pin extends Component {
 				left: cx - r,
 				top: cy - r
 			}}>
-				<circle strokeWidth={1} stroke='white' cx={r} cy={r} r={sr} fill={model.get('type') ? 'white' : 'none'} />
+				<circle strokeWidth={1} stroke='white' cx={r} cy={r} r={sr} fill={model.get('type') ? 'none' : 'white'} />
 				{model.get('connected') ? <circle strokeWidth={1} stroke='white' cx={r} cy={r} r={r - 1} fill='none' /> : null}
 			</svg>
 		);
