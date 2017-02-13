@@ -56,6 +56,30 @@ class BlockModel extends Record({
 		return this.merge({ x: x + dx, y: y + dy });
 	}
 
+	/**
+	 * @param {number} index
+	 * @param {string} k
+	 * @param {any} v
+	 */
+	setOutputPinValue(index, k, v) {
+		const {outputPins} = this;
+
+		const pin = outputPins.get(index);
+		return this.set('outputPins', outputPins.set(index, pin.set(k, v)));
+	}
+
+	/**
+	 * @param {number} index
+	 * @param {string} k
+	 * @param {any} v
+	 */
+	setIutputPinValue(index, k, v) {
+		const {inputPins} = this;
+
+		const pin = inputPins.get(index);
+		return this.set('inputPins', inputPins.set(index, pin.set(k, v)));
+	}
+
 	addOutputPin() {
 		const {outputPins} = this;
 
@@ -95,9 +119,9 @@ class BlockModel extends Record({
 		const index = pin.get('index');
 
 		if (type === 0) {
-			return [w + r, d * index + r];
+			return [w + r, d * index + r - 1];
 		} else if (type === 1) {
-			return [-r, d * index + r];
+			return [-r - 1, d * index + r - 1];
 		}
 
 		return [0, 0];

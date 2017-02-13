@@ -13,8 +13,10 @@ class App extends Component {
 
 		this.state = {
 			blocks: [new BlockModel({ x: 100, y: 100 }), new BlockModel({ x: 500, y: 80 })],
-			links: [{ out: [0, 0], in: [1, 0] }]
+			links: []
 		};
+
+		this.link(0, 0, 1, 0);
 	}
 
 	render() {
@@ -56,6 +58,21 @@ class App extends Component {
 				</div>
 			</div>
 		);
+	}
+
+	/**
+	 * @param {number} oBlockIndex
+	 * @param {number} oPinIndex
+	 * @param {number} iBlockIndex
+	 * @param {number} iPinIndex
+	 */
+	link(oBlockIndex, oPinIndex, iBlockIndex, iPinIndex) {
+		const {state: {blocks, links}} = this;
+
+		blocks[oBlockIndex] = blocks[oBlockIndex].setOutputPinValue(oPinIndex, 'connected', true);
+		blocks[iBlockIndex] = blocks[iBlockIndex].setIutputPinValue(iPinIndex, 'connected', true);
+		links.push({ out: [oBlockIndex, oPinIndex], in: [iBlockIndex, iPinIndex] });
+		this.setState({ blocks });
 	}
 
 	/**
