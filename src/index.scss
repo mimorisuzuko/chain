@@ -10,8 +10,23 @@ body {
 	background-color: rgb(30, 30, 30);
 	font-family: Menlo, Monaco, 'Courier New', monospace;
 	font-size: 0.75em;
+	user-select: none;
 
 	* {
 		color: rgb(212, 212, 212);
 	}
+
+	&.cursor-move {
+		* {
+			cursor: move;
+		}
+	}
+}
+
+textarea {
+	font: inherit;
+}
+
+a {
+	text-decoration: none;
 }
