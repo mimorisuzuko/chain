@@ -18,7 +18,7 @@ class PinModel extends Record({ type: 0, connected: false, index: 0 }) {
 
 class Pin extends Component {
 	render() {
-		const {props: {model, x, y}} = this;
+		const {props: {model, cx, cy}} = this;
 		const {RADIUS: r, S_RADIUS: sr} = PinModel;
 		const width = r * 2;
 
@@ -28,8 +28,8 @@ class Pin extends Component {
 				width,
 				height: width,
 				position: 'absolute',
-				left: x,
-				top: y
+				left: cx - r,
+				top: cy - r
 			}}>
 				<circle strokeWidth={1} stroke='white' cx={r} cy={r} r={sr} fill={model.get('type') ? 'white' : 'none'} />
 				{model.get('connected') ? <circle strokeWidth={1} stroke='white' cx={r} cy={r} r={r - 1} fill='none' /> : null}
@@ -68,6 +68,18 @@ class BlockModel extends Record({
 		return this.set('outputPins', outputPins.pop());
 	}
 
+	/**
+	 * @param {PinModel} pin
+	 * @returns {number[]}
+	 */
+	absoluteCentralPositionOf(pin) {
+		const {centralPositionOf} = BlockModel;
+		const [dx, dy] = centralPositionOf(pin);
+		const {x, y} = this;
+
+		return [x + dx, y + dy];
+	}
+
 	static get WIDTH() {
 		return 180;
 	}
@@ -75,7 +87,7 @@ class BlockModel extends Record({
 	/**
 	 * @param {PinModel} pin
 	 */
-	static pinPosition(pin) {
+	static centralPositionOf(pin) {
 		const {WIDTH: w} = BlockModel;
 		const {RADIUS: r} = PinModel;
 		const d = r * 2;
@@ -83,9 +95,9 @@ class BlockModel extends Record({
 		const index = pin.get('index');
 
 		if (type === 0) {
-			return [w, d * index];
+			return [w + r, d * index + r];
 		} else if (type === 1) {
-			return [-d, d * index];
+			return [-r, d * index + r];
 		}
 
 		return [0, 0];
@@ -158,14 +170,14 @@ class Block extends Component {
 	render() {
 		const {RADIUS: radius} = PinModel;
 		const diameter = radius * 2;
-		const {WIDTH: width, pinPosition} = BlockModel;
+		const {WIDTH: width, centralPositionOf} = BlockModel;
 		const {props: {model, onChange, remove}} = this;
 		const pins = _.map([
-			[model.get('inputPins'), -diameter],
-			[model.get('outputPins'), width]
+			[model.get('inputPins')],
+			[model.get('outputPins')]
 		], ([pins, dx]) => pins.map((a, i) => {
-			const [x, y] = pinPosition(a);
-			return <Pin model={a} x={x} y={y} />;
+			const [cx, cy] = centralPositionOf(a);
+			return <Pin model={a} cx={cx} cy={cy} />;
 		}));
 
 		return (
