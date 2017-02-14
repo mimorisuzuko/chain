@@ -116,7 +116,8 @@ class App extends Component {
 	 * @param {string} id
 	 */
 	removeBlock(id) {
-		let {state: {blocks, links: _links}} = this;
+		const {state: {blocks: _blocks, links: _links}} = this;
+		let blocks = _blocks.delete(id);
 		const links = _links.filter(({out: [oBlockId, oPinIndex], in: [iBlockId, iPinIndex]}) => {
 			if (oBlockId === id) {
 				const block = blocks.get(iBlockId);
@@ -133,10 +134,7 @@ class App extends Component {
 			return true;
 		});
 
-		this.setState({
-			blocks: blocks.delete(id),
-			links
-		});
+		this.setState({ blocks, links });
 	}
 }
 
