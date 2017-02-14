@@ -5,7 +5,7 @@ const Immutable = require('immutable');
 const {Block, BlockModel} = require('./components/block.jsx');
 const {Link} = require('./components/link.jsx');
 const {Component} = React;
-const {List} = Immutable;
+const {List, Map} = Immutable;
 
 require('./index.scss');
 
@@ -13,20 +13,19 @@ class App extends Component {
 	constructor(props) {
 		super(props);
 
-		const blocks = {};
-		const a = new BlockModel({ x: 100, y: 100 });
-		const b = new BlockModel({ x: 500, y: 80 });
-		blocks[a.get('id')] = a;
-		blocks[b.get('id')] = b;
-
 		this.state = {
-			blocks: Immutable.fromJS(blocks),
+			blocks: Map(),
 			links: List()
 		};
 
 		setTimeout(() => {
-			console.log('Test: link()');
-			this.link(a.get('id'), 0, b.get('id'), 0);
+			console.log('Debug: createBlock()');
+			this.createBlock(100, 100);
+			this.createBlock(500, 80);
+
+			console.log('Debug: link()');
+			const [a, b] = _.keys(this.state.blocks.toJS());
+			this.link(a, 0, b, 0);
 		}, 2000);
 	}
 
@@ -89,6 +88,18 @@ class App extends Component {
 			blocks: blocks.set(oBlockId, oBlock.toggleConnectionPin('output', oPinIndex)).set(iBlockId, iBlock.toggleConnectionPin('input', iPinIndex)),
 			links: links.push({ out: [oBlockId, oPinIndex], in: [iBlockId, iPinIndex] })
 		});
+	}
+
+	/**
+	 * @param {number} x
+	 * @param {number} y
+	 */
+	createBlock(x, y) {
+		const {state: {blocks}} = this;
+		const block = new BlockModel({ x, y });
+		const id = block.get('id');
+
+		this.setState({ blocks: blocks.set(id, block) });
 	}
 
 	/**
