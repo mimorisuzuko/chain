@@ -6,7 +6,7 @@ const {Component} = React;
 class Link extends Component {
 	render() {
 		const {points} = Link;
-		const {props: {from: [ax, ay], to: [bx, by]}} = this;
+		const {props: {pintopin: [[ax, ay], [bx, by]]}} = this;
 
 		return <polyline points={points(ax, ay, bx, by)} fill='none' strokeWidth={3} stroke='white' />;
 	}

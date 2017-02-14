@@ -39,12 +39,22 @@ class Pin extends Component {
 }
 
 class BlockModel extends Record({
+	id: '',
 	x: 0,
 	y: 0,
 	value: 'Hello, World!',
 	inputPins: List([new PinModel({ type: 1 })]),
 	outputPins: List([new PinModel({ type: 0 })])
 }) {
+
+	/**
+	 * @param {Object} o
+	 */
+	constructor(o) {
+		const id = `block${Date.now()}`;
+
+		super(_.assign({ id }, o));
+	}
 
 	/**
 	 * @param {number} dx
