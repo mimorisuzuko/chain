@@ -4,6 +4,7 @@ const _ = require('lodash');
 const Immutable = require('immutable');
 const {Block, BlockModel} = require('./components/block.jsx');
 const {Link, LinkModel} = require('./components/link.jsx');
+const {BlockCreator, BlockCreatorModel} = require('./components/block-creator.jsx');
 const {Component} = React;
 const {List, Map} = Immutable;
 
@@ -16,23 +17,18 @@ class App extends Component {
 		this.connectMover = null;
 		this.connectEnder = null;
 		this.tempBlockAndPin = null;
+		this.isMouseDown = false;
 		this.state = {
 			blocks: Map(),
 			links: List(),
 			tempLink: new LinkModel(),
-			onConnectPinEnd: null
+			onConnectPinEnd: null,
+			blockCreator: new BlockCreatorModel()
 		};
-
-		setTimeout(() => {
-			console.log('Debug: createBlock()');
-			this.createBlock(100, 100);
-			this.createBlock(400, 80);
-			this.createBlock(700, 100);
-		}, 1000);
 	}
 
 	render() {
-		const {state: {blocks: _blocks, links: _links, tempLink, onConnectPinEnd}} = this;
+		const {state: {blocks: _blocks, links: _links, tempLink, onConnectPinEnd, blockCreator}} = this;
 		let blocks = _blocks;
 		const links = _links.map(({out: [oBlockId, oPinIndex], in: [iBlockId, iPinIndex]}) => {
 			const pintopin = _.map([[oBlockId, 'outputPins', oPinIndex], [iBlockId, 'inputPins', iPinIndex]], (key) => {
@@ -52,12 +48,16 @@ class App extends Component {
 				height: '100%',
 				position: 'relative'
 			}}>
-				<svg style={{
-					position: 'absolute',
-					width: '100%',
-					height: '100%',
-					display: 'block'
-				}}>
+				<svg
+					onMouseDown={this.onMouseDown.bind(this)}
+					onMouseMove={this.onMouseMove.bind(this)}
+					onMouseUp={this.onMouseUp.bind(this)}
+					style={{
+						position: 'absolute',
+						width: '100%',
+						height: '100%',
+						display: 'block'
+					}}>
 					{links}
 					<Link model={tempLink} />
 				</svg>
@@ -76,9 +76,60 @@ class App extends Component {
 							/>
 						))
 					}
+					{<BlockCreator model={blockCreator} add={this.addBlock.bind(this)} update={this.updateBlockCreator.bind(this)} />}
 				</div>
 			</div>
 		);
+	}
+
+	/**
+	 * @param {MouseEvent} e
+	 */
+	mouse(e) {
+		const {clientX, clientY} = e;
+		const {left, top} = ReactDOM.findDOMNode(this).getBoundingClientRect();
+		const x = clientX - left;
+		const y = clientY - top;
+
+		return [x, y];
+	}
+
+	/**
+	 * @param {MouseEvent} e
+	 */
+	onMouseDown(e) {
+		const {target, currentTarget} = e;
+
+		if (target !== currentTarget) { return; }
+		this.isMouseDown = true;
+	}
+
+	/**
+	 * @param {MouseEvent} e
+	 */
+	onMouseMove(e) {
+		this.isMouseDown = false;
+	}
+
+	/**
+	 * @param {MouseEvent} e
+	 */
+	onMouseUp(e) {
+		const {isMouseDown, state: {blockCreator}} = this;
+		const [x, y] = this.mouse(e);
+
+		if (isMouseDown) {
+			this.setState({ blockCreator: blockCreator.toggle().merge({ x, y }) });
+		}
+
+		this.isMouseDown = false;
+	}
+
+	/**
+	 * @param {BlockCreatorModel} model
+	 */
+	updateBlockCreator(model) {
+		this.setState({ blockCreator: model });
 	}
 
 	/**
@@ -125,10 +176,7 @@ class App extends Component {
 	 */
 	onConnectMove(e) {
 		const {state: {tempLink}} = this;
-		const {clientX, clientY} = e;
-		const {left, top} = ReactDOM.findDOMNode(this).getBoundingClientRect();
-		const x = clientX - left;
-		const y = clientY - top;
+		const [x, y] = this.mouse(e);
 
 		this.setState({ tempLink: tempLink.end(x, y) });
 	}
@@ -141,16 +189,15 @@ class App extends Component {
 		this.setState({ tempLink: tempLink.set('visible', false), onConnectPinEnd: null });
 	}
 
-	/**
-	 * @param {number} x
-	 * @param {number} y
-	 */
-	createBlock(x, y) {
-		const {state: {blocks}} = this;
-		const block = new BlockModel({ x, y });
+	addBlock() {
+		const {state: {blockCreator, blocks}} = this;
+		const x = blockCreator.get('x');
+		const y = blockCreator.get('y');
+		const value = blockCreator.get('value');
+		const block = new BlockModel({ x, y, value });
 		const id = block.get('id');
 
-		this.setState({ blocks: blocks.set(id, block) });
+		this.setState({ blocks: blocks.set(id, block), blockCreator: blockCreator.set('visible', false) });
 	}
 
 	/**

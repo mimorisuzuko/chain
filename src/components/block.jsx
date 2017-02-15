@@ -75,7 +75,7 @@ class BlockModel extends Record({
 	id: '',
 	x: 0,
 	y: 0,
-	value: 'Hello, World!',
+	value: '',
 	inputPins: List([new PinModel({ type: 1 })]),
 	outputPins: List([new PinModel({ type: 0 })])
 }) {
