@@ -1,9 +1,12 @@
 const React = require('react');
 const Immutable = require('immutable');
 const Radium = require('radium');
+const _ = require('lodash');
 const {black, lblack, blue} = require('../color.jsx');
+const {BlockModel: {BLOCK_LIST}} = require('./block.jsx');
 const {Record} = Immutable;
 const {Component} = React;
+const blockNames = _.keys(BLOCK_LIST);
 
 const Textarea = Radium(class Textarea extends Component {
 	render() {
@@ -18,6 +21,8 @@ const Textarea = Radium(class Textarea extends Component {
 				outline: 'none',
 				borderColor: 'transparent',
 				borderWidth: 1,
+				width: '100%',
+				boxSizing: 'border-box',
 				borderStyle: 'solid',
 				':focus': {
 					borderColor: blue
@@ -64,17 +69,24 @@ class Button extends Component {
 	}
 }
 
-class BlockCreatorModel extends Record({ x: 0, y: 0, value: '', visible: false }) {
+class BlockCreatorModel extends Record({ x: 0, y: 0, value: '', visible: false, name: blockNames[0] }) {
 	toggle() {
 		const {visible} = this;
 
 		return this.set('visible', !visible);
 	}
+
+	static get WIDTH() {
+		return 180;
+	}
 }
 
-class BlockCreator extends Component {
+const BlockCreator = Radium(class BlockCreator extends Component {
 	render() {
+		const {WIDTH: width} = BlockCreatorModel;
 		const {props: {model, add}} = this;
+		const name = model.get('name');
+		const {editablevalue} = BLOCK_LIST[name];
 
 		return (
 			model.get('visible') ?
@@ -83,11 +95,27 @@ class BlockCreator extends Component {
 					left: model.get('x'),
 					top: model.get('y'),
 					padding: 10,
+					width,
 					backgroundColor: black,
 					border: `1px solid ${lblack}`,
 					boxShadow: '0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2)'
 				}}>
-					<Textarea value={model.get('value')} onChange={this.onChangeTextarea.bind(this)} />
+					<select onChange={this.onChangeSelect.bind(this)} value={name} style={{
+						display: 'block',
+						width: '100%',
+						marginBottom: 5,
+						backgroundColor: lblack,
+						borderWidth: 1,
+						borderStyle: 'solid',
+						borderColor: 'transparent',
+						outline: 'none',
+						':focus': {
+							borderColor: blue
+						}
+					}}>
+						{_.map(blockNames, (a, i) => <option value={a}>{`${_.capitalize(a)} Block`}</option>)}
+					</select>
+					{editablevalue !== false ? <Textarea value={model.get('value')} onChange={this.onChangeTextarea.bind(this)} /> : null}
 					<Button value='add' onClick={add} />
 				</div>
 				: null
@@ -103,6 +131,16 @@ class BlockCreator extends Component {
 
 		update(model.set('value', value));
 	}
-}
+
+	/**
+	 * @param {Event} e
+	 */
+	onChangeSelect(e) {
+		const {currentTarget: {value}} = e;
+		const {props: {model, update}} = this;
+
+		update(model.set('name', value));
+	}
+});
 
 module.exports = { BlockCreator, BlockCreatorModel };

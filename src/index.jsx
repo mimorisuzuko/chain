@@ -194,7 +194,8 @@ class App extends Component {
 		const x = blockCreator.get('x');
 		const y = blockCreator.get('y');
 		const value = blockCreator.get('value');
-		const block = new BlockModel({ x, y, value });
+		const name = blockCreator.get('name');
+		const block = new BlockModel({ x, y, value, name });
 		const id = block.get('id');
 
 		this.setState({ blocks: blocks.set(id, block), blockCreator: blockCreator.set('visible', false) });

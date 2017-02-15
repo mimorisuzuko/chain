@@ -78,17 +78,22 @@ class BlockModel extends Record({
 	value: '',
 	inputPinsMinlength: 0,
 	outputPinsMinlength: 0,
-	inputPins: List([new PinModel({ type: 1 })]),
-	outputPins: List([new PinModel({ type: 0 })])
+	inputPins: List(),
+	outputPins: List(),
+	editablepin: true,
+	editablevalue: true,
+	color: 'white'
 }) {
 
 	/**
 	 * @param {Object} o
 	 */
 	constructor(o) {
+		const {BLOCK_LIST: list} = BlockModel;
 		const id = `block${Date.now()}`;
+		const {name} = o;
 
-		super(_.assign({ id }, o));
+		super(_.assign({ id }, o, list[name]));
 	}
 
 	/**
@@ -111,6 +116,23 @@ class BlockModel extends Record({
 		const {x, y} = this;
 
 		return [x + dx, y + dy];
+	}
+
+	static get BLOCK_LIST() {
+		return {
+			value: {
+				editablepin: false,
+				outputPins: List([new PinModel({ type: 0 })]),
+				color: 'rgb(156, 220, 254)'
+			},
+			view: {
+				value: '',
+				editablepin: false,
+				editablevalue: false,
+				inputPins: List([new PinModel({ type: 1 })]),
+				color: 'rgb(197, 134, 192)'
+			}
+		};
 	}
 
 	static get WIDTH() {
@@ -159,23 +181,18 @@ class Button extends Component {
 	}
 }
 
-const Textarea = Radium(class _Textarea extends Component {
+const Textarea = Radium(class Textarea extends Component {
 	render() {
-		const {props: {value}} = this;
+		const {props: {value, editable}} = this;
 
 		return (
-			<textarea value={value} onChange={this.onChange.bind(this)} style={{
+			<textarea readOnly={!editable} value={value} onChange={this.onChange.bind(this)} style={{
 				display: 'block',
-				borderWidth: 1,
-				borderStyle: 'solid',
-				borderColor: 'transparent',
+				border: 'none',
 				outline: 'none',
 				backgroundColor: lblack,
 				width: '100%',
 				boxSizing: 'border-box',
-				':focus': {
-					borderColor: blue
-				}
 			}} />
 		);
 	}
@@ -226,13 +243,19 @@ class Block extends Component {
 			}}>
 				<div data-movable={true}>
 					<Button value='×' backgroundColor={red} onClick={remove} />
-					<Button value='-' backgroundColor={lblack} onClick={this.removeOutputPin.bind(this)} />
-					<Button value='+' backgroundColor={lblack} onClick={this.addOutputPin.bind(this)} />
+					{model.get('editablepin') ? [
+						<Button value='-' backgroundColor={lblack} onClick={this.removeOutputPin.bind(this)} />,
+						<Button value='+' backgroundColor={lblack} onClick={this.addOutputPin.bind(this)} />
+					] : null}
 				</div>
 				<div data-movable={true} style={{
 					padding: '10px 5px 5px'
 				}}>
-					<Textarea value={model.get('value')} onChange={this.onChangeTextarea.bind(this)} />
+					<div style={{
+						borderLeft: `5px solid ${model.get('color')}`
+					}}>
+						<Textarea value={model.get('value')} onChange={this.onChangeTextarea.bind(this)} editable={model.get('editablevalue')} />
+					</div>
 				</div>
 				{pins}
 			</div>
