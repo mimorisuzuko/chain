@@ -28,11 +28,6 @@ class App extends Component {
 			this.createBlock(100, 100);
 			this.createBlock(400, 80);
 			this.createBlock(700, 100);
-
-			console.log('Debug: connectPins()');
-			const [a, b, c] = _.keys(this.state.blocks.toJS());
-			this.connectPins(a, 0, b, 0);
-			this.connectPins(a, 0, c, 0);
 		}, 1000);
 	}
 
@@ -87,21 +82,26 @@ class App extends Component {
 	}
 
 	/**
-	 * @param {string} id
+	 * @param {string} blockId
 	 * @param {PinModel} pin
 	 */
-	onConnectPinStart(id, pin) {
-		const {state: {blocks, tempLink}, onConnectPinEnd} = this;
+	onConnectPinStart(blockId, pin) {
+		const {state: {blocks, tempLink, links}, onConnectPinEnd} = this;
 		const connectPinMover = this.onConnectMove.bind(this);
 		const connectPinEnder = this.onConnectEnd.bind(this);
-		const [x, y] = blocks.get(id).absoluteCentralPositionOf(pin);
+		const [x, y] = blocks.get(blockId).absoluteCentralPositionOf(pin);
+		const pinIndex = pin.get('index');
 
 		document.addEventListener('mousemove', connectPinMover);
 		document.addEventListener('mouseup', connectPinEnder);
-		this.tempBlockAndPin = [id, pin];
+		this.tempBlockAndPin = [blockId, pin];
 		this.connectPinMover = connectPinMover;
 		this.connectPinEnder = connectPinEnder;
-		this.setState({ tempLink: tempLink.start(x, y), onConnectPinEnd });
+		this.setState({
+			tempLink: tempLink.start(x, y),
+			onConnectPinEnd,
+			links: pin.get('type') === 1 ? links.filter(({ in: [id, index]}) => !(blockId === id && pinIndex === index)) : links
+		});
 	}
 
 	/**
@@ -109,13 +109,15 @@ class App extends Component {
 	 * @param {PinModel} pin0
 	 */
 	onConnectPinEnd(id0, pin0) {
-		const {tempBlockAndPin: [id1, pin1]} = this;
-		const [type0, type1] = _.map([pin0, pin1], (a) => a.get('type'));
+		const {tempBlockAndPin: [id1, pin1], state: {links}} = this;
+		const [[type0, index0], [type1, index1]] = _.map([pin0, pin1], (a) => [a.get('type'), a.get('index')]);
 
 		if (id0 === id1 || type0 === type1) { return; }
-		const [[a, b], [c, d]] = _.sortBy([[id0, pin0, type0], [id1, pin1, type1]], 2);
+		const [[oBlockId, oPinIndex], [iBlockId, iPinIndex]] = _.sortBy([[id0, index0, type0], [id1, index1, type1]], 2);
 
-		this.connectPins(a, b.get('index'), c, d.get('index'));
+		this.setState({
+			links: links.filter(({in: [id, index]}) => !(id === iBlockId && iPinIndex === index)).push({ out: [oBlockId, oPinIndex], in: [iBlockId, iPinIndex] })
+		});
 	}
 
 	/**
@@ -137,18 +139,6 @@ class App extends Component {
 		document.removeEventListener('mousemove', connectMover);
 		document.removeEventListener('mouseup', connectEnder);
 		this.setState({ tempLink: tempLink.set('visible', false), onConnectPinEnd: null });
-	}
-
-	/**
-	 * @param {string} oBlockId
-	 * @param {number} oPinIndex
-	 * @param {string} iBlockId
-	 * @param {number} iPinIndex
-	 */
-	connectPins(oBlockId, oPinIndex, iBlockId, iPinIndex) {
-		const {state: {links}} = this;
-
-		this.setState({ links: links.push({ out: [oBlockId, oPinIndex], in: [iBlockId, iPinIndex] }) });
 	}
 
 	/**
