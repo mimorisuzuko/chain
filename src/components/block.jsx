@@ -207,7 +207,7 @@ class Block extends Component {
 	removeOutputPin() {
 		const {props: {model, update}} = this;
 
-		update(model.updateIn(['outputPins'], (pins) => pins.pop()));
+		update(model.updateIn(['outputPins'], (pins) => pins.pop()), true);
 	}
 
 	addOutputPin() {

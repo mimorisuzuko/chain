@@ -21,19 +21,24 @@ class App extends Component {
 		setTimeout(() => {
 			console.log('Debug: createBlock()');
 			this.createBlock(100, 100);
-			this.createBlock(500, 80);
+			this.createBlock(400, 80);
+			this.createBlock(700, 100);
 
-			console.log('Debug: link()');
-			const [a, b] = _.keys(this.state.blocks.toJS());
-			this.link(a, 0, b, 0);
-		}, 2000);
+			console.log('Debug: connectPins()');
+			const [a, b, c] = _.keys(this.state.blocks.toJS());
+			this.connectPins(a, 0, b, 0);
+			this.connectPins(a, 0, c, 0);
+		}, 1000);
 	}
 
 	render() {
-		const {state: {blocks, links: _links}} = this;
-		const links = _links.map(({out: [oBlockId, oPinIndex], in: [iBlockId, iPinIndex]}) => {
+		let {state: {blocks, links}} = this;
+
+		links = links.map(({out: [oBlockId, oPinIndex], in: [iBlockId, iPinIndex]}) => {
 			const pintopin = _.map([[oBlockId, 'outputPins', oPinIndex], [iBlockId, 'inputPins', iPinIndex]], (key) => {
 				const [id] = key;
+
+				blocks = blocks.setIn(_.concat(key, 'connected'), true);
 
 				return blocks.get(id).absoluteCentralPositionOf(blocks.getIn(key));
 			});
@@ -79,15 +84,10 @@ class App extends Component {
 	 * @param {string} iBlockId
 	 * @param {number} iPinIndex
 	 */
-	link(oBlockId, oPinIndex, iBlockId, iPinIndex) {
-		const {state: {blocks, links}} = this;
-		const okeys = [oBlockId, 'outputPins', oPinIndex, 'connected'];
-		const ikeys = [iBlockId, 'inputPins', iPinIndex, 'connected'];
+	connectPins(oBlockId, oPinIndex, iBlockId, iPinIndex) {
+		const {state: {links}} = this;
 
-		this.setState({
-			blocks: blocks.setIn(okeys, true).setIn(ikeys, true),
-			links: links.push({ out: [oBlockId, oPinIndex], in: [iBlockId, iPinIndex] })
-		});
+		this.setState({ links: links.push({ out: [oBlockId, oPinIndex], in: [iBlockId, iPinIndex] }) });
 	}
 
 	/**
@@ -105,37 +105,28 @@ class App extends Component {
 	/**
 	 * @param {string} id
 	 * @param {BlockModel} model
+	 * @param {boolean} shouldLinkUpdate
 	 */
-	updateBlock(id, model) {
-		const {state: {blocks}} = this;
+	updateBlock(id, model, shouldLinkUpdate) {
+		const {state: {blocks, links}} = this;
+		const {size: index} = model.get('outputPins');
 
-		this.setState({ blocks: blocks.set(id, model) });
+		this.setState({
+			blocks: blocks.set(id, model),
+			links: shouldLinkUpdate ? links.filter(({out: [oBlockId, oPinIndex]}) => !(oBlockId === id && oPinIndex === index)) : links
+		});
 	}
 
 	/**
 	 * @param {string} id
 	 */
 	removeBlock(id) {
-		const {state: {blocks: _blocks, links: _links}} = this;
-		const keys = [];
-		const links = _links.filter(({out: [oBlockId, oPinIndex], in: [iBlockId, iPinIndex]}) => {
-			if (oBlockId === id) {
-				keys.push([iBlockId, 'inputPins', iPinIndex, 'connected']);
-				return false;
-			} else if (iBlockId === id) {
-				keys.push([oBlockId, 'outputPins', oPinIndex, 'connected']);
-				return false;
-			}
+		const {state: {blocks, links}} = this;
 
-			return true;
+		this.setState({
+			blocks: blocks.delete(id),
+			links: links.filter(({out: [oBlockId, oPinIndex], in: [iBlockId, iPinIndex]}) => !(oBlockId === id || iBlockId === id))
 		});
-		let blocks = _blocks.delete(id);
-
-		_.forEach(keys, (key) => {
-			blocks = blocks.setIn(key, false);
-		});
-
-		this.setState({ blocks, links });
 	}
 }
 
