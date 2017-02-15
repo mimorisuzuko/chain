@@ -76,6 +76,8 @@ class BlockModel extends Record({
 	x: 0,
 	y: 0,
 	value: '',
+	inputPinsMinlength: 0,
+	outputPinsMinlength: 0,
 	inputPins: List([new PinModel({ type: 1 })]),
 	outputPins: List([new PinModel({ type: 0 })])
 }) {
@@ -240,7 +242,10 @@ class Block extends Component {
 	removeOutputPin() {
 		const {props: {model, update}} = this;
 
-		update(model.updateIn(['outputPins'], (pins) => pins.pop()), true);
+		const {size} = model.get('outputPins');
+		const min = model.get('outputPinsMinlength');
+
+		update(min < size ? model.updateIn(['outputPins'], (pins) => pins.pop()) : model, true);
 	}
 
 	addOutputPin() {
