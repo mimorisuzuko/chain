@@ -17,24 +17,40 @@ class PinModel extends Record({ type: 0, connected: false, index: 0 }) {
 }
 
 class Pin extends Component {
+	constructor(props) {
+		super(props);
+
+		this.state = { isMouseHover: false };
+	}
+
 	render() {
+		const {state: {isMouseHover}} = this;
 		const {props: {model, cx, cy}} = this;
 		const {RADIUS: r, S_RADIUS: sr} = PinModel;
 		const width = r * 2;
 
 		return (
-			<svg style={{
+			<svg onMouseEnter={this.onMouseEnter.bind(this)} onMouseLeave={this.onMouseLeave.bind(this)} style={{
 				display: 'block',
 				width,
 				height: width,
 				position: 'absolute',
 				left: cx - r,
-				top: cy - r
+				top: cy - r,
+				cursor: 'pointer'
 			}}>
 				<circle strokeWidth={1} stroke='white' cx={r} cy={r} r={sr} fill={model.get('type') ? 'none' : 'white'} />
-				{model.get('connected') ? <circle strokeWidth={1} stroke='white' cx={r} cy={r} r={r - 1} fill='none' /> : null}
+				{isMouseHover || model.get('connected') ? <circle strokeWidth={1} stroke='white' cx={r} cy={r} r={r - 1} fill='none' /> : null}
 			</svg>
 		);
+	}
+
+	onMouseEnter() {
+		this.setState({ isMouseHover: true });
+	}
+
+	onMouseLeave() {
+		this.setState({ isMouseHover: false });
 	}
 }
 
