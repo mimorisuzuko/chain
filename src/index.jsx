@@ -32,11 +32,10 @@ class App extends Component {
 	render() {
 		const {state: {blocks, links: _links}} = this;
 		const links = _links.map(({out: [oBlockId, oPinIndex], in: [iBlockId, iPinIndex]}) => {
-			const pintopin = _.map([[oBlockId, 'outputPins', oPinIndex], [iBlockId, 'inputPins', iPinIndex]], ([id, name, index]) => {
-				const block = blocks.get(id);
-				const pin = block.get(name).get(index);
+			const pintopin = _.map([[oBlockId, 'outputPins', oPinIndex], [iBlockId, 'inputPins', iPinIndex]], (key) => {
+				const [id] = key;
 
-				return block.absoluteCentralPositionOf(pin);
+				return blocks.get(id).absoluteCentralPositionOf(blocks.getIn(key));
 			});
 
 			return <Link pintopin={pintopin} />;
@@ -82,10 +81,11 @@ class App extends Component {
 	 */
 	link(oBlockId, oPinIndex, iBlockId, iPinIndex) {
 		const {state: {blocks, links}} = this;
-		const [oBlock, iBlock] = _.map([oBlockId, iBlockId], (a) => blocks.get(a));
+		const okeys = [oBlockId, 'outputPins', oPinIndex, 'connected'];
+		const ikeys = [iBlockId, 'inputPins', iPinIndex, 'connected'];
 
 		this.setState({
-			blocks: blocks.set(oBlockId, oBlock.toggleConnectionPin('output', oPinIndex)).set(iBlockId, iBlock.toggleConnectionPin('input', iPinIndex)),
+			blocks: blocks.setIn(okeys, true).setIn(ikeys, true),
 			links: links.push({ out: [oBlockId, oPinIndex], in: [iBlockId, iPinIndex] })
 		});
 	}
@@ -117,21 +117,22 @@ class App extends Component {
 	 */
 	removeBlock(id) {
 		const {state: {blocks: _blocks, links: _links}} = this;
-		let blocks = _blocks.delete(id);
+		const keys = [];
 		const links = _links.filter(({out: [oBlockId, oPinIndex], in: [iBlockId, iPinIndex]}) => {
 			if (oBlockId === id) {
-				const block = blocks.get(iBlockId);
-
-				blocks = blocks.set(iBlockId, block.toggleConnectionPin('input', iPinIndex));
+				keys.push([iBlockId, 'inputPins', iPinIndex, 'connected']);
 				return false;
 			} else if (iBlockId === id) {
-				const block = blocks.get(oBlockId);
-
-				blocks = blocks.set(oBlockId, block.toggleConnectionPin('output', oPinIndex));
+				keys.push([oBlockId, 'outputPins', oPinIndex, 'connected']);
 				return false;
 			}
 
 			return true;
+		});
+		let blocks = _blocks.delete(id);
+
+		_.forEach(keys, (key) => {
+			blocks = blocks.setIn(key, false);
 		});
 
 		this.setState({ blocks, links });

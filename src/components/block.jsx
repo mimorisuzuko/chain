@@ -67,31 +67,6 @@ class BlockModel extends Record({
 	}
 
 	/**
-	 * @param {string} prefix
-	 * @param {number} index
-	 */
-	toggleConnectionPin(prefix, index) {
-		const k = `${prefix}Pins`;
-		const pins = this.get(k);
-		const pin = pins.get(index);
-		const connected = pin.get('connected');
-
-		return this.set(k, pins.set(index, pin.set('connected', !connected)));
-	}
-
-	addOutputPin() {
-		const {outputPins} = this;
-
-		return this.set('outputPins', outputPins.push(new PinModel({ type: 0, index: outputPins.size })));
-	}
-
-	removeOutputPin() {
-		const {outputPins} = this;
-
-		return this.set('outputPins', outputPins.pop());
-	}
-
-	/**
 	 * @param {PinModel} pin
 	 * @returns {number[]}
 	 */
@@ -232,13 +207,17 @@ class Block extends Component {
 	removeOutputPin() {
 		const {props: {model, update}} = this;
 
-		update(model.removeOutputPin());
+		update(model.updateIn(['outputPins'], (pins) => pins.pop()));
 	}
 
 	addOutputPin() {
 		const {props: {model, update}} = this;
 
-		update(model.addOutputPin());
+		update(model.updateIn(['outputPins'], (pins) => {
+			const {size: index} = pins;
+
+			return pins.push(new PinModel({ type: 0, index }));
+		}));
 	}
 
 	/**
