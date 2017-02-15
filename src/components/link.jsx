@@ -1,14 +1,33 @@
 const React = require('react');
 const _ = require('lodash');
+const Immutable = require('immutable');
 const {PinModel} = require('./block.jsx');
 const {Component} = React;
+const {Record} = Immutable;
 
-class Link extends Component {
-	render() {
-		const {points} = Link;
-		const {props: {pintopin: [[ax, ay], [bx, by]]}} = this;
+class LinkModel extends Record({ ax: 0, ay: 0, bx: 0, by: 0, visible: false }) {
 
-		return <polyline points={points(ax, ay, bx, by)} fill='none' strokeWidth={3} stroke='white' />;
+	/**
+	 * @param {number} ax
+	 * @param {number} ay
+	 */
+	start(ax, ay) {
+		return this.merge({ ax, ay, bx: ax, by: ay, visible: true });
+	}
+
+	/**
+	 * @param {number} bx
+	 * @param {number} by
+	 */
+	end(bx, by) {
+		return this.merge({ bx, by });
+	}
+
+	points() {
+		const {points} = LinkModel;
+		const {ax, ay, bx, by} = this;
+
+		return points(ax, ay, bx, by);
 	}
 
 	/**
@@ -16,7 +35,7 @@ class Link extends Component {
 	 * @param {number} _ay
 	 * @param {number} _bx
 	 * @param {number} _by 
-	 * @returns {number[][]}
+	 * @returns {number[]}
 	 */
 	static points(_ax, _ay, _bx, _by) {
 		const {RADIUS: _radius} = PinModel;
@@ -43,7 +62,7 @@ class Link extends Component {
 
 		const dy = by - ay;
 		const dist = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-		const {INTERVAL: _interval} = Link;
+		const {INTERVAL: _interval} = LinkModel;
 		const interval = Math.min(_.floor(dist), _interval);
 
 		if (interval === 0) {
@@ -70,4 +89,28 @@ class Link extends Component {
 	}
 }
 
-module.exports = { Link };
+class Link extends Component {
+	render() {
+		const {polyline} = Link;
+		const {points} = LinkModel;
+		const {props: {model, pintopin}} = this;
+
+		if (pintopin) {
+			const [[ax, ay], [bx, by]] = pintopin;
+			return polyline(points(ax, ay, bx, by));
+		} else if (model) {
+			return model.get('visible') ? polyline(model.points()) : null;
+		}
+
+		return null;
+	}
+
+	/**
+	 * @param {number[]} points
+	 */
+	static polyline(points) {
+		return <polyline points={points} fill='none' strokeWidth={3} stroke='white' />;
+	}
+}
+
+module.exports = { Link, LinkModel };

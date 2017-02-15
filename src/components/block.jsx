@@ -30,19 +30,36 @@ class Pin extends Component {
 		const width = r * 2;
 
 		return (
-			<svg onMouseEnter={this.onMouseEnter.bind(this)} onMouseLeave={this.onMouseLeave.bind(this)} style={{
-				display: 'block',
-				width,
-				height: width,
-				position: 'absolute',
-				left: cx - r,
-				top: cy - r,
-				cursor: 'pointer'
-			}}>
+			<svg
+				onMouseDown={this.onMouseDown.bind(this)}
+				onMouseUp={this.onMouseUp.bind(this)}
+				onMouseEnter={this.onMouseEnter.bind(this)}
+				onMouseLeave={this.onMouseLeave.bind(this)}
+				style={{
+					display: 'block',
+					width,
+					height: width,
+					position: 'absolute',
+					left: cx - r,
+					top: cy - r,
+					cursor: 'pointer'
+				}}>
 				<circle strokeWidth={1} stroke='white' cx={r} cy={r} r={sr} fill={model.get('type') ? 'none' : 'white'} />
 				{isMouseHover || model.get('connected') ? <circle strokeWidth={1} stroke='white' cx={r} cy={r} r={r - 1} fill='none' /> : null}
 			</svg>
 		);
+	}
+
+	onMouseDown() {
+		const {props: {model, onConnectStart}} = this;
+
+		onConnectStart(model);
+	}
+
+	onMouseUp() {
+		const {props: {model, onConnectEnd}} = this;
+
+		onConnectEnd(model);
 	}
 
 	onMouseEnter() {
@@ -185,13 +202,13 @@ class Block extends Component {
 		const {RADIUS: radius} = PinModel;
 		const diameter = radius * 2;
 		const {WIDTH: width, centralPositionOf} = BlockModel;
-		const {props: {model, onChange, remove}} = this;
+		const {props: {model, onChange, remove, onConnectPinStart, onConnectPinEnd}} = this;
 		const pins = _.map([
 			[model.get('inputPins')],
 			[model.get('outputPins')]
 		], ([pins, dx]) => pins.map((a, i) => {
 			const [cx, cy] = centralPositionOf(a);
-			return <Pin model={a} cx={cx} cy={cy} />;
+			return <Pin model={a} cx={cx} cy={cy} onConnectStart={onConnectPinStart} onConnectEnd={onConnectPinEnd} />;
 		}));
 
 		return (
