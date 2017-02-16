@@ -99,7 +99,7 @@ class Link extends Component {
 			const [[ax, ay], [bx, by]] = pintopin;
 			return polyline(points(ax, ay, bx, by));
 		} else if (model) {
-			return model.get('visible') ? polyline(model.points()) : null;
+			return model.get('visible') ? polyline(model.points(), true) : null;
 		}
 
 		return null;
@@ -107,9 +107,10 @@ class Link extends Component {
 
 	/**
 	 * @param {number[]} points
+	 * @param {boolean} dashed
 	 */
-	static polyline(points) {
-		return <polyline points={points} fill='none' strokeWidth={3} stroke='white' />;
+	static polyline(points, dashed = false) {
+		return <polyline points={points} fill='none' strokeWidth={3} strokeDasharray={dashed ? '5 5' : 'none'} stroke='white' />;
 	}
 }
 
