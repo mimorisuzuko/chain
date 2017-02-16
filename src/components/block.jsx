@@ -2,11 +2,11 @@ const React = require('react');
 const Immutable = require('immutable');
 const Radium = require('radium');
 const _ = require('lodash');
-const {black, lblack, red, blue} = require('../color.jsx');
+const {black, lblack, red, blue, vlblue, vpink} = require('../color.jsx');
 const {Record, List} = Immutable;
 const {Component} = React;
 
-class PinModel extends Record({ type: 0, connected: false, index: 0 }) {
+class PinModel extends Record({ type: 0, connected: false, index: 0, color: 'white' }) {
 	static get RADIUS() {
 		return 8;
 	}
@@ -29,6 +29,8 @@ class Pin extends Component {
 		const {props: {model, cx, cy}} = this;
 		const {RADIUS: r, S_RADIUS: sr} = PinModel;
 		const width = r * 2;
+		const color = model.get('color');
+		const outline = isMouseHover || isConnecting || model.get('connected') ? <circle strokeWidth={1} stroke={color} cx={r} cy={r} r={r - 1} fill='none' /> : null;
 
 		return (
 			<svg
@@ -45,8 +47,8 @@ class Pin extends Component {
 					top: cy - r,
 					cursor: 'pointer'
 				}}>
-				<circle strokeWidth={1} stroke='white' cx={r} cy={r} r={sr} fill={model.get('type') ? 'none' : 'white'} />
-				{isMouseHover || isConnecting || model.get('connected') ? <circle strokeWidth={1} stroke='white' cx={r} cy={r} r={r - 1} fill='none' /> : null}
+				<circle strokeWidth={1} stroke={color} cx={r} cy={r} r={sr} fill={model.get('type') ? 'none' : color} />
+				{outline}
 			</svg>
 		);
 	}
@@ -134,15 +136,15 @@ class BlockModel extends Record({
 		return {
 			value: {
 				editablepin: false,
-				outputPins: List([new PinModel({ type: 0 })]),
-				color: 'rgb(156, 220, 254)'
+				outputPins: List([new PinModel({ type: 0, color: vpink })]),
+				color: vlblue
 			},
 			view: {
 				value: '',
 				editablepin: false,
 				editablevalue: false,
 				inputPins: List([new PinModel({ type: 1 })]),
-				color: 'rgb(197, 134, 192)'
+				color: vpink
 			}
 		};
 	}
