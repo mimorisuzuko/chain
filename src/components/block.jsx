@@ -20,11 +20,12 @@ class Pin extends Component {
 	constructor(props) {
 		super(props);
 
-		this.state = { isMouseHover: false };
+		this.mouseUpper = null;
+		this.state = { isMouseHover: false, isConnecting: false };
 	}
 
 	render() {
-		const {state: {isMouseHover}} = this;
+		const {state: {isMouseHover, isConnecting}} = this;
 		const {props: {model, cx, cy}} = this;
 		const {RADIUS: r, S_RADIUS: sr} = PinModel;
 		const width = r * 2;
@@ -45,15 +46,26 @@ class Pin extends Component {
 					cursor: 'pointer'
 				}}>
 				<circle strokeWidth={1} stroke='white' cx={r} cy={r} r={sr} fill={model.get('type') ? 'none' : 'white'} />
-				{isMouseHover || model.get('connected') ? <circle strokeWidth={1} stroke='white' cx={r} cy={r} r={r - 1} fill='none' /> : null}
+				{isMouseHover || isConnecting || model.get('connected') ? <circle strokeWidth={1} stroke='white' cx={r} cy={r} r={r - 1} fill='none' /> : null}
 			</svg>
 		);
 	}
 
 	onMouseDown() {
 		const {props: {model, onConnectStart}} = this;
+		const mouseUpper = this.onMouseUpDocument.bind(this);
 
 		onConnectStart(model);
+		this.setState({ isConnecting: true });
+		document.addEventListener('mouseup', mouseUpper);
+		this.mouseUpper = mouseUpper;
+	}
+
+	onMouseUpDocument() {
+		const {mouseUpper} = this;
+
+		document.removeEventListener('mouseup', mouseUpper);
+		this.setState({ isConnecting: false });
 	}
 
 	onMouseUp() {
@@ -183,16 +195,30 @@ class Button extends Component {
 
 const Textarea = Radium(class Textarea extends Component {
 	render() {
-		const {props: {value, editable}} = this;
+		const {props: {value, editable, color}} = this;
 
 		return (
 			<textarea readOnly={!editable} value={value} onChange={this.onChange.bind(this)} style={{
 				display: 'block',
-				border: 'none',
 				outline: 'none',
 				backgroundColor: lblack,
 				width: '100%',
 				boxSizing: 'border-box',
+				borderLeft: 'none',
+				borderTopWidth: 1,
+				borderTopColor: 'transparent',
+				borderTopStyle: 'solid',
+				borderRightWidth: 1,
+				borderRightColor: 'transparent',
+				borderRightStyle: 'solid',
+				borderBottomWidth: 1,
+				borderBottomColor: 'transparent',
+				borderBottomStyle: 'solid',
+				':focus': {
+					borderTopColor: color,
+					borderRightColor: color,
+					borderBottomColor: color
+				}
 			}} />
 		);
 	}
@@ -222,6 +248,7 @@ class Block extends Component {
 		const diameter = radius * 2;
 		const {WIDTH: width, centralPositionOf} = BlockModel;
 		const {props: {model, onChange, remove, onConnectPinStart, onConnectPinEnd}} = this;
+		const color = model.get('color');
 		const pins = _.map([
 			[model.get('inputPins')],
 			[model.get('outputPins')]
@@ -252,9 +279,9 @@ class Block extends Component {
 					padding: '10px 5px 5px'
 				}}>
 					<div style={{
-						borderLeft: `5px solid ${model.get('color')}`
+						borderLeft: `5px solid ${color}`
 					}}>
-						<Textarea value={model.get('value')} onChange={this.onChangeTextarea.bind(this)} editable={model.get('editablevalue')} />
+						<Textarea color={color} value={model.get('value')} onChange={this.onChangeTextarea.bind(this)} editable={model.get('editablevalue')} />
 					</div>
 				</div>
 				{pins}
