@@ -28,13 +28,20 @@ class App extends Component {
 	}
 
 	render() {
-		const {state: {blocks: _blocks, links: _links, tempLink, onConnectPinEnd, blockCreator}} = this;
-		let blocks = _blocks;
+		const {state: {blocks, links: _links, tempLink, onConnectPinEnd, blockCreator}} = this;
+		const connectedPins = {};
 		const links = _links.map(({out: [oBlockId, oPinIndex], in: [iBlockId, iPinIndex]}) => {
 			const pintopin = _.map([[oBlockId, 'outputPins', oPinIndex], [iBlockId, 'inputPins', iPinIndex]], (key) => {
-				const [id] = key;
+				const [id, name, index] = key;
 
-				blocks = blocks.setIn(_.concat(key, 'connected'), true);
+				if (!_.has(connectedPins, id)) {
+					connectedPins[id] = {
+						outputPins: [],
+						inputPins: []
+					};
+				}
+
+				connectedPins[id][name].push(index);
 
 				return blocks.get(id).absoluteCentralPositionOf(blocks.getIn(key));
 			});
@@ -69,6 +76,7 @@ class App extends Component {
 						blocks.entrySeq().map(([id, model]) => (
 							<Block
 								model={model}
+								connectedPins={connectedPins[id]}
 								onConnectPinStart={this.onConnectPinStart.bind(this, id)}
 								onConnectPinEnd={onConnectPinEnd ? onConnectPinEnd.bind(this, id) : () => { }}
 								update={this.updateBlock.bind(this, id)}

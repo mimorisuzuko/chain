@@ -6,7 +6,7 @@ const {black, lblack, red, blue, vlblue, vpink} = require('../color.jsx');
 const {Record, List} = Immutable;
 const {Component} = React;
 
-class PinModel extends Record({ type: 0, connected: false, index: 0, color: 'white' }) {
+class PinModel extends Record({ type: 0, index: 0, color: 'white' }) {
 	static get RADIUS() {
 		return 8;
 	}
@@ -26,11 +26,11 @@ class Pin extends Component {
 
 	render() {
 		const {state: {isMouseHover, isConnecting}} = this;
-		const {props: {model, cx, cy}} = this;
+		const {props: {model, cx, cy, connected}} = this;
 		const {RADIUS: r, S_RADIUS: sr} = PinModel;
 		const width = r * 2;
 		const color = model.get('color');
-		const outline = isMouseHover || isConnecting || model.get('connected') ? <circle strokeWidth={1} stroke={color} cx={r} cy={r} r={r - 1} fill='none' /> : null;
+		const outline = isMouseHover || isConnecting || connected ? <circle strokeWidth={1} stroke={color} cx={r} cy={r} r={r - 1} fill='none' /> : null;
 
 		return (
 			<svg
@@ -249,15 +249,26 @@ class Block extends Component {
 		const {RADIUS: radius} = PinModel;
 		const diameter = radius * 2;
 		const {WIDTH: width, centralPositionOf} = BlockModel;
-		const {props: {model, onChange, remove, onConnectPinStart, onConnectPinEnd}} = this;
+		const {props: {model, onChange, remove, onConnectPinStart, onConnectPinEnd, connectedPins}} = this;
 		const color = model.get('color');
-		const pins = _.map([
-			[model.get('inputPins')],
-			[model.get('outputPins')]
-		], ([pins, dx]) => pins.map((a, i) => {
-			const [cx, cy] = centralPositionOf(a);
-			return <Pin model={a} cx={cx} cy={cy} onConnectStart={onConnectPinStart} onConnectEnd={onConnectPinEnd} />;
-		}));
+		const pins = _.map(['inputPins', 'outputPins'], (name) => {
+			const connected = _.has(connectedPins, name) ? connectedPins[name] : [];
+
+			return model.get(name).map((a, i) => {
+				const [cx, cy] = centralPositionOf(a);
+
+				return (
+					<Pin
+						model={a}
+						cx={cx}
+						cy={cy}
+						connected={_.includes(connected, i)}
+						onConnectStart={onConnectPinStart}
+						onConnectEnd={onConnectPinEnd}
+					/>
+				);
+			});
+		});
 
 		return (
 			<div data-movable={true} onMouseDown={this.onMouseDown.bind(this)} style={{
