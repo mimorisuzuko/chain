@@ -250,23 +250,6 @@ class Block extends Component {
 		this.mouseUpper = null;
 	}
 
-	shouldComponentUpdate(_nextProps, nextState) {
-		const {props: _props, state} = this;
-		const props = {};
-		const nextProps = {};
-
-		_.forEach(_.toPairs(_nextProps), ([k, v]) => {
-			if (typeof v === 'function') { return; }
-			nextProps[k] = v;
-		});
-		_.forEach(_.toPairs(_props), ([k, v]) => {
-			if (typeof v === 'function') { return; }
-			props[k] = v;
-		});
-
-		return !Immutable.is(Map(nextProps), Map(props)) || !Immutable.is(Map(nextState), Map(state));
-	}
-
 	render() {
 		const {RADIUS: radius} = PinModel;
 		const diameter = radius * 2;
