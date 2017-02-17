@@ -85,7 +85,7 @@ class LinkModel extends Record({ ax: 0, ay: 0, bx: 0, by: 0, visible: false }) {
 	}
 
 	static get INTERVAL() {
-		return 100;
+		return 50;
 	}
 }
 

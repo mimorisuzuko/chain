@@ -3,7 +3,7 @@ const Immutable = require('immutable');
 const Radium = require('radium');
 const _ = require('lodash');
 const {black, lblack, red, blue, vlblue, vpink} = require('../color.jsx');
-const {Record, List} = Immutable;
+const {Record, List, Map} = Immutable;
 const {Component} = React;
 
 class PinModel extends Record({ type: 0, index: 0, color: 'white' }) {
@@ -248,6 +248,23 @@ class Block extends Component {
 		this.py = 0;
 		this.mouseMover = null;
 		this.mouseUpper = null;
+	}
+
+	shouldComponentUpdate(_nextProps, nextState) {
+		const {props: _props, state} = this;
+		const props = {};
+		const nextProps = {};
+
+		_.forEach(_.toPairs(_nextProps), ([k, v]) => {
+			if (typeof v === 'function') { return; }
+			nextProps[k] = v;
+		});
+		_.forEach(_.toPairs(_props), ([k, v]) => {
+			if (typeof v === 'function') { return; }
+			props[k] = v;
+		});
+
+		return !Immutable.is(Map(nextProps), Map(props)) || !Immutable.is(Map(nextState), Map(state));
 	}
 
 	render() {
