@@ -145,6 +145,11 @@ class BlockModel extends Record({
 				editablevalue: false,
 				inputPins: List([new PinModel({ type: 1 })]),
 				color: vpink
+			},
+			debug: {
+				value: '"Hello, World!"',
+				outputPins: List([new PinModel({ type: 0 })]),
+				inputPins: List([new PinModel({ type: 1 })])
 			}
 		};
 	}
