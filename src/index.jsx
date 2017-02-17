@@ -30,7 +30,7 @@ class App extends Component {
 	render() {
 		const {state: {blocks, links: _links, tempLink, onConnectPinEnd, blockCreator}} = this;
 		const connectedPins = {};
-		const links = _links.map(({out: [oBlockId, oPinIndex], in: [iBlockId, iPinIndex]}) => {
+		const links = _links.map(({output: [oBlockId, oPinIndex], input: [iBlockId, iPinIndex]}) => {
 			const pintopin = _.map([[oBlockId, 'outputPins', oPinIndex], [iBlockId, 'inputPins', iPinIndex]], (key) => {
 				const [id, name, index] = key;
 
@@ -159,7 +159,7 @@ class App extends Component {
 		this.setState({
 			tempLink: tempLink.start(x, y),
 			onConnectPinEnd,
-			links: pin.get('type') === 1 ? links.filter(({ in: [id, index]}) => !(blockId === id && pinIndex === index)) : links
+			links: pin.get('type') === 1 ? links.filter(({ input: [id, index]}) => !(blockId === id && pinIndex === index)) : links
 		});
 	}
 
@@ -175,7 +175,7 @@ class App extends Component {
 		const [[oBlockId, oPinIndex], [iBlockId, iPinIndex]] = _.sortBy([[id0, index0, type0], [id1, index1, type1]], 2);
 
 		this.setState({
-			links: links.filter(({in: [id, index]}) => !(id === iBlockId && iPinIndex === index)).push({ out: [oBlockId, oPinIndex], in: [iBlockId, iPinIndex] })
+			links: links.filter(({input: [id, index]}) => !(id === iBlockId && iPinIndex === index)).push({ output: [oBlockId, oPinIndex], input: [iBlockId, iPinIndex] })
 		});
 	}
 
@@ -220,7 +220,7 @@ class App extends Component {
 
 		this.setState({
 			blocks: blocks.set(id, model),
-			links: shouldLinkUpdate ? links.filter(({out: [oBlockId, oPinIndex]}) => !(oBlockId === id && oPinIndex === index)) : links
+			links: shouldLinkUpdate ? links.filter(({output: [oBlockId, oPinIndex]}) => !(oBlockId === id && oPinIndex === index)) : links
 		});
 	}
 
@@ -232,7 +232,7 @@ class App extends Component {
 
 		this.setState({
 			blocks: blocks.delete(id),
-			links: links.filter(({out: [oBlockId, oPinIndex], in: [iBlockId, iPinIndex]}) => !(oBlockId === id || iBlockId === id))
+			links: links.filter(({output: [oBlockId, oPinIndex], input: [iBlockId, iPinIndex]}) => !(oBlockId === id || iBlockId === id))
 		});
 	}
 }
