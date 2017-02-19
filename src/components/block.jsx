@@ -87,6 +87,7 @@ class Pin extends Component {
 
 class BlockModel extends Record({
 	id: '',
+	name: '',
 	x: 0,
 	y: 0,
 	value: '',
@@ -108,7 +109,7 @@ class BlockModel extends Record({
 		const id = `block${Date.now()}`;
 		const {name} = o;
 
-		super(_.assign({ id }, o, list[name]));
+		super(_.assign({ id, name }, o, list[name]));
 	}
 
 	/**
