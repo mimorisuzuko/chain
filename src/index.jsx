@@ -170,7 +170,7 @@ class App extends Component {
 	onConnectPinEnd(id0, pin0) {
 		const {tempBlockAndPin: [id1, pin1], state: {links}} = this;
 		const [[type0, index0], [type1, index1]] = _.map([pin0, pin1], (a) => [a.get('type'), a.get('index')]);
-		console.log(id0, id1);
+
 		if (id0 === id1 || type0 === type1) { return; }
 		const [[oBlockId, oPinIndex], [iBlockId, iPinIndex]] = _.sortBy([[id0, index0, type0], [id1, index1, type1]], 2);
 
