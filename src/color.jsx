@@ -1,4 +1,5 @@
 const Color = require('color');
+const white = Color('rgb(212, 212, 212)');
 const black = Color('rgb(30, 30, 30)');
 const lblack = black.lighten(0.3);
 const red = Color('rgb(229, 57, 53)');
@@ -8,6 +9,7 @@ const vpink = Color('rgb(197, 134, 192)');
 
 module.exports = {
 	black,
+	white,
 	lblack,
 	red,
 	blue,

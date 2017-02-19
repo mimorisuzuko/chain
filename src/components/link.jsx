@@ -1,6 +1,7 @@
 const React = require('react');
 const _ = require('lodash');
 const Immutable = require('immutable');
+const {white} = require('../color.jsx');
 const {PinModel} = require('./block.jsx');
 const {Component} = React;
 const {Record} = Immutable;
@@ -110,7 +111,7 @@ class Link extends Component {
 	 * @param {boolean} dashed
 	 */
 	static polyline(points, dashed = false) {
-		return <polyline points={points} fill='none' strokeWidth={3} strokeDasharray={dashed ? '5 5' : 'none'} stroke='white' />;
+		return <polyline points={points} fill='none' strokeWidth={3} strokeDasharray={dashed ? '5 5' : 'none'} stroke={white} />;
 	}
 }
 

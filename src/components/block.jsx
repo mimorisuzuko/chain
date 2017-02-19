@@ -2,11 +2,11 @@ const React = require('react');
 const Immutable = require('immutable');
 const Radium = require('radium');
 const _ = require('lodash');
-const {black, lblack, red, blue, vlblue, vpink} = require('../color.jsx');
+const {black, white, lblack, red, blue, vlblue, vpink} = require('../color.jsx');
 const {Record, List, Map} = Immutable;
 const {Component} = React;
 
-class PinModel extends Record({ type: 0, index: 0, color: 'white' }) {
+class PinModel extends Record({ type: 0, index: 0, color: white }) {
 	static get RADIUS() {
 		return 8;
 	}
@@ -96,7 +96,7 @@ class BlockModel extends Record({
 	outputPins: List(),
 	editablepin: true,
 	editablevalue: true,
-	color: 'white'
+	color: white
 }) {
 
 	/**
