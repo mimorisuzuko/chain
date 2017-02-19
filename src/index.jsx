@@ -216,11 +216,11 @@ class App extends Component {
 	 */
 	updateBlock(id, model, shouldLinkUpdate) {
 		const {state: {blocks, links}} = this;
-		const {size: index} = model.get('outputPins');
+		const {size: index} = model.get('inputPins');
 
 		this.setState({
 			blocks: blocks.set(id, model),
-			links: shouldLinkUpdate ? links.filter(({output: [oBlockId, oPinIndex]}) => !(oBlockId === id && oPinIndex === index)) : links
+			links: shouldLinkUpdate ? links.filter(({input: [ib, ip]}) => !(ib === id && ip === index)) : links
 		});
 	}
 

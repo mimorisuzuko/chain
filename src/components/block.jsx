@@ -96,7 +96,8 @@ class BlockModel extends Record({
 	outputPins: List(),
 	editablepin: true,
 	editablevalue: true,
-	color: white
+	color: white,
+	addedPinColor: white
 }) {
 
 	/**
@@ -151,6 +152,7 @@ class BlockModel extends Record({
 				outputPins: List([new PinModel({ type: 0 })]),
 				inputPins: List([new PinModel({ type: 1, color: vblue })]),
 				color: vblue,
+				addedPinColor: vlblue
 			},
 			debug: {
 				value: '"Hello, World!"',
@@ -295,8 +297,8 @@ class Block extends Component {
 				<div data-movable={true}>
 					<Button value='×' backgroundColor={red} onClick={remove} />
 					{model.get('editablepin') ? [
-						<Button value='-' backgroundColor={lblack} onClick={this.removeOutputPin.bind(this)} />,
-						<Button value='+' backgroundColor={lblack} onClick={this.addOutputPin.bind(this)} />
+						<Button value='-' backgroundColor={lblack} onClick={this.removeInputPin.bind(this)} />,
+						<Button value='+' backgroundColor={lblack} onClick={this.addInputPin.bind(this)} />
 					] : null}
 				</div>
 				<div data-movable={true} style={{
@@ -313,22 +315,23 @@ class Block extends Component {
 		);
 	}
 
-	removeOutputPin() {
+	removeInputPin() {
 		const {props: {model, update}} = this;
 
-		const {size} = model.get('outputPins');
-		const min = model.get('outputPinsMinlength');
+		const {size} = model.get('inputPins');
+		const min = model.get('inputPinsMinlength');
 
-		update(min < size ? model.updateIn(['outputPins'], (pins) => pins.pop()) : model, true);
+		update(min < size ? model.updateIn(['inputPins'], (pins) => pins.pop()) : model, true);
 	}
 
-	addOutputPin() {
+	addInputPin() {
 		const {props: {model, update}} = this;
+		const color = model.get('addedPinColor');
 
-		update(model.updateIn(['outputPins'], (pins) => {
+		update(model.updateIn(['inputPins'], (pins) => {
 			const {size: index} = pins;
 
-			return pins.push(new PinModel({ type: 0, index }));
+			return pins.push(new PinModel({ type: 1, index, color }));
 		}));
 	}
 
