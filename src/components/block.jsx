@@ -2,7 +2,7 @@ const React = require('react');
 const Immutable = require('immutable');
 const Radium = require('radium');
 const _ = require('lodash');
-const {black, white, lblack, red, blue, vblue, vlblue, vpink} = require('../color.jsx');
+const {black, white, lblack, red, blue, vblue, vlblue, vpink} = require('../color');
 const {Record, List, Map} = Immutable;
 const {Component} = React;
 

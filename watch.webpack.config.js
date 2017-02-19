@@ -23,7 +23,7 @@ module.exports = {
 	module: {
 		loaders: [
 			{
-				test: /\.jsx$/,
+				test: /\.(js|jsx)$/,
 				exclude: /node_modules/,
 				loaders: [
 					'react-hot-loader',

@@ -2,9 +2,9 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 const _ = require('lodash');
 const Immutable = require('immutable');
-const {Block, BlockModel} = require('./components/block.jsx');
-const {Link, LinkModel} = require('./components/link.jsx');
-const {BlockCreator, BlockCreatorModel} = require('./components/block-creator.jsx');
+const {Block, BlockModel} = require('./components/block');
+const {Link, LinkModel} = require('./components/link');
+const {BlockCreator, BlockCreatorModel} = require('./components/block-creator');
 const {Component} = React;
 const {List, Map} = Immutable;
 

@@ -1,8 +1,8 @@
 const React = require('react');
 const _ = require('lodash');
 const Immutable = require('immutable');
-const {white} = require('../color.jsx');
-const {PinModel} = require('./block.jsx');
+const {white} = require('../color');
+const {PinModel} = require('./block');
 const {Component} = React;
 const {Record} = Immutable;
 
