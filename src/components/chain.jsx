@@ -37,11 +37,14 @@ class Chain extends Component {
 		window.addEventListener('message', this.onMessage.bind(this));
 	}
 
-	componentDidUpdate(prevProps, prevState) {
+	shouldComponentUpdate(nextProps, nextState) {
 		const {state} = this;
 
-		if (Immutable.is(Map(state), Map(prevState))) { return; }
+		return !Immutable.is(Map(state), Map(nextState));
+	}
 
+	componentDidUpdate(prevProps) {
+		const {state} = this;
 		const {updateHTMLRenderer} = prevProps;
 		const {blocks} = state;
 		const $html = document.createElement('html');
