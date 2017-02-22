@@ -40,7 +40,7 @@ class Chain extends Component {
 	shouldComponentUpdate(nextProps, nextState) {
 		const {state, props} = this;
 
-		return !Immutable.is(Map(state), Map(nextState)) || !(JSON.stringify(props) === JSON.stringify(nextProps));
+		return !Immutable.is(Map(state), Map(nextState)) || !Immutable.is(Map(props), Map(nextProps));
 	}
 
 	componentDidUpdate(prevProps) {
@@ -69,7 +69,6 @@ class Chain extends Component {
 	render() {
 		const {
 			state: {blocks, links: _links, tempLink, blockCreator},
-			props: {style}
 		} = this;
 		const links = _links.map(({output: [oBlockId, oPinIndex], input: [iBlockId, iPinIndex]}) => {
 			const pintopin = _.map([[oBlockId, 'outputPins', oPinIndex], [iBlockId, 'inputPins', iPinIndex]], (key) => {
@@ -82,12 +81,12 @@ class Chain extends Component {
 		});
 
 		return (
-			<div style={_.assign({}, style, {
+			<div style={{
 				width: '100%',
 				height: '100%',
 				position: 'relative',
 				backgroundColor: black
-			})}>
+			}}>
 				<svg
 					onMouseDown={this.onMouseDown}
 					onMouseMove={this.onMouseMove}

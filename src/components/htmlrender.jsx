@@ -12,15 +12,15 @@ class HTMLRenderer extends Component {
 	}
 
 	render() {
-		const {props: {html, style}} = this;
+		const {props: {html}} = this;
 
 		return (
-			<iframe srcDoc={html} style={_.assign(style, {
+			<iframe srcDoc={html} style={{
 				display: 'block',
 				width: '100%',
 				height: '100%',
 				border: 'none'
-			})} />
+			}} />
 		);
 	}
 }

@@ -24,11 +24,15 @@ class Tab extends Component {
 			</a>
 		)
 		);
-		const children = React.Children.map(_children, (child, i) => React.cloneElement(child, {
-			style: {
-				display: active === i ? 'block' : 'none'
-			}
-		})
+		const children = React.Children.map(_children, (child, i) => (
+			<div style={{
+				display: i === active ? 'block' : 'none',
+				width: '100%',
+				height: '100%'
+			}}>
+				{child}
+			</div>
+		)
 		);
 
 		return (
