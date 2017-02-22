@@ -2,7 +2,7 @@ const React = require('react');
 const Immutable = require('immutable');
 const Radium = require('radium');
 const _ = require('lodash');
-const {black, white, lblack, red, vblue, vlblue, vpink} = require('../color');
+const {black, white, lblack, red, vblue, vlblue, vpink, vyellow} = require('../color');
 const {Record, List} = Immutable;
 const {Component} = React;
 
@@ -206,6 +206,20 @@ class BlockModel extends Record({
 				inputPins: List([new PinModel({ type: 1, color: vblue })]),
 				color: vblue,
 				addedPinColor: vlblue
+			},
+			property: {
+				outputPins: List([new PinModel({ type: 0 })]),
+				inputPins: List([new PinModel({ type: 1 })]),
+				editablepin: false,
+				color: vyellow
+			},
+			operator: {
+				inputPinsMinlength: 2,
+				outputPins: List([new PinModel({ type: 0 })]),
+				inputPins: List([
+					new PinModel({ type: 1 }),
+					new PinModel({ type: 1, index: 1 })
+				]),
 			},
 			debug: {
 				value: '"Hello, World!"',

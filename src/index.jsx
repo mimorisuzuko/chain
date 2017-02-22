@@ -156,10 +156,16 @@ class Chain extends Component {
 			const [self, ...args] = values;
 
 			return self ? `${self}["${value}"](${_.join(args, ', ')})` : `${value}(${_.join(args, ', ')})`;
-		} else if (name === 'debug') {
-			return `_this_is_debug_block(${_.join(values, ', ')})`;
 		} else if (name === 'view') {
 			return `parent.postMessage({id: '${id}', type: 'chainResult', value: ${values[0]}}, '*')`;
+		} else if (name === 'property') {
+			const [self] = values;
+
+			return `${self}["${value}"]`;
+		} else if (name === 'operator') {
+			return _.join(values, value);
+		} else if (name === 'debug') {
+			return `_this_is_debug_block(${_.join(values, ', ')})`;
 		}
 
 		return values[0];

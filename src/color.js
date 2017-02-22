@@ -8,6 +8,7 @@ const blue = Color('rgb(33, 150, 243)');
 const vblue = Color('rgb(86, 156, 214)');
 const vlblue = Color('rgb(156, 220, 254)');
 const vpink = Color('rgb(197, 134, 192)');
+const vyellow = Color('rgb(220, 220, 170)');
 
 module.exports = {
 	black,
@@ -18,5 +19,6 @@ module.exports = {
 	blue,
 	vblue,
 	vlblue,
-	vpink
+	vpink,
+	vyellow
 };
