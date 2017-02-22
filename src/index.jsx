@@ -39,19 +39,9 @@ class App extends Component {
 
 	render() {
 		const {state: {blocks, links: _links, tempLink, blockCreator}} = this;
-		const connectedPins = {};
 		const links = _links.map(({output: [oBlockId, oPinIndex], input: [iBlockId, iPinIndex]}) => {
 			const pintopin = _.map([[oBlockId, 'outputPins', oPinIndex], [iBlockId, 'inputPins', iPinIndex]], (key) => {
-				const [id, name, index] = key;
-
-				if (!_.has(connectedPins, id)) {
-					connectedPins[id] = {
-						outputPins: [],
-						inputPins: []
-					};
-				}
-
-				connectedPins[id][name].push(index);
+				const [id] = key;
 
 				return blocks.get(id).absoluteCentralPositionOf(blocks.getIn(key));
 			});
@@ -83,10 +73,9 @@ class App extends Component {
 					height: '100%',
 				}}>
 					{
-						blocks.entrySeq().map(([id, model]) => (
+						blocks.keySeq().map((id) => (
 							<Block
-								model={model}
-								connectedPins={connectedPins[id]}
+								model={blocks.get(id)}
 								onConnectPinStart={this.onConnectPinStart}
 								onConnectPinEnd={this.onConnectPinEnd}
 								update={this.updateBlock}
@@ -156,7 +145,7 @@ class App extends Component {
 	 */
 	onConnectPinStart(block, pin) {
 		const blockId = block.get('id');
-		const {state: {blocks, tempLink, links}, onConnectPinEnd} = this;
+		const {state: {blocks, tempLink}} = this;
 		const [x, y] = blocks.get(blockId).absoluteCentralPositionOf(pin);
 		const pinIndex = pin.get('index');
 
@@ -164,11 +153,20 @@ class App extends Component {
 		document.addEventListener('mouseup', this.onConnectEndDocument);
 		this.tempBlockAndPin = [blockId, pin];
 		this.isConnecting = true;
-		this.setState({
-			tempLink: tempLink.start(x, y),
-			onConnectPinEnd,
-			links: pin.get('type') === 1 ? links.filter(({ input: [id, index]}) => !(blockId === id && pinIndex === index)) : links
-		});
+
+		if (pin.get('type') === 1) {
+			const {blocks, links} = this.disconnectedPins({ input: [blockId, pinIndex] });
+
+			this.setState({
+				tempLink: tempLink.start(x, y),
+				blocks,
+				links
+			});
+		} else {
+			this.setState({
+				tempLink: tempLink.start(x, y),
+			});
+		}
 	}
 
 	/**
@@ -176,7 +174,7 @@ class App extends Component {
 	 * @param {PinModel} pin0
 	 */
 	onConnectPinEnd(block0, pin0) {
-		const {tempBlockAndPin: [id1, pin1], state: {links}, isConnecting} = this;
+		const {tempBlockAndPin: [id1, pin1], isConnecting} = this;
 		if (!isConnecting) { return; }
 
 		const id0 = block0.get('id');
@@ -184,9 +182,11 @@ class App extends Component {
 
 		if (id0 === id1 || type0 === type1) { return; }
 		const [[oBlockId, oPinIndex], [iBlockId, iPinIndex]] = _.sortBy([[id0, index0, type0], [id1, index1, type1]], 2);
+		const {links, blocks} = this.disconnectedPins({ input: [iBlockId, iPinIndex] });
 
 		this.setState({
-			links: links.filter(({input: [id, index]}) => !(id === iBlockId && iPinIndex === index)).push({ output: [oBlockId, oPinIndex], input: [iBlockId, iPinIndex] })
+			links: links.push({ output: [oBlockId, oPinIndex], input: [iBlockId, iPinIndex] }),
+			blocks: blocks.updateIn([oBlockId, 'outputPins', oPinIndex], (pin) => pin.connect()).updateIn([iBlockId, 'inputPins', iPinIndex], (pin) => pin.connect(oBlockId))
 		});
 	}
 
@@ -226,27 +226,61 @@ class App extends Component {
 	 * @param {boolean} shouldLinkUpdate
 	 */
 	updateBlock(model, shouldLinkUpdate) {
-		const {state: {blocks, links}} = this;
-		const {size: index} = model.get('inputPins');
 		const id = model.get('id');
 
-		this.setState({
-			blocks: blocks.set(id, model),
-			links: shouldLinkUpdate ? links.filter(({input: [ib, ip]}) => !(ib === id && ip === index)) : links
-		});
+		if (shouldLinkUpdate) {
+			const {size} = model.get('inputPins');
+			const {blocks, links} = this.disconnectedPins({ input: [id, size] });
+
+			this.setState({
+				blocks: blocks.set(id, model),
+				links
+			});
+		} else {
+			const {state: {blocks}} = this;
+
+			this.setState({ blocks: blocks.set(id, model) });
+		}
 	}
 
 	/**
 	 * @param {BlockModel} model
 	 */
 	removeBlock(model) {
-		const {state: {blocks, links}} = this;
 		const id = model.get('id');
+		const {blocks, links} = this.disconnectedPins({ input: [id], output: [id] });
 
 		this.setState({
 			blocks: blocks.delete(id),
-			links: links.filter(({output: [oBlockId], input: [iBlockId]}) => !(oBlockId === id || iBlockId === id))
+			links
 		});
+	}
+
+	/**
+	 * @param {{output: (string|number)[], input: (string|number)[]}} target
+	 */
+	disconnectedPins(target) {
+		let {state: {blocks, links}} = this;
+		const names = _.filter(['input', 'output'], (a) => _.has(target, a));
+
+		links = links.filter((link) => {
+			return _.reduce(names, (current, name) => {
+				const [targetId, targetIndex] = target[name];
+				const [linkId, linkIndex] = link[name];
+
+				if (targetId === linkId && (!targetIndex || targetIndex === linkIndex)) {
+					const {input: [inputId, inputIndex], output: [outputId, outputIndex]} = link;
+
+					blocks = blocks.updateIn([inputId, 'inputPins', inputIndex], (pin) => pin.disconnect()).updateIn([outputId, 'outputPins', outputIndex], (pin) => pin.disconnect());
+
+					return false;
+				}
+
+				return current;
+			}, true);
+		});
+
+		return { blocks, links };
 	}
 }
 

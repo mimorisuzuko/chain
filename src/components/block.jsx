@@ -6,7 +6,49 @@ const {black, white, lblack, red, vblue, vlblue, vpink} = require('../color');
 const {Record, List} = Immutable;
 const {Component} = React;
 
-class PinModel extends Record({ type: 0, index: 0, color: white }) {
+class PinModel extends Record({ type: 0, index: 0, color: white, dst: null }) {
+	/**
+	 * @param {Object} o
+	 */
+	constructor(o) {
+		const {type} = o;
+
+		if (type === 0) {
+			super(_.assign(o, { dst: 0 }));
+		} else {
+			super(_.assign(o, { dst: null }));
+		}
+	}
+
+	/**
+	 * @param {string} id
+	 */
+	connect(id) {
+		const {type, dst} = this;
+
+		if (type === 0) {
+			return this.set('dst', dst + 1);
+		}
+
+		return this.set('dst', id);
+	}
+
+	disconnect() {
+		const {type, dst} = this;
+
+		if (type === 0) {
+			return this.set('dst', dst - 1);
+		}
+
+		return this.set('dst', null);
+	}
+
+	connected() {
+		const {type, dst} = this;
+
+		return type === 0 ? dst > 0 : dst;
+	}
+
 	static get RADIUS() {
 		return 8;
 	}
@@ -33,11 +75,11 @@ class Pin extends Component {
 
 	render() {
 		const {state: {isMouseHover, isConnecting}} = this;
-		const {props: {model, cx, cy, connected}} = this;
+		const {props: {model, cx, cy}} = this;
 		const {RADIUS: r, S_RADIUS: sr} = PinModel;
 		const width = r * 2;
 		const color = model.get('color');
-		const outline = isMouseHover || isConnecting || connected ? <circle strokeWidth={1} stroke={color} cx={r} cy={r} r={r - 1} fill='none' /> : null;
+		const outline = isMouseHover || isConnecting || model.connected() ? <circle strokeWidth={1} stroke={color} cx={r} cy={r} r={r - 1} fill='none' /> : null;
 
 		return (
 			<svg
@@ -281,12 +323,10 @@ class Block extends Component {
 
 	render() {
 		const {WIDTH: width, centralPositionOf} = BlockModel;
-		const {props: {model, onConnectPinStart, onConnectPinEnd, connectedPins}} = this;
+		const {props: {model, onConnectPinStart, onConnectPinEnd}} = this;
 		const color = model.get('color');
 		const pins = _.map(['inputPins', 'outputPins'], (name) => {
-			const connected = _.has(connectedPins, name) ? connectedPins[name] : [];
-
-			return model.get(name).map((a, i) => {
+			return model.get(name).map((a) => {
 				const [cx, cy] = centralPositionOf(a);
 
 				return (
@@ -295,7 +335,6 @@ class Block extends Component {
 						parent={model}
 						cx={cx}
 						cy={cy}
-						connected={_.includes(connected, i)}
 						onConnectStart={onConnectPinStart}
 						onConnectEnd={onConnectPinEnd}
 					/>
