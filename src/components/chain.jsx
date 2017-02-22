@@ -38,9 +38,9 @@ class Chain extends Component {
 	}
 
 	shouldComponentUpdate(nextProps, nextState) {
-		const {state} = this;
+		const {state, props} = this;
 
-		return !Immutable.is(Map(state), Map(nextState));
+		return !Immutable.is(Map(state), Map(nextState)) || !(JSON.stringify(props) === JSON.stringify(nextProps));
 	}
 
 	componentDidUpdate(prevProps) {
@@ -60,7 +60,7 @@ class Chain extends Component {
 			script += `\n${e}`;
 		});
 
-		$script.innerHTML = script;
+		$script.innerHTML = `try{${script}\n}catch(e){\nparent.postMessage({type: 'chainError', value: String(e)}, '*');}`;
 		$body.appendChild($script);
 		$html.appendChild($body);
 		updateHTMLRenderer($html.outerHTML);
@@ -82,7 +82,7 @@ class Chain extends Component {
 		});
 
 		return (
-			<div style={_.assign(style, {
+			<div style={_.assign({}, style, {
 				width: '100%',
 				height: '100%',
 				position: 'relative',
@@ -129,9 +129,11 @@ class Chain extends Component {
 		const {state: {blocks}} = this;
 		const {data: {id, value, type}} = e;
 
-		if (type !== 'chainResult') { return; }
-
-		this.setState({ blocks: blocks.setIn([id, 'value'], value) });
+		if (type === 'chainResult') {
+			this.setState({ blocks: blocks.setIn([id, 'value'], value) });
+		} else if (type === 'chainError') {
+			console.log(value);
+		}
 	}
 
 	/**
