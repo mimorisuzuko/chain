@@ -36,6 +36,7 @@ class Chain extends Component {
 		this.onConnectPinEnd = this.onConnectPinEnd.bind(this);
 		this.onConnectMoveDocument = this.onConnectMoveDocument.bind(this);
 		this.onConnectEndDocument = this.onConnectEndDocument.bind(this);
+		window.addEventListener('message', this.onMessage.bind(this));
 	}
 
 	componentDidUpdate(prevProps, prevState) {
@@ -55,10 +56,10 @@ class Chain extends Component {
 
 			const e = this.block2expression(id);
 
-			script += e;
+			script += `\n${e}`;
 		});
 
-		$script.innerText = script;
+		$script.innerHTML = script;
 		$body.appendChild($script);
 		$html.appendChild($body);
 		updateHTMLRenderer($html.outerHTML);
@@ -121,6 +122,18 @@ class Chain extends Component {
 	}
 
 	/**
+	 * @param {MessageEvent} e
+	 */
+	onMessage(e) {
+		const {state: {blocks}} = this;
+		const {data: {id, value, type}} = e;
+
+		if (type !== 'chainResult') { return; }
+
+		this.setState({ blocks: blocks.setIn([id, 'value'], value) });
+	}
+
+	/**
 	 * @param {string} id
 	 * @returns {string}
 	 */
@@ -144,7 +157,9 @@ class Chain extends Component {
 
 			return self ? `${self}["${value}"](${_.join(args, ', ')})` : `${value}(${_.join(args, ', ')})`;
 		} else if (name === 'debug') {
-			return `_this_is_debug_block(${_.join(value, ', ')})`;
+			return `_this_is_debug_block(${_.join(values, ', ')})`;
+		} else if (name === 'view') {
+			return `parent.postMessage({id: '${id}', type: 'chainResult', value: ${values[0]}}, '*')`;
 		}
 
 		return values[0];
