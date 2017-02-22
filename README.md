@@ -2,8 +2,14 @@
 
 A New Visual Programming Language to Build a Program Like JavaScript.
 
-## Example
+## Example: !dlroW ,olleH
 
-### !dlroW ,olleH
+### Chain
 
 ![](ss.png)
+
+### JavaScript
+
+```javascript
+Array.from("Hello, " + "World!").reverse().join("")
+```
