@@ -157,6 +157,13 @@ class BlockModel extends Record({
 		super(_.assign({ id, name }, o, list[name]));
 	}
 
+	isTail() {
+		const {outputPins} = this;
+		const {size} = outputPins;
+
+		return size === 0 || !outputPins.get(0).connected();
+	}
+
 	/**
 	 * @param {number} dx
 	 * @param {number} dy

@@ -10,7 +10,7 @@ const {List, Map} = Immutable;
 
 require('./index.scss');
 
-class App extends Component {
+class Chain extends Component {
 	constructor(props) {
 		super(props);
 
@@ -35,6 +35,33 @@ class App extends Component {
 		this.onConnectPinEnd = this.onConnectPinEnd.bind(this);
 		this.onConnectMoveDocument = this.onConnectMoveDocument.bind(this);
 		this.onConnectEndDocument = this.onConnectEndDocument.bind(this);
+	}
+
+	componentWillUpdate(nextProps, nextState) {
+		const {state} = this;
+
+		if (Immutable.is(Map(state), Map(nextState))) { return; }
+
+		const {updateHTMLRenderer} = nextProps;
+		const {links, blocks} = nextState;
+		const $html = document.createElement('html');
+		const $body = document.createElement('body');
+		const $script = document.createElement('script');
+		let script = '';
+
+		links.forEach(({input: [id]}) => {
+			const block = blocks.get(id);
+
+			if (!block.isTail()) { return; }
+			const e = this.block2expression(id);
+
+			script += e;
+		});
+
+		$script.innerText = script;
+		$body.appendChild($script);
+		$html.appendChild($body);
+		updateHTMLRenderer($html.outerHTML);
 	}
 
 	render() {
@@ -87,6 +114,36 @@ class App extends Component {
 				</div>
 			</div>
 		);
+	}
+
+	/**
+	 * @param {string} id
+	 * @returns {string}
+	 */
+	block2expression(id) {
+		const {state: {blocks}} = this;
+		const block = blocks.get(id);
+		const name = block.get('name');
+		const value = block.get('value');
+		const inputPins = block.get('inputPins');
+
+		const values = inputPins.map((pin) => {
+			const id = pin.get('dst');
+
+			return id ? this.block2expression(id) : null;
+		}).toJS();
+
+		if (name === 'value') {
+			return value;
+		} else if (name === 'function') {
+			const [self, ...args] = values;
+
+			return self ? `${self}["${value}"](${_.join(args, ', ')})` : `${value}(${_.join(args, ', ')})`;
+		} else if (name === 'debug') {
+			return `_this_is_debug_block(${_.join(value, ', ')})`;
+		}
+
+		return values[0];
 	}
 
 	/**
@@ -281,6 +338,54 @@ class App extends Component {
 		});
 
 		return { blocks, links };
+	}
+}
+
+class HTMLRenderer extends Component {
+	shouldComponentUpdate(nextProps) {
+		const {props} = this;
+
+		return !Immutable.is(Map(props), Map(nextProps));
+	}
+
+	render() {
+		const {props: {html}} = this;
+
+		return (
+			<iframe srcDoc={html} style={{
+				display: 'none'
+			}} />
+		);
+	}
+}
+
+class App extends Component {
+	constructor(props) {
+		super(props);
+
+		this.state = { html: '' };
+		this.updateHTMLRenderer = this.updateHTMLRenderer.bind(this);
+	}
+
+	render() {
+		const {state: {html}} = this;
+
+		return (
+			<div style={{
+				width: '100%',
+				height: '100%'
+			}}>
+				<Chain updateHTMLRenderer={this.updateHTMLRenderer} />
+				<HTMLRenderer html={html} />
+			</div>
+		);
+	}
+
+	/**
+	 * @param {string} html
+	 */
+	updateHTMLRenderer(html) {
+		this.setState({ html });
 	}
 }
 
