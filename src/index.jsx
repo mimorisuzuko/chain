@@ -347,7 +347,11 @@ class Chain extends Component {
 				if (targetId === linkId && (!targetIndex || targetIndex === linkIndex)) {
 					const {input: [inputId, inputIndex], output: [outputId, outputIndex]} = link;
 
-					blocks = blocks.updateIn([inputId, 'inputPins', inputIndex], (pin) => pin.disconnect()).updateIn([outputId, 'outputPins', outputIndex], (pin) => pin.disconnect());
+					blocks = blocks.updateIn([inputId, 'inputPins', inputIndex], (pin) => pin.disconnect()).updateIn([outputId, 'outputPins', outputIndex], (pin) => pin.disconnect()).update(inputId, (block) => {
+						const name = block.get('name');
+
+						return name === 'view' ? block.set('value', '') : block;
+					});
 
 					return false;
 				}
