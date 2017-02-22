@@ -1,17 +1,15 @@
 # Chain
 
-Chain is a visual programming language that allows user to use methods of JavaScript.
+A New Visual Programming Language to Build a Program Like JavaScript.
 
-## Example
+## Example: !dlroW ,olleH
 
-### Hello, World!
+### Chain
 
-![Hello, World!](images/00.gif)
+![](ss.png)
 
-### !dlroW ,olleH
+### JavaScript
 
-![!dlroW ,olleH](images/01.png)
-
-## Play Chain!
-
-You can read [`How to play Chain`](https://github.com/mimorisuzuko/chain/wiki/How-to-play-Chain-lang=%22ja%22) and play Chain on the latest Chrome.
+```javascript
+Array.from("Hello, " + "World!").reverse().join("")
+```

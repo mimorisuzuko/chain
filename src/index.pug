@@ -1,33 +1,8 @@
 doctype html
 html
 	head
+		title Chain: A New Visual Programming Language to Build a Program Like JavaScript
 		meta(charset='utf-8')
-		title Chain
-		link(rel='stylesheet', href='index.css')
 	body
-		main.chain
-			canvas#chain-canvas
-			div#chain-html
-			iframe#chain-window
-			div.block-menu(style='display:none;')
-				select
-					option(value='function') Function Block
-					option(value='value') Value Block
-					option(value='property') Property Block
-					option(value='operator') Operator Block
-					option(value='view') View Block
-					option(value='if') If Block
-					option(value='repeat') Repeat Block
-					//option(value='functionize') Functionize Block
-				input(type='text')
-				button.btn add
-			div.rename-area(style='display:none;')
-				input(type='text')
-			ul.clear
-				li
-					a.btn(href='#chain-canvas') Chain
-				li
-					a.btn(href='#chain-html') HTML
-				li
-					a.btn(href='#chain-window') Window
+		main
 		script(src='index.js')
