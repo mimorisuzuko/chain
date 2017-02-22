@@ -4,7 +4,7 @@ const Immutable = require('immutable');
 const {white} = require('../color');
 const {PinModel} = require('./block');
 const {Component} = React;
-const {Record} = Immutable;
+const {Record, Map} = Immutable;
 
 class LinkModel extends Record({ ax: 0, ay: 0, bx: 0, by: 0, visible: false }) {
 
@@ -91,6 +91,12 @@ class LinkModel extends Record({ ax: 0, ay: 0, bx: 0, by: 0, visible: false }) {
 }
 
 class Link extends Component {
+	shouldComponentUpdate(nextProps) {
+		const {props} = this;
+
+		return !Immutable.is(Map(props), Map(nextProps));
+	}
+
 	render() {
 		const {polyline} = Link;
 		const {points} = LinkModel;
