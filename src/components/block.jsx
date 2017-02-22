@@ -2,8 +2,8 @@ const React = require('react');
 const Immutable = require('immutable');
 const Radium = require('radium');
 const _ = require('lodash');
-const {black, white, lblack, red, blue, vblue, vlblue, vpink} = require('../color');
-const {Record, List, Map} = Immutable;
+const {black, white, lblack, red, vblue, vlblue, vpink} = require('../color');
+const {Record, List} = Immutable;
 const {Component} = React;
 
 class PinModel extends Record({ type: 0, index: 0, color: white }) {
@@ -20,8 +20,15 @@ class Pin extends Component {
 	constructor(props) {
 		super(props);
 
-		this.mouseUpper = null;
-		this.state = { isMouseHover: false, isConnecting: false };
+		this.state = {
+			isMouseHover: false,
+			isConnecting: false
+		};
+		this.onMouseDown = this.onMouseDown.bind(this);
+		this.onMouseUp = this.onMouseUp.bind(this);
+		this.onMouseEnter = this.onMouseEnter.bind(this);
+		this.onMouseLeave = this.onMouseLeave.bind(this);
+		this.onMouseUpDocument = this.onMouseUpDocument.bind(this);
 	}
 
 	render() {
@@ -34,10 +41,10 @@ class Pin extends Component {
 
 		return (
 			<svg
-				onMouseDown={this.onMouseDown.bind(this)}
-				onMouseUp={this.onMouseUp.bind(this)}
-				onMouseEnter={this.onMouseEnter.bind(this)}
-				onMouseLeave={this.onMouseLeave.bind(this)}
+				onMouseDown={this.onMouseDown}
+				onMouseUp={this.onMouseUp}
+				onMouseEnter={this.onMouseEnter}
+				onMouseLeave={this.onMouseLeave}
 				style={{
 					display: 'block',
 					width,
@@ -54,26 +61,22 @@ class Pin extends Component {
 	}
 
 	onMouseDown() {
-		const {props: {model, onConnectStart}} = this;
-		const mouseUpper = this.onMouseUpDocument.bind(this);
+		const {props: {parent, model, onConnectStart}} = this;
 
-		onConnectStart(model);
+		onConnectStart(parent, model);
 		this.setState({ isConnecting: true });
-		document.addEventListener('mouseup', mouseUpper);
-		this.mouseUpper = mouseUpper;
+		document.addEventListener('mouseup', this.onMouseUpDocument);
 	}
 
 	onMouseUpDocument() {
-		const {mouseUpper} = this;
-
-		document.removeEventListener('mouseup', mouseUpper);
+		document.removeEventListener('mouseup', this.onMouseUpDocument);
 		this.setState({ isConnecting: false });
 	}
 
 	onMouseUp() {
-		const {props: {model, onConnectEnd}} = this;
+		const {props: {parent, model, onConnectEnd}} = this;
 
-		onConnectEnd(model);
+		onConnectEnd(parent, model);
 	}
 
 	onMouseEnter() {
@@ -188,11 +191,17 @@ class BlockModel extends Record({
 }
 
 class Button extends Component {
+	constructor(props) {
+		super(props);
+
+		this.onClick = this.onClick.bind(this);
+	}
+
 	render() {
 		const {props: {value, backgroundColor}} = this;
 
 		return (
-			<a href='#' onClick={this.onClick.bind(this)} style={{
+			<a href='#' onClick={this.onClick} style={{
 				padding: '1px 8px',
 				backgroundColor,
 				marginRight: 1
@@ -210,11 +219,17 @@ class Button extends Component {
 }
 
 const Textarea = Radium(class Textarea extends Component {
+	constructor(props) {
+		super(props);
+
+		this.onChange = this.onChange.bind(this);
+	}
+
 	render() {
 		const {props: {value, editable, color}} = this;
 
 		return (
-			<textarea readOnly={!editable} value={value} onChange={this.onChange.bind(this)} style={{
+			<textarea readOnly={!editable} value={value} onChange={this.onChange} style={{
 				display: 'block',
 				outline: 'none',
 				backgroundColor: lblack,
@@ -255,15 +270,18 @@ class Block extends Component {
 
 		this.px = 0;
 		this.py = 0;
-		this.mouseMover = null;
-		this.mouseUpper = null;
+		this.onMouseDown = this.onMouseDown.bind(this);
+		this.onChangeTextarea = this.onChangeTextarea.bind(this);
+		this.removeInputPin = this.removeInputPin.bind(this);
+		this.addInputPin = this.addInputPin.bind(this);
+		this.onMouseMoveDocument = this.onMouseMoveDocument.bind(this);
+		this.onMouseUpDocument = this.onMouseUpDocument.bind(this);
+		this.remove = this.remove.bind(this);
 	}
 
 	render() {
-		const {RADIUS: radius} = PinModel;
-		const diameter = radius * 2;
 		const {WIDTH: width, centralPositionOf} = BlockModel;
-		const {props: {model, onChange, remove, onConnectPinStart, onConnectPinEnd, connectedPins}} = this;
+		const {props: {model, onConnectPinStart, onConnectPinEnd, connectedPins}} = this;
 		const color = model.get('color');
 		const pins = _.map(['inputPins', 'outputPins'], (name) => {
 			const connected = _.has(connectedPins, name) ? connectedPins[name] : [];
@@ -274,6 +292,7 @@ class Block extends Component {
 				return (
 					<Pin
 						model={a}
+						parent={model}
 						cx={cx}
 						cy={cy}
 						connected={_.includes(connected, i)}
@@ -285,7 +304,7 @@ class Block extends Component {
 		});
 
 		return (
-			<div data-movable={true} onMouseDown={this.onMouseDown.bind(this)} style={{
+			<div data-movable={true} onMouseDown={this.onMouseDown} style={{
 				position: 'absolute',
 				left: model.get('x'),
 				top: model.get('y'),
@@ -296,10 +315,10 @@ class Block extends Component {
 				boxShadow: '0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2)'
 			}}>
 				<div data-movable={true}>
-					<Button value='×' backgroundColor={red} onClick={remove} />
+					<Button value='×' backgroundColor={red} onClick={this.remove} />
 					{model.get('editablepin') ? [
-						<Button value='-' backgroundColor={lblack} onClick={this.removeInputPin.bind(this)} />,
-						<Button value='+' backgroundColor={lblack} onClick={this.addInputPin.bind(this)} />
+						<Button value='-' backgroundColor={lblack} onClick={this.removeInputPin} />,
+						<Button value='+' backgroundColor={lblack} onClick={this.addInputPin} />
 					] : null}
 				</div>
 				<div data-movable={true} style={{
@@ -308,12 +327,18 @@ class Block extends Component {
 					<div style={{
 						borderLeft: `5px solid ${color}`
 					}}>
-						<Textarea color={color} value={model.get('value')} onChange={this.onChangeTextarea.bind(this)} editable={model.get('editablevalue')} />
+						<Textarea color={color} value={model.get('value')} onChange={this.onChangeTextarea} editable={model.get('editablevalue')} />
 					</div>
 				</div>
 				{pins}
 			</div>
 		);
+	}
+
+	remove() {
+		const {props: {model, remove}} = this;
+
+		remove(model);
 	}
 
 	removeInputPin() {
@@ -353,22 +378,17 @@ class Block extends Component {
 		const {target: {dataset: {movable}}, clientX, clientY} = e;
 
 		if (!Boolean(movable)) { return; }
-		const mouseMover = this.onMouseMove.bind(this);
-		const mouseUpper = this.onMouseUp.bind(this);
-
 		document.body.classList.add('cursor-move');
-		document.addEventListener('mousemove', mouseMover);
-		document.addEventListener('mouseup', mouseUpper);
+		document.addEventListener('mousemove', this.onMouseMoveDocument);
+		document.addEventListener('mouseup', this.onMouseUpDocument);
 		this.px = clientX;
 		this.py = clientY;
-		this.mouseMover = mouseMover;
-		this.mouseUpper = mouseUpper;
 	}
 
 	/**
 	 * @param {MouseEvent} e
 	 */
-	onMouseMove(e) {
+	onMouseMoveDocument(e) {
 		const {props: {model, update}, px, py} = this;
 		const {clientX, clientY} = e;
 		const dx = clientX - px;
@@ -382,14 +402,10 @@ class Block extends Component {
 	/**
 	 * @param {MouseEvent} e
 	 */
-	onMouseUp(e) {
-		const {mouseMover, mouseUpper} = this;
-
+	onMouseUpDocument() {
 		document.body.classList.remove('cursor-move');
-		document.removeEventListener('mousemove', mouseMover);
-		document.removeEventListener('mouseup', mouseUpper);
-		this.mouseMover = null;
-		this.mouseUpper = null;
+		document.removeEventListener('mousemove', this.onMouseMoveDocument);
+		document.removeEventListener('mouseup', this.onMouseUpDocument);
 	}
 }
 

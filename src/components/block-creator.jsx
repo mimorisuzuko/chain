@@ -9,11 +9,17 @@ const {Component} = React;
 const blockNames = _.keys(BLOCK_LIST);
 
 const Textarea = Radium(class Textarea extends Component {
+	constructor(props) {
+		super(props);
+
+		this.onChange = this.onChange.bind(this);
+	}
+
 	render() {
 		const {props: {value}} = this;
 
 		return (
-			<textarea onChange={this.onChange.bind(this)} value={value} style={{
+			<textarea onChange={this.onChange} value={value} style={{
 				display: 'block',
 				border: 'none',
 				backgroundColor: lblack,
@@ -42,11 +48,17 @@ const Textarea = Radium(class Textarea extends Component {
 });
 
 class Button extends Component {
+	constructor(props) {
+		super(props);
+
+		this.onClick = this.onClick.bind(this);
+	}
+
 	render() {
 		const {props: {value}} = this;
 
 		return (
-			<a href='#' onClick={this.onClick.bind(this)} style={{
+			<a href='#' onClick={this.onClick} style={{
 				textTransform: 'uppercase',
 				display: 'inline-block',
 				backgroundColor: lblack,
@@ -82,6 +94,13 @@ class BlockCreatorModel extends Record({ x: 0, y: 0, value: '', visible: false, 
 }
 
 const BlockCreator = Radium(class BlockCreator extends Component {
+	constructor(props) {
+		super(props);
+
+		this.onChangeSelect = this.onChangeSelect.bind(this);
+		this.onChangeTextarea = this.onChangeTextarea.bind(this);
+	}
+
 	render() {
 		const {WIDTH: width} = BlockCreatorModel;
 		const {props: {model, add}} = this;
@@ -100,7 +119,7 @@ const BlockCreator = Radium(class BlockCreator extends Component {
 					border: `1px solid ${lblack}`,
 					boxShadow: '0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2)'
 				}}>
-					<select onChange={this.onChangeSelect.bind(this)} value={name} style={{
+					<select onChange={this.onChangeSelect} value={name} style={{
 						display: 'block',
 						width: '100%',
 						marginBottom: 5,
@@ -113,9 +132,9 @@ const BlockCreator = Radium(class BlockCreator extends Component {
 							borderColor: blue
 						}
 					}}>
-						{_.map(blockNames, (a, i) => <option value={a}>{`${_.capitalize(a)} Block`}</option>)}
+						{_.map(blockNames, (a) => <option value={a}>{`${_.capitalize(a)} Block`}</option>)}
 					</select>
-					{editablevalue !== false ? <Textarea value={model.get('value')} onChange={this.onChangeTextarea.bind(this)} /> : null}
+					{editablevalue !== false ? <Textarea value={model.get('value')} onChange={this.onChangeTextarea} /> : null}
 					<Button value='add' onClick={add} />
 				</div>
 				: null

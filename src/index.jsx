@@ -14,10 +14,6 @@ class App extends Component {
 	constructor(props) {
 		super(props);
 
-		this.connectMover = null;
-		this.connectEnder = null;
-		this.tempBlockAndPin = null;
-		this.isMouseDown = false;
 		this.state = {
 			blocks: Map(),
 			links: List(),
@@ -25,10 +21,24 @@ class App extends Component {
 			onConnectPinEnd: null,
 			blockCreator: new BlockCreatorModel()
 		};
+		this.tempBlockAndPin = null;
+		this.isMouseDown = false;
+		this.isConnecting = false;
+		this.onMouseDown = this.onMouseDown.bind(this);
+		this.onMouseMove = this.onMouseMove.bind(this);
+		this.onMouseUp = this.onMouseUp.bind(this);
+		this.addBlock = this.addBlock.bind(this);
+		this.removeBlock = this.removeBlock.bind(this);
+		this.updateBlock = this.updateBlock.bind(this);
+		this.updateBlockCreator = this.updateBlockCreator.bind(this);
+		this.onConnectPinStart = this.onConnectPinStart.bind(this);
+		this.onConnectPinEnd = this.onConnectPinEnd.bind(this);
+		this.onConnectMoveDocument = this.onConnectMoveDocument.bind(this);
+		this.onConnectEndDocument = this.onConnectEndDocument.bind(this);
 	}
 
 	render() {
-		const {state: {blocks, links: _links, tempLink, onConnectPinEnd, blockCreator}} = this;
+		const {state: {blocks, links: _links, tempLink, blockCreator}} = this;
 		const connectedPins = {};
 		const links = _links.map(({output: [oBlockId, oPinIndex], input: [iBlockId, iPinIndex]}) => {
 			const pintopin = _.map([[oBlockId, 'outputPins', oPinIndex], [iBlockId, 'inputPins', iPinIndex]], (key) => {
@@ -56,9 +66,9 @@ class App extends Component {
 				position: 'relative'
 			}}>
 				<svg
-					onMouseDown={this.onMouseDown.bind(this)}
-					onMouseMove={this.onMouseMove.bind(this)}
-					onMouseUp={this.onMouseUp.bind(this)}
+					onMouseDown={this.onMouseDown}
+					onMouseMove={this.onMouseMove}
+					onMouseUp={this.onMouseUp}
 					style={{
 						position: 'absolute',
 						width: '100%',
@@ -77,14 +87,14 @@ class App extends Component {
 							<Block
 								model={model}
 								connectedPins={connectedPins[id]}
-								onConnectPinStart={this.onConnectPinStart.bind(this, id)}
-								onConnectPinEnd={onConnectPinEnd ? onConnectPinEnd.bind(this, id) : () => { }}
-								update={this.updateBlock.bind(this, id)}
-								remove={this.removeBlock.bind(this, id)}
+								onConnectPinStart={this.onConnectPinStart}
+								onConnectPinEnd={this.onConnectPinEnd}
+								update={this.updateBlock}
+								remove={this.removeBlock}
 							/>
 						))
 					}
-					{<BlockCreator model={blockCreator} add={this.addBlock.bind(this)} update={this.updateBlockCreator.bind(this)} />}
+					{<BlockCreator model={blockCreator} add={this.addBlock} update={this.updateBlockCreator} />}
 				</div>
 			</div>
 		);
@@ -115,7 +125,7 @@ class App extends Component {
 	/**
 	 * @param {MouseEvent} e
 	 */
-	onMouseMove(e) {
+	onMouseMove() {
 		this.isMouseDown = false;
 	}
 
@@ -141,21 +151,19 @@ class App extends Component {
 	}
 
 	/**
-	 * @param {string} blockId
+	 * @param {BlockModel} block
 	 * @param {PinModel} pin
 	 */
-	onConnectPinStart(blockId, pin) {
+	onConnectPinStart(block, pin) {
+		const blockId = block.get('id');
 		const {state: {blocks, tempLink, links}, onConnectPinEnd} = this;
-		const connectPinMover = this.onConnectMove.bind(this);
-		const connectPinEnder = this.onConnectEnd.bind(this);
 		const [x, y] = blocks.get(blockId).absoluteCentralPositionOf(pin);
 		const pinIndex = pin.get('index');
 
-		document.addEventListener('mousemove', connectPinMover);
-		document.addEventListener('mouseup', connectPinEnder);
+		document.addEventListener('mousemove', this.onConnectMoveDocument);
+		document.addEventListener('mouseup', this.onConnectEndDocument);
 		this.tempBlockAndPin = [blockId, pin];
-		this.connectPinMover = connectPinMover;
-		this.connectPinEnder = connectPinEnder;
+		this.isConnecting = true;
 		this.setState({
 			tempLink: tempLink.start(x, y),
 			onConnectPinEnd,
@@ -164,11 +172,14 @@ class App extends Component {
 	}
 
 	/**
-	 * @param {string} id0
+	 * @param {BlockModel} block0
 	 * @param {PinModel} pin0
 	 */
-	onConnectPinEnd(id0, pin0) {
-		const {tempBlockAndPin: [id1, pin1], state: {links}} = this;
+	onConnectPinEnd(block0, pin0) {
+		const {tempBlockAndPin: [id1, pin1], state: {links}, isConnecting} = this;
+		if (!isConnecting) { return; }
+
+		const id0 = block0.get('id');
 		const [[type0, index0], [type1, index1]] = _.map([pin0, pin1], (a) => [a.get('type'), a.get('index')]);
 
 		if (id0 === id1 || type0 === type1) { return; }
@@ -182,19 +193,20 @@ class App extends Component {
 	/**
 	 * @param {MouseEvent} e
 	 */
-	onConnectMove(e) {
+	onConnectMoveDocument(e) {
 		const {state: {tempLink}} = this;
 		const [x, y] = this.mouse(e);
 
 		this.setState({ tempLink: tempLink.end(x, y) });
 	}
 
-	onConnectEnd() {
-		const {connectMover, connectEnder, state: {tempLink}} = this;
+	onConnectEndDocument() {
+		const {state: {tempLink}} = this;
 
-		document.removeEventListener('mousemove', connectMover);
-		document.removeEventListener('mouseup', connectEnder);
-		this.setState({ tempLink: tempLink.set('visible', false), onConnectPinEnd: null });
+		document.removeEventListener('mousemove', this.onConnectMoveDocument);
+		document.removeEventListener('mouseup', this.onConnectEndDocument);
+		this.isConnecting = false;
+		this.setState({ tempLink: tempLink.set('visible', false) });
 	}
 
 	addBlock() {
@@ -210,13 +222,13 @@ class App extends Component {
 	}
 
 	/**
-	 * @param {string} id
 	 * @param {BlockModel} model
 	 * @param {boolean} shouldLinkUpdate
 	 */
-	updateBlock(id, model, shouldLinkUpdate) {
+	updateBlock(model, shouldLinkUpdate) {
 		const {state: {blocks, links}} = this;
 		const {size: index} = model.get('inputPins');
+		const id = model.get('id');
 
 		this.setState({
 			blocks: blocks.set(id, model),
@@ -225,14 +237,15 @@ class App extends Component {
 	}
 
 	/**
-	 * @param {string} id
+	 * @param {BlockModel} model
 	 */
-	removeBlock(id) {
+	removeBlock(model) {
 		const {state: {blocks, links}} = this;
+		const id = model.get('id');
 
 		this.setState({
 			blocks: blocks.delete(id),
-			links: links.filter(({output: [oBlockId, oPinIndex], input: [iBlockId, iPinIndex]}) => !(oBlockId === id || iBlockId === id))
+			links: links.filter(({output: [oBlockId], input: [iBlockId]}) => !(oBlockId === id || iBlockId === id))
 		});
 	}
 }
