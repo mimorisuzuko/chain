@@ -38,22 +38,21 @@ class Chain extends Component {
 		this.onConnectEndDocument = this.onConnectEndDocument.bind(this);
 	}
 
-	componentWillUpdate(nextProps, nextState) {
+	componentDidUpdate(prevProps, prevState) {
 		const {state} = this;
 
-		if (Immutable.is(Map(state), Map(nextState))) { return; }
+		if (Immutable.is(Map(state), Map(prevState))) { return; }
 
-		const {updateHTMLRenderer} = nextProps;
-		const {links, blocks} = nextState;
+		const {updateHTMLRenderer} = prevProps;
+		const {blocks} = state;
 		const $html = document.createElement('html');
 		const $body = document.createElement('body');
 		const $script = document.createElement('script');
 		let script = '';
 
-		links.forEach(({input: [id]}) => {
-			const block = blocks.get(id);
-
+		blocks.entrySeq().forEach(([id, block]) => {
 			if (!block.isTail()) { return; }
+
 			const e = this.block2expression(id);
 
 			script += e;
