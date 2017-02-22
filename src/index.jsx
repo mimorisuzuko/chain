@@ -2,6 +2,7 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 const _ = require('lodash');
 const Immutable = require('immutable');
+const {blue, black, lblack, llblack} = require('./color');
 const {Block, BlockModel} = require('./components/block');
 const {Link, LinkModel} = require('./components/link');
 const {BlockCreator, BlockCreatorModel} = require('./components/block-creator');
@@ -65,7 +66,10 @@ class Chain extends Component {
 	}
 
 	render() {
-		const {state: {blocks, links: _links, tempLink, blockCreator}} = this;
+		const {
+			state: {blocks, links: _links, tempLink, blockCreator},
+			props: {style}
+		} = this;
 		const links = _links.map(({output: [oBlockId, oPinIndex], input: [iBlockId, iPinIndex]}) => {
 			const pintopin = _.map([[oBlockId, 'outputPins', oPinIndex], [iBlockId, 'inputPins', iPinIndex]], (key) => {
 				const [id] = key;
@@ -77,11 +81,12 @@ class Chain extends Component {
 		});
 
 		return (
-			<div style={{
+			<div style={_.assign(style, {
 				width: '100%',
 				height: '100%',
-				position: 'relative'
-			}}>
+				position: 'relative',
+				backgroundColor: black
+			})}>
 				<svg
 					onMouseDown={this.onMouseDown}
 					onMouseMove={this.onMouseMove}
@@ -349,13 +354,80 @@ class HTMLRenderer extends Component {
 	}
 
 	render() {
-		const {props: {html}} = this;
+		const {props: {html, style}} = this;
 
 		return (
-			<iframe srcDoc={html} style={{
-				display: 'none'
-			}} />
+			<iframe srcDoc={html} style={_.assign(style, {
+				display: 'block',
+				width: '100%',
+				height: '100%',
+				border: 'none'
+			})} />
 		);
+	}
+}
+
+class Tab extends Component {
+	constructor(props) {
+		super(props);
+
+		this.onClickItem = this.onClickItem.bind(this);
+	}
+
+	render() {
+		const {HEIGHT: height} = Tab;
+		const {props: {children: _children, names: _names, active}} = this;
+		const names = _.map(_names, (a, i) => (
+			<a href='#' data-index={i} onClick={this.onClickItem} style={{
+				display: 'inline-block',
+				fontSize: '1rem',
+				padding: '5px 10px',
+				borderBottom: `3px solid ${active === i ? blue : 'transparent'}`
+			}}>
+				{a}
+			</a>
+		)
+		);
+		const children = React.Children.map(_children, (child, i) => React.cloneElement(child, {
+			style: {
+				display: active === i ? 'block' : 'none'
+			}
+		})
+		);
+
+		return (
+			<div style={{
+				width: '100%',
+				height: `calc(100% - ${height}px)`
+			}}>
+				{children}
+				<footer style={{
+					backgroundColor: lblack,
+					position: 'fixed',
+					left: 0,
+					bottom: 0,
+					borderTop: `1px solid ${llblack}`,
+					width: '100%',
+					height,
+				}}>
+					{names}
+				</footer>
+			</div>
+		);
+	}
+
+	/**
+	 * @param {MouseEvent} e
+	 */
+	onClickItem(e) {
+		const {currentTarget: {dataset: {index}}} = e;
+		const {props: {updateActiveTab}} = this;
+
+		updateActiveTab(_.parseInt(index));
+	}
+
+	static get HEIGHT() {
+		return 33;
 	}
 }
 
@@ -363,22 +435,27 @@ class App extends Component {
 	constructor(props) {
 		super(props);
 
-		this.state = { html: '' };
+		this.state = { html: '', active: 0 };
+		this.updateActiveTab = this.updateActiveTab.bind(this);
 		this.updateHTMLRenderer = this.updateHTMLRenderer.bind(this);
 	}
 
 	render() {
-		const {state: {html}} = this;
+		const {state: {html, active}} = this;
 
 		return (
-			<div style={{
-				width: '100%',
-				height: '100%'
-			}}>
+			<Tab names={['Chain', 'Result']} active={active} updateActiveTab={this.updateActiveTab}>
 				<Chain updateHTMLRenderer={this.updateHTMLRenderer} />
 				<HTMLRenderer html={html} />
-			</div>
+			</Tab>
 		);
+	}
+
+	/**
+	 * @param {number} active
+	 */
+	updateActiveTab(active) {
+		this.setState({ active });
 	}
 
 	/**
