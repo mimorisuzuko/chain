@@ -294,7 +294,7 @@ class Chain extends Component {
 		const block = new BlockModel({ x, y, value, name });
 		const id = block.get('id');
 
-		this.setState({ blocks: blocks.set(id, block), blockCreator: blockCreator.set('visible', false) });
+		this.setState({ blocks: blocks.set(id, block), blockCreator: blockCreator.hide() });
 	}
 
 	/**

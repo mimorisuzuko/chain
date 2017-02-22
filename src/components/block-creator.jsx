@@ -85,7 +85,15 @@ class BlockCreatorModel extends Record({ x: 0, y: 0, value: '', visible: false, 
 	toggle() {
 		const {visible} = this;
 
-		return this.set('visible', !visible);
+		return visible ? this.hide() : this.show();
+	}
+
+	show() {
+		return this.merge({ visible: true, value: '' });
+	}
+
+	hide() {
+		return this.set('visible', false);
 	}
 
 	static get WIDTH() {
