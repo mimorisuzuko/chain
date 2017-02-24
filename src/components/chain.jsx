@@ -125,13 +125,13 @@ class Chain extends Component {
 	 * @param {MessageEvent} e
 	 */
 	onMessage(e) {
-		const {state: {blocks}} = this;
+		const {state: {blocks}, props: {addBalloon}} = this;
 		const {data: {id, value, type}} = e;
 
 		if (type === 'chainResult') {
 			this.setState({ blocks: blocks.setIn([id, 'value'], value) });
 		} else if (type === 'chainError') {
-			console.log(value);
+			addBalloon(value);
 		}
 	}
 
