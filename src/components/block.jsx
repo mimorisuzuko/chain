@@ -164,6 +164,23 @@ class BlockModel extends Record({
 		return size === 0 || !outputPins.get(0).connected();
 	}
 
+	addInputPin() {
+		const {addedPinColor: color} = this;
+
+
+		return this.update('inputPins', (pins) => {
+			const {size: index} = pins;
+
+			return pins.push(new PinModel({ type: 1, index, color }));
+		});
+	}
+
+	removeInputPin() {
+		const {inputPins: {size}, inputPinsMinlength: min} = this;
+
+		return min < size ? this.update('inputPins', (pins) => pins.pop()) : this;
+	}
+
 	/**
 	 * @param {number} dx
 	 * @param {number} dy
@@ -404,21 +421,13 @@ class Block extends Component {
 	removeInputPin() {
 		const {props: {model, update}} = this;
 
-		const {size} = model.get('inputPins');
-		const min = model.get('inputPinsMinlength');
-
-		update(min < size ? model.updateIn(['inputPins'], (pins) => pins.pop()) : model, true);
+		update(model.removeInputPin(), true);
 	}
 
 	addInputPin() {
 		const {props: {model, update}} = this;
-		const color = model.get('addedPinColor');
 
-		update(model.updateIn(['inputPins'], (pins) => {
-			const {size: index} = pins;
-
-			return pins.push(new PinModel({ type: 1, index, color }));
-		}));
+		update(model.addInputPin());
 	}
 
 	/**
