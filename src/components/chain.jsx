@@ -59,8 +59,8 @@ class Chain extends Component {
 
 			script += `\n${e}`;
 		});
-
-		$script.innerHTML = `try{${script}\n}catch(e){\nparent.postMessage({type: 'chainError', value: String(e)}, '*');}`;
+		script = script.replace(/\n/g, '\\n').replace(/"/g, '\\"');
+		$script.innerHTML = `try{\n(0, eval)("${script}")\n}catch(e){\nparent.postMessage({type: 'chainError', value: String(e)}, '*');\n}`;
 		$body.appendChild($script);
 		$html.appendChild($body);
 		updateHTMLRenderer($html.outerHTML);
