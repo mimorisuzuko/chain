@@ -1,12 +1,12 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
 const Immutable = require('immutable');
-const {Tab} = require('./components/tab');
-const {Chain} = require('./components/chain');
-const {HTMLRenderer} = require('./components/htmlrender');
-const {Balloon, BalloonModel} = require('./components/balloon');
-const {Component} = React;
-const {List} = Immutable;
+const { Tab } = require('./components/tab');
+const { Chain } = require('./components/chain');
+const { HTMLRenderer } = require('./components/htmlrender');
+const { Balloon, BalloonModel } = require('./components/balloon');
+const { Component } = React;
+const { List } = Immutable;
 
 require('./index.scss');
 
@@ -27,7 +27,7 @@ class App extends Component {
 	}
 
 	render() {
-		const {state: {html, active, balloons}} = this;
+		const { state: { html, active, balloons } } = this;
 
 		return (
 			<div style={{
@@ -53,7 +53,7 @@ class App extends Component {
 	 * @param {string} value
 	 */
 	addBalloon(value) {
-		const {state: {balloons}} = this;
+		const { state: { balloons } } = this;
 		const balloon = new BalloonModel({ value });
 
 		this.setState({
@@ -66,7 +66,7 @@ class App extends Component {
 	 * @param {BalloonModel} model
 	 */
 	updateBalloon(index, model) {
-		const {state: {balloons}} = this;
+		const { state: { balloons } } = this;
 
 		this.setState({
 			balloons: balloons.set(index, model)
@@ -77,7 +77,7 @@ class App extends Component {
 	 * @param {number} index
 	 */
 	removeBalloon(index) {
-		const {state: {balloons}} = this;
+		const { state: { balloons } } = this;
 
 		this.setState({
 			balloons: balloons.filter((a, i) => i !== index)

@@ -1,7 +1,7 @@
 const React = require('react');
 const _ = require('lodash');
-const {blue, lblack, llblack} = require('../color');
-const {Component} = React;
+const { blue, lblack, llblack } = require('../color');
+const { Component } = React;
 
 class Tab extends Component {
 	constructor(props) {
@@ -11,8 +11,8 @@ class Tab extends Component {
 	}
 
 	render() {
-		const {HEIGHT: height} = Tab;
-		const {props: {children: _children, names: _names, active}} = this;
+		const { HEIGHT: height } = Tab;
+		const { props: { children: _children, names: _names, active } } = this;
 		const names = _.map(_names, (a, i) => (
 			<a href='#' data-index={i} onClick={this.onClickItem} style={{
 				display: 'inline-block',
@@ -60,8 +60,8 @@ class Tab extends Component {
 	 * @param {MouseEvent} e
 	 */
 	onClickItem(e) {
-		const {currentTarget: {dataset: {index}}} = e;
-		const {props: {updateActiveTab}} = this;
+		const { currentTarget: { dataset: { index } } } = e;
+		const { props: { updateActiveTab } } = this;
 
 		updateActiveTab(_.parseInt(index));
 	}

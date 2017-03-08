@@ -2,12 +2,12 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 const _ = require('lodash');
 const Immutable = require('immutable');
-const {black} = require('../color');
-const {Block, BlockModel} = require('./block');
-const {Link, LinkModel} = require('./link');
-const {BlockCreator, BlockCreatorModel} = require('./block-creator');
-const {Component} = React;
-const {List, Map} = Immutable;
+const { black } = require('../color');
+const { Block, BlockModel } = require('./block');
+const { Link, LinkModel } = require('./link');
+const { BlockCreator, BlockCreatorModel } = require('./block-creator');
+const { Component } = React;
+const { List, Map } = Immutable;
 
 class Chain extends Component {
 	constructor(props) {
@@ -38,15 +38,15 @@ class Chain extends Component {
 	}
 
 	shouldComponentUpdate(nextProps, nextState) {
-		const {state, props} = this;
+		const { state, props } = this;
 
 		return !Immutable.is(Map(state), Map(nextState)) || !Immutable.is(Map(props), Map(nextProps));
 	}
 
 	componentDidUpdate(prevProps) {
-		const {state} = this;
-		const {updateHTMLRenderer} = prevProps;
-		const {blocks} = state;
+		const { state } = this;
+		const { updateHTMLRenderer } = prevProps;
+		const { blocks } = state;
 		const $html = document.createElement('html');
 		const $body = document.createElement('body');
 		const $script = document.createElement('script');
@@ -68,9 +68,9 @@ class Chain extends Component {
 
 	render() {
 		const {
-			state: {blocks, links: _links, tempLink, blockCreator},
+			state: { blocks, links: _links, tempLink, blockCreator },
 		} = this;
-		const links = _links.map(({output: [oBlockId, oPinIndex], input: [iBlockId, iPinIndex]}) => {
+		const links = _links.map(({ output: [oBlockId, oPinIndex], input: [iBlockId, iPinIndex] }) => {
 			const pintopin = _.map([[oBlockId, 'outputPins', oPinIndex], [iBlockId, 'inputPins', iPinIndex]], (key) => {
 				const [id] = key;
 
@@ -125,8 +125,8 @@ class Chain extends Component {
 	 * @param {MessageEvent} e
 	 */
 	onMessage(e) {
-		const {state: {blocks}, props: {addBalloon}} = this;
-		const {data: {id, value, type}} = e;
+		const { state: { blocks }, props: { addBalloon } } = this;
+		const { data: { id, value, type } } = e;
 
 		if (type === 'chainResult') {
 			this.setState({ blocks: blocks.setIn([id, 'value'], value) });
@@ -140,7 +140,7 @@ class Chain extends Component {
 	 * @returns {string}
 	 */
 	block2expression(id) {
-		const {state: {blocks}} = this;
+		const { state: { blocks } } = this;
 		const block = blocks.get(id);
 		const name = block.get('name');
 		const value = block.get('value');
@@ -177,8 +177,8 @@ class Chain extends Component {
 	 * @param {MouseEvent} e
 	 */
 	mouse(e) {
-		const {clientX, clientY} = e;
-		const {left, top} = ReactDOM.findDOMNode(this).getBoundingClientRect();
+		const { clientX, clientY } = e;
+		const { left, top } = ReactDOM.findDOMNode(this).getBoundingClientRect();
 		const x = clientX - left;
 		const y = clientY - top;
 
@@ -189,7 +189,7 @@ class Chain extends Component {
 	 * @param {MouseEvent} e
 	 */
 	onMouseDown(e) {
-		const {target, currentTarget} = e;
+		const { target, currentTarget } = e;
 
 		if (target !== currentTarget) { return; }
 		this.isMouseDown = true;
@@ -206,7 +206,7 @@ class Chain extends Component {
 	 * @param {MouseEvent} e
 	 */
 	onMouseUp(e) {
-		const {isMouseDown, state: {blockCreator}} = this;
+		const { isMouseDown, state: { blockCreator } } = this;
 		const [x, y] = this.mouse(e);
 
 		if (isMouseDown) {
@@ -229,7 +229,7 @@ class Chain extends Component {
 	 */
 	onConnectPinStart(block, pin) {
 		const blockId = block.get('id');
-		const {state: {blocks, tempLink}} = this;
+		const { state: { blocks, tempLink } } = this;
 		const [x, y] = blocks.get(blockId).absoluteCentralPositionOf(pin);
 		const pinIndex = pin.get('index');
 
@@ -239,7 +239,7 @@ class Chain extends Component {
 		this.isConnecting = true;
 
 		if (pin.get('type') === 1) {
-			const {blocks, links} = this.disconnectedPins({ input: [blockId, pinIndex] });
+			const { blocks, links } = this.disconnectedPins({ input: [blockId, pinIndex] });
 
 			this.setState({
 				tempLink: tempLink.start(x, y),
@@ -258,7 +258,7 @@ class Chain extends Component {
 	 * @param {PinModel} pin0
 	 */
 	onConnectPinEnd(block0, pin0) {
-		const {tempBlockAndPin: [id1, pin1], isConnecting} = this;
+		const { tempBlockAndPin: [id1, pin1], isConnecting } = this;
 		if (!isConnecting) { return; }
 
 		const id0 = block0.get('id');
@@ -266,7 +266,7 @@ class Chain extends Component {
 
 		if (id0 === id1 || type0 === type1) { return; }
 		const [[oBlockId, oPinIndex], [iBlockId, iPinIndex]] = _.sortBy([[id0, index0, type0], [id1, index1, type1]], 2);
-		const {links, blocks} = this.disconnectedPins({ input: [iBlockId, iPinIndex] });
+		const { links, blocks } = this.disconnectedPins({ input: [iBlockId, iPinIndex] });
 
 		this.setState({
 			links: links.push({ output: [oBlockId, oPinIndex], input: [iBlockId, iPinIndex] }),
@@ -278,14 +278,14 @@ class Chain extends Component {
 	 * @param {MouseEvent} e
 	 */
 	onConnectMoveDocument(e) {
-		const {state: {tempLink}} = this;
+		const { state: { tempLink } } = this;
 		const [x, y] = this.mouse(e);
 
 		this.setState({ tempLink: tempLink.end(x, y) });
 	}
 
 	onConnectEndDocument() {
-		const {state: {tempLink}} = this;
+		const { state: { tempLink } } = this;
 
 		document.removeEventListener('mousemove', this.onConnectMoveDocument);
 		document.removeEventListener('mouseup', this.onConnectEndDocument);
@@ -294,7 +294,7 @@ class Chain extends Component {
 	}
 
 	addBlock() {
-		const {state: {blockCreator, blocks}} = this;
+		const { state: { blockCreator, blocks } } = this;
 		const x = blockCreator.get('x');
 		const y = blockCreator.get('y');
 		const value = blockCreator.get('value');
@@ -313,15 +313,15 @@ class Chain extends Component {
 		const id = model.get('id');
 
 		if (shouldLinkUpdate) {
-			const {size} = model.get('inputPins');
-			const {blocks, links} = this.disconnectedPins({ input: [id, size] });
+			const { size } = model.get('inputPins');
+			const { blocks, links } = this.disconnectedPins({ input: [id, size] });
 
 			this.setState({
 				blocks: blocks.set(id, model),
 				links
 			});
 		} else {
-			const {state: {blocks}} = this;
+			const { state: { blocks } } = this;
 
 			this.setState({ blocks: blocks.set(id, model) });
 		}
@@ -332,7 +332,7 @@ class Chain extends Component {
 	 */
 	removeBlock(model) {
 		const id = model.get('id');
-		const {blocks, links} = this.disconnectedPins({ input: [id], output: [id] });
+		const { blocks, links } = this.disconnectedPins({ input: [id], output: [id] });
 
 		this.setState({
 			blocks: blocks.delete(id),
@@ -344,7 +344,7 @@ class Chain extends Component {
 	 * @param {{output: (string|number)[], input: (string|number)[]}} target
 	 */
 	disconnectedPins(target) {
-		let {state: {blocks, links}} = this;
+		let { state: { blocks, links } } = this;
 		const names = _.filter(['input', 'output'], (a) => _.has(target, a));
 
 		links = links.filter((link) => {
@@ -353,7 +353,7 @@ class Chain extends Component {
 				const [linkId, linkIndex] = link[name];
 
 				if (targetId === linkId && (!targetIndex || targetIndex === linkIndex)) {
-					const {input: [inputId, inputIndex], output: [outputId, outputIndex]} = link;
+					const { input: [inputId, inputIndex], output: [outputId, outputIndex] } = link;
 
 					blocks = blocks.updateIn([inputId, 'inputPins', inputIndex], (pin) => pin.disconnect()).updateIn([outputId, 'outputPins', outputIndex], (pin) => pin.disconnect()).update(inputId, (block) => {
 						const name = block.get('name');

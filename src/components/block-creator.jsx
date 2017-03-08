@@ -2,10 +2,10 @@ const React = require('react');
 const Immutable = require('immutable');
 const Radium = require('radium');
 const _ = require('lodash');
-const {black, lblack, blue} = require('../color');
-const {BlockModel: {BLOCK_LIST}} = require('./block');
-const {Record} = Immutable;
-const {Component} = React;
+const { black, lblack, blue } = require('../color');
+const { BlockModel: { BLOCK_LIST } } = require('./block');
+const { Record } = Immutable;
+const { Component } = React;
 const blockNames = _.keys(BLOCK_LIST);
 
 const Textarea = Radium(class Textarea extends Component {
@@ -16,7 +16,7 @@ const Textarea = Radium(class Textarea extends Component {
 	}
 
 	render() {
-		const {props: {value}} = this;
+		const { props: { value } } = this;
 
 		return (
 			<textarea onChange={this.onChange} value={value} style={{
@@ -41,7 +41,7 @@ const Textarea = Radium(class Textarea extends Component {
 	 * @param {Event} e
 	 */
 	onChange(e) {
-		const {props: {onChange}} = this;
+		const { props: { onChange } } = this;
 
 		onChange(e);
 	}
@@ -55,7 +55,7 @@ class Button extends Component {
 	}
 
 	render() {
-		const {props: {value}} = this;
+		const { props: { value } } = this;
 
 		return (
 			<a href='#' onClick={this.onClick} style={{
@@ -75,7 +75,7 @@ class Button extends Component {
 	 * @param {MouseEvent} e
 	 */
 	onClick(e) {
-		const {props: {onClick}} = this;
+		const { props: { onClick } } = this;
 
 		onClick(e);
 	}
@@ -83,7 +83,7 @@ class Button extends Component {
 
 class BlockCreatorModel extends Record({ x: 0, y: 0, value: '', visible: false, name: blockNames[0] }) {
 	toggle() {
-		const {visible} = this;
+		const { visible } = this;
 
 		return visible ? this.hide() : this.show();
 	}
@@ -110,10 +110,10 @@ const BlockCreator = Radium(class BlockCreator extends Component {
 	}
 
 	render() {
-		const {WIDTH: width} = BlockCreatorModel;
-		const {props: {model, add}} = this;
+		const { WIDTH: width } = BlockCreatorModel;
+		const { props: { model, add } } = this;
 		const name = model.get('name');
-		const {editablevalue} = BLOCK_LIST[name];
+		const { editablevalue } = BLOCK_LIST[name];
 
 		return (
 			model.get('visible') ?
@@ -153,8 +153,8 @@ const BlockCreator = Radium(class BlockCreator extends Component {
 	 * @param {Event} e
 	 */
 	onChangeTextarea(e) {
-		const {currentTarget: {value}} = e;
-		const {props: {model, update}} = this;
+		const { currentTarget: { value } } = e;
+		const { props: { model, update } } = this;
 
 		update(model.set('value', value));
 	}
@@ -163,8 +163,8 @@ const BlockCreator = Radium(class BlockCreator extends Component {
 	 * @param {Event} e
 	 */
 	onChangeSelect(e) {
-		const {currentTarget: {value}} = e;
-		const {props: {model, update}} = this;
+		const { currentTarget: { value } } = e;
+		const { props: { model, update } } = this;
 
 		update(model.set('name', value));
 	}
