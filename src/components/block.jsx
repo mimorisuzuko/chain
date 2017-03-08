@@ -284,7 +284,8 @@ class Button extends Component {
 			<a href='#' onClick={this.onClick} style={{
 				padding: '1px 8px',
 				backgroundColor,
-				marginRight: 1
+				marginRight: 1,
+				display: 'inline-block'
 			}}>
 				{value}
 			</a>
@@ -400,13 +401,10 @@ class Block extends Component {
 					] : null}
 				</div>
 				<div data-movable={true} style={{
-					padding: '10px 5px 5px'
+					borderLeft: `5px solid ${color}`,
+					margin: '10px 5px 5px'
 				}}>
-					<div style={{
-						borderLeft: `5px solid ${color}`
-					}}>
-						<Textarea color={color} value={model.get('value')} onChange={this.onChangeTextarea} editable={model.get('editablevalue')} />
-					</div>
+					<Textarea color={color} value={model.get('value')} onChange={this.onChangeTextarea} editable={model.get('editablevalue')} />
 				</div>
 				{pins}
 			</div>
