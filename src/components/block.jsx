@@ -135,6 +135,7 @@ class BlockModel extends Record({
 	name: '',
 	x: 0,
 	y: 0,
+	minHeight: 0,
 	value: '',
 	inputPinsMinlength: 0,
 	outputPinsMinlength: 0,
@@ -165,10 +166,9 @@ class BlockModel extends Record({
 	}
 
 	addInputPin() {
-		const {addedPinColor: color} = this;
+		const {addedPinColor: color, inputPins: {size}} = this;
 
-
-		return this.update('inputPins', (pins) => {
+		return this.set('minHeight', (size + 1) * (PinModel.RADIUS * 2)).update('inputPins', (pins) => {
 			const {size: index} = pins;
 
 			return pins.push(new PinModel({ type: 1, index, color }));
@@ -178,7 +178,7 @@ class BlockModel extends Record({
 	removeInputPin() {
 		const {inputPins: {size}, inputPinsMinlength: min} = this;
 
-		return min < size ? this.update('inputPins', (pins) => pins.pop()) : this;
+		return min < size ? this.set('minHeight', (size - 1) * (PinModel.RADIUS * 2)).update('inputPins', (pins) => pins.pop()) : this;
 	}
 
 	/**
@@ -389,6 +389,7 @@ class Block extends Component {
 				border: `1px solid ${lblack}`,
 				boxSizing: 'border-box',
 				backgroundColor: black,
+				minHeight: model.get('minHeight'),
 				boxShadow: '0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2)'
 			}}>
 				<div data-movable={true}>
