@@ -135,7 +135,7 @@ class BlockModel extends Record({
 	name: '',
 	x: 0,
 	y: 0,
-	minHeight: 0,
+	height: 0,
 	value: '',
 	inputPinsMinlength: 0,
 	outputPinsMinlength: 0,
@@ -151,11 +151,11 @@ class BlockModel extends Record({
 	 * @param {Object} o
 	 */
 	constructor(o) {
-		const { BLOCK_LIST: list } = BlockModel;
+		const { BLOCK_LIST: list, MIN_HEIGHT: height } = BlockModel;
 		const id = `block${Date.now()}`;
 		const { name } = o;
 
-		super(_.assign({ id, name }, o, list[name]));
+		super(_.assign({ id, name, height }, o, list[name]));
 	}
 
 	isTail() {
@@ -167,8 +167,9 @@ class BlockModel extends Record({
 
 	addInputPin() {
 		const { addedPinColor: color, inputPins: { size } } = this;
+		const height = Math.max(BlockModel.MIN_HEIGHT, (size + 2) * (PinModel.RADIUS * 2));
 
-		return this.set('minHeight', (size + 1) * (PinModel.RADIUS * 2)).update('inputPins', (pins) => {
+		return this.set('height', height).update('inputPins', (pins) => {
 			const { size: index } = pins;
 
 			return pins.push(new PinModel({ type: 1, index, color }));
@@ -177,8 +178,9 @@ class BlockModel extends Record({
 
 	removeInputPin() {
 		const { inputPins: { size }, inputPinsMinlength: min } = this;
+		const height = Math.max(BlockModel.MIN_HEIGHT, size * (PinModel.RADIUS * 2));
 
-		return min < size ? this.set('minHeight', (size - 1) * (PinModel.RADIUS * 2)).update('inputPins', (pins) => pins.pop()) : this;
+		return min < size ? this.set('height', height).update('inputPins', (pins) => pins.pop()) : this;
 	}
 
 	/**
@@ -250,6 +252,10 @@ class BlockModel extends Record({
 		return 180;
 	}
 
+	static get MIN_HEIGHT() {
+		return 64;
+	}
+
 	/**
 	 * @param {PinModel} pin
 	 */
@@ -315,6 +321,7 @@ const Textarea = Radium(class Textarea extends Component {
 				outline: 'none',
 				backgroundColor: lblack,
 				width: '100%',
+				height: '100%',
 				boxSizing: 'border-box',
 				borderLeft: 'none',
 				borderTopWidth: 1,
@@ -364,6 +371,7 @@ class Block extends Component {
 		const { WIDTH: width, centralPositionOf } = BlockModel;
 		const { props: { model, onConnectPinStart, onConnectPinEnd } } = this;
 		const color = model.get('color');
+		const height = model.get('height');
 		const pins = _.map(['inputPins', 'outputPins'], (name) => {
 			return model.get(name).map((a) => {
 				const [cx, cy] = centralPositionOf(a);
@@ -388,9 +396,8 @@ class Block extends Component {
 				top: model.get('y'),
 				width,
 				border: `1px solid ${lblack}`,
-				boxSizing: 'border-box',
 				backgroundColor: black,
-				minHeight: model.get('minHeight'),
+				height,
 				boxShadow: '0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2)'
 			}}>
 				<div data-movable={true}>
@@ -402,7 +409,8 @@ class Block extends Component {
 				</div>
 				<div data-movable={true} style={{
 					borderLeft: `5px solid ${color}`,
-					margin: '10px 5px 5px'
+					margin: 5,
+					height: height - 10 - 16
 				}}>
 					<Textarea color={color} value={model.get('value')} onChange={this.onChangeTextarea} editable={model.get('editablevalue')} />
 				</div>
