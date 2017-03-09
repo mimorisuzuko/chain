@@ -400,6 +400,7 @@ class Block extends Component {
 				border: `1px solid ${lblack}`,
 				backgroundColor: black,
 				height,
+				boxSizing: 'border-box',
 				boxShadow: '0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2)'
 			}}>
 				<div data-movable={true}>
@@ -411,8 +412,8 @@ class Block extends Component {
 				</div>
 				<div data-movable={true} style={{
 					borderLeft: `5px solid ${color}`,
-					margin: 5,
-					height: height - 10 - 16
+					height: height - 16 - 12,
+					margin: 5
 				}}>
 					<Textarea color={color} value={model.get('value')} onChange={this.onChangeTextarea} editable={model.get('editablevalue')} />
 				</div>
