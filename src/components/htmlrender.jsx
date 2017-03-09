@@ -1,18 +1,17 @@
 const React = require('react');
-const _ = require('lodash');
 const Immutable = require('immutable');
-const {Component} = React;
-const {Map} = Immutable;
+const { Component } = React;
+const { Map } = Immutable;
 
 class HTMLRenderer extends Component {
 	shouldComponentUpdate(nextProps) {
-		const {props} = this;
+		const { props } = this;
 
 		return !Immutable.is(Map(props), Map(nextProps));
 	}
 
 	render() {
-		const {props: {html}} = this;
+		const { props: { html } } = this;
 
 		return (
 			<iframe srcDoc={html} style={{
