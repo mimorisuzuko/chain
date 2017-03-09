@@ -130,8 +130,10 @@ class Chain extends Component {
 				blocks: blocks.setIn([windowBlockId, 'value'], '')
 			});
 		} else if (type === 'chainResult') {
+			const result = _.isObjectLike(value) ? JSON.stringify(value) : String(value);
+
 			this.setState({
-				blocks: blocks.updateIn([windowBlockId, 'value'], (v) => v ? `${v}\n${value}` : value)
+				blocks: blocks.updateIn([windowBlockId, 'value'], (a) => a ? `${a}\n${result}` : result)
 			});
 		} else if (type === 'chainError') {
 			addBalloon(value);
