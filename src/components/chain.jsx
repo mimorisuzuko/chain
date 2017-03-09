@@ -53,11 +53,11 @@ class Chain extends Component {
 		const $html = document.createElement('html');
 		const $body = document.createElement('body');
 		const $script = document.createElement('script');
-		const script = _.join(_.map(this.block2expression(windowBlockId), (a, i) => `parent.postMessage({ type: ${i === 0 ? '"chainFirstResult"' : '"chainResult"'}, value: ${a} }, '*')`), '\n').replace(/\n/g, '\\n').replace(/"/g, '\\"');
+		const script = _.join(_.map(this.block2expression(windowBlockId), (a) => `parent.postMessage({ type: 'chainResult', value: ${a} }, '*');`), '\n').replace(/\n/g, '\\n').replace(/"/g, '\\"');
 
 		if (prevScript === script) { return; }
 		this.prevScript = script;
-		$script.innerHTML = `try{\n(0, eval)("${script}")\n}catch(e){\nparent.postMessage({type: 'chainError', value: String(e)}, '*');\n}`;
+		$script.innerHTML = `parent.postMessage({ type: 'chainClear' }, '*');\ntry{\n(0, eval)("${script}")\n}catch(e){\nparent.postMessage({type: 'chainError', value: String(e)}, '*');\n}`;
 		$body.appendChild($script);
 		$html.appendChild($body);
 		updateHTMLRenderer($html.outerHTML);
@@ -125,13 +125,13 @@ class Chain extends Component {
 		const { state: { blocks }, props: { addBalloon }, windowBlockId } = this;
 		const { data: { value, type } } = e;
 
-		if (type === 'chainFirstResult') {
+		if (type === 'chainClear') {
 			this.setState({
-				blocks: blocks.setIn([windowBlockId, 'value'], value)
+				blocks: blocks.setIn([windowBlockId, 'value'], '')
 			});
 		} else if (type === 'chainResult') {
 			this.setState({
-				blocks: blocks.updateIn([windowBlockId, 'value'], (v) => `${v}\n${value}`)
+				blocks: blocks.updateIn([windowBlockId, 'value'], (v) => v ? `${v}\n${value}` : value)
 			});
 		} else if (type === 'chainError') {
 			addBalloon(value);
