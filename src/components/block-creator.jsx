@@ -6,7 +6,7 @@ const { black, lblack, blue } = require('../color');
 const { BlockModel: { BLOCK_LIST } } = require('./block');
 const { Record } = Immutable;
 const { Component } = React;
-const blockNames = _.keys(BLOCK_LIST);
+const blockNames = _.filter(_.keys(BLOCK_LIST), (a) => a !== 'window');
 
 const Textarea = Radium(class Textarea extends Component {
 	constructor(props) {

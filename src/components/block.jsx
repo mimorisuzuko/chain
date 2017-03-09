@@ -143,6 +143,7 @@ class BlockModel extends Record({
 	outputPins: List(),
 	editablepin: true,
 	editablevalue: true,
+	deletable: true,
 	color: white,
 	addedPinColor: white
 }) {
@@ -207,17 +208,18 @@ class BlockModel extends Record({
 
 	static get BLOCK_LIST() {
 		return {
+			window: {
+				value: '',
+				editablevalue: false,
+				inputPinsMinlength: 1,
+				inputPins: List([new PinModel({ type: 1 })]),
+				color: vpink,
+				deletable: false
+			},
 			value: {
 				editablepin: false,
 				outputPins: List([new PinModel({ type: 0, color: vpink })]),
 				color: vlblue
-			},
-			view: {
-				value: '',
-				editablepin: false,
-				editablevalue: false,
-				inputPins: List([new PinModel({ type: 1 })]),
-				color: vpink
 			},
 			function: {
 				inputPinsMinlength: 1,
@@ -401,7 +403,7 @@ class Block extends Component {
 				boxShadow: '0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2)'
 			}}>
 				<div data-movable={true}>
-					<Button value='×' backgroundColor={red} onClick={this.remove} />
+					{model.get('deletable') ? <Button value='×' backgroundColor={red} onClick={this.remove} /> : null}
 					{model.get('editablepin') ? [
 						<Button value='-' backgroundColor={lblack} onClick={this.removeInputPin} />,
 						<Button value='+' backgroundColor={lblack} onClick={this.addInputPin} />

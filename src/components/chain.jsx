@@ -13,13 +13,18 @@ class Chain extends Component {
 	constructor(props) {
 		super(props);
 
+		const windowBlock = new BlockModel({ name: 'window', x: window.innerWidth / 2, y: window.innerHeight / 2 });
+		const windowBlockId = windowBlock.get('id');
+
 		this.state = {
-			blocks: Map(),
+			blocks: Map([[windowBlockId, windowBlock]]),
 			links: List(),
 			tempLink: new LinkModel(),
 			onConnectPinEnd: null,
 			blockCreator: new BlockCreatorModel()
 		};
+		this.prevScript = '';
+		this.windowBlockId = windowBlockId;
 		this.tempBlockAndPin = null;
 		this.isMouseDown = false;
 		this.isConnecting = false;
@@ -43,23 +48,15 @@ class Chain extends Component {
 		return !Immutable.is(Map(state), Map(nextState)) || !Immutable.is(Map(props), Map(nextProps));
 	}
 
-	componentDidUpdate(prevProps) {
-		const { state } = this;
-		const { updateHTMLRenderer } = prevProps;
-		const { blocks } = state;
+	componentDidUpdate() {
+		const { windowBlockId, props: { updateHTMLRenderer }, prevScript } = this;
 		const $html = document.createElement('html');
 		const $body = document.createElement('body');
 		const $script = document.createElement('script');
-		let script = '';
+		const script = _.join(_.map(this.block2expression(windowBlockId), (a, i) => `parent.postMessage({ type: ${i === 0 ? '"chainFirstResult"' : '"chainResult"'}, value: ${a} }, '*')`), '\n').replace(/\n/g, '\\n').replace(/"/g, '\\"');
 
-		blocks.entrySeq().forEach(([id, block]) => {
-			if (!block.isTail()) { return; }
-
-			const e = this.block2expression(id);
-
-			script += `\n${e}`;
-		});
-		script = script.replace(/\n/g, '\\n').replace(/"/g, '\\"');
+		if (prevScript === script) { return; }
+		this.prevScript = script;
 		$script.innerHTML = `try{\n(0, eval)("${script}")\n}catch(e){\nparent.postMessage({type: 'chainError', value: String(e)}, '*');\n}`;
 		$body.appendChild($script);
 		$html.appendChild($body);
@@ -125,11 +122,17 @@ class Chain extends Component {
 	 * @param {MessageEvent} e
 	 */
 	onMessage(e) {
-		const { state: { blocks }, props: { addBalloon } } = this;
-		const { data: { id, value, type } } = e;
+		const { state: { blocks }, props: { addBalloon }, windowBlockId } = this;
+		const { data: { value, type } } = e;
 
-		if (type === 'chainResult') {
-			this.setState({ blocks: blocks.setIn([id, 'value'], value) });
+		if (type === 'chainFirstResult') {
+			this.setState({
+				blocks: blocks.setIn([windowBlockId, 'value'], value)
+			});
+		} else if (type === 'chainResult') {
+			this.setState({
+				blocks: blocks.updateIn([windowBlockId, 'value'], (v) => `${v}\n${value}`)
+			});
 		} else if (type === 'chainError') {
 			addBalloon(value);
 		}
@@ -137,29 +140,37 @@ class Chain extends Component {
 
 	/**
 	 * @param {string} id
-	 * @returns {string}
+	 * @returns {string|string[]}
 	 */
 	block2expression(id) {
 		const { state: { blocks } } = this;
 		const block = blocks.get(id);
 		const name = block.get('name');
-		const value = block.get('value');
-		const inputPins = block.get('inputPins');
 
-		const values = inputPins.map((pin) => {
+		if (name === 'window') {
+			const ret = [];
+
+			block.get('inputPins').forEach((pin) => {
+				const id = pin.get('dst');
+
+				if (!id) { return; }
+				ret.push(this.block2expression(id));
+			});
+
+			return ret;
+		}
+
+		const value = block.get('value');
+		const values = block.get('inputPins').map((pin) => {
 			const id = pin.get('dst');
 
 			return id ? this.block2expression(id) : null;
 		}).toJS();
 
-		if (name === 'value') {
-			return value;
-		} else if (name === 'function') {
+		if (name === 'function') {
 			const [self, ...args] = values;
 
 			return self ? `${self}["${value}"](${_.join(args, ', ')})` : `${value}(${_.join(args, ', ')})`;
-		} else if (name === 'view') {
-			return `parent.postMessage({id: '${id}', type: 'chainResult', value: ${values[0]}}, '*')`;
 		} else if (name === 'property') {
 			const [self] = values;
 
@@ -170,7 +181,7 @@ class Chain extends Component {
 			return `_this_is_debug_block(${_.join(values, ', ')})`;
 		}
 
-		return values[0];
+		return value;
 	}
 
 	/**

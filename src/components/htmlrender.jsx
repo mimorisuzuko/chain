@@ -1,15 +1,7 @@
 const React = require('react');
-const Immutable = require('immutable');
 const { Component } = React;
-const { Map } = Immutable;
 
 class HTMLRenderer extends Component {
-	shouldComponentUpdate(nextProps) {
-		const { props } = this;
-
-		return !Immutable.is(Map(props), Map(nextProps));
-	}
-
 	render() {
 		const { props: { html } } = this;
 
