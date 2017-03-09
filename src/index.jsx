@@ -20,10 +20,24 @@ class App extends Component {
 			balloons: List()
 		};
 		this.addBalloon = this.addBalloon.bind(this);
-		this.updateBalloon = this.updateBalloon.bind(this);
+		this.balloonsLoop = this.balloonsAnimation.bind(this);
 		this.removeBalloon = this.removeBalloon.bind(this);
 		this.updateActiveTab = this.updateActiveTab.bind(this);
 		this.updateHTMLRenderer = this.updateHTMLRenderer.bind(this);
+	}
+
+	balloonsAnimation() {
+		const { state: { balloons } } = this;
+
+		this.setState({
+			balloons: balloons.map((a) => a.decrementLife()).filter((a) => a.get('life'))
+		});
+
+		requestAnimationFrame(this.balloonsLoop);
+	}
+
+	componentDidMount() {
+		this.balloonsAnimation();
 	}
 
 	render() {
@@ -43,7 +57,7 @@ class App extends Component {
 					right: 15,
 					bottom: 15
 				}}>
-					{balloons.map((a, i) => <Balloon index={i} model={a} update={this.updateBalloon} remove={this.removeBalloon} />)}
+					{balloons.map((a, i) => <Balloon index={i} model={a} remove={this.removeBalloon} />)}
 				</div>
 			</div>
 		);
@@ -58,18 +72,6 @@ class App extends Component {
 
 		this.setState({
 			balloons: balloons.push(balloon)
-		});
-	}
-
-	/**
-	 * @param {number} index
-	 * @param {BalloonModel} model
-	 */
-	updateBalloon(index, model) {
-		const { state: { balloons } } = this;
-
-		this.setState({
-			balloons: balloons.set(index, model)
 		});
 	}
 

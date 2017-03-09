@@ -1,12 +1,23 @@
 const React = require('react');
 const Immutable = require('immutable');
+const _ = require('lodash');
 const { orange } = require('../color');
 const { Record } = Immutable;
 const { Component } = React;
 
-class BalloonModel extends Record({ value: '', life: 100 }) {
+class BalloonModel extends Record({ value: '', life: 0 }) {
+	constructor(o) {
+		super(_.assign({ life: BalloonModel.MAX_LIFE }, o));
+	}
+
+	decrementLife() {
+		const { life } = this;
+
+		return this.set('life', life - 1);
+	}
+
 	static get MAX_LIFE() {
-		return 100;
+		return 300;
 	}
 }
 
@@ -14,32 +25,7 @@ class Balloon extends Component {
 	constructor(props) {
 		super(props);
 
-		this.loop = this.loop.bind(this);
 		this.onClick = this.onClick.bind(this);
-		this.animation = 0;
-	}
-
-	loop() {
-		const { props: { model, update, index, remove } } = this;
-		const _life = model.get('life');
-		const life = _life - 1;
-
-		if (life <= 0) {
-			remove(index);
-		} else {
-			update(index, model.set('life', life));
-			this.animation = requestAnimationFrame(this.loop);
-		}
-	}
-
-	componentDidMount() {
-		this.loop();
-	}
-
-	componentWillUnmount() {
-		const { animation } = this;
-
-		cancelAnimationFrame(animation);
 	}
 
 	render() {
