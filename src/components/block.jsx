@@ -135,6 +135,7 @@ class BlockModel extends Record({
 	name: '',
 	x: 0,
 	y: 0,
+	width: 0,
 	height: 0,
 	value: '',
 	inputPinsMinlength: 0,
@@ -152,11 +153,11 @@ class BlockModel extends Record({
 	 * @param {Object} o
 	 */
 	constructor(o) {
-		const { BLOCK_LIST: list, MIN_HEIGHT: height } = BlockModel;
+		const { BLOCK_LIST: list, MIN_HEIGHT: height, WIDTH: width } = BlockModel;
 		const id = `block${Date.now()}`;
 		const { name } = o;
 
-		super(_.assign({ id, name, height }, o, list[name]));
+		super(_.assign({ id, name, height, width }, o, list[name]));
 	}
 
 	isTail() {
@@ -196,11 +197,29 @@ class BlockModel extends Record({
 
 	/**
 	 * @param {PinModel} pin
+	 */
+	centralPositionOf(pin) {
+		const { RADIUS: r } = PinModel;
+		const d = r * 2;
+		const type = pin.get('type');
+		const index = pin.get('index');
+		const { width } = this;
+
+		if (type === 0) {
+			return [width + r, d * index + r - 1];
+		} else if (type === 1) {
+			return [-r - 1, d * index + r - 1];
+		}
+
+		return [0, 0];
+	}
+
+	/**
+	 * @param {PinModel} pin
 	 * @returns {number[]}
 	 */
 	absoluteCentralPositionOf(pin) {
-		const { centralPositionOf } = BlockModel;
-		const [dx, dy] = centralPositionOf(pin);
+		const [dx, dy] = this.centralPositionOf(pin);
 		const { x, y } = this;
 
 		return [x + dx, y + dy];
@@ -214,6 +233,7 @@ class BlockModel extends Record({
 				inputPinsMinlength: 1,
 				inputPins: List([new PinModel({ type: 1 })]),
 				color: vpink,
+				width: 270,
 				deletable: false
 			},
 			value: {
@@ -256,25 +276,6 @@ class BlockModel extends Record({
 
 	static get MIN_HEIGHT() {
 		return 64;
-	}
-
-	/**
-	 * @param {PinModel} pin
-	 */
-	static centralPositionOf(pin) {
-		const { WIDTH: w } = BlockModel;
-		const { RADIUS: r } = PinModel;
-		const d = r * 2;
-		const type = pin.get('type');
-		const index = pin.get('index');
-
-		if (type === 0) {
-			return [w + r, d * index + r - 1];
-		} else if (type === 1) {
-			return [-r - 1, d * index + r - 1];
-		}
-
-		return [0, 0];
 	}
 }
 
@@ -370,13 +371,12 @@ class Block extends Component {
 	}
 
 	render() {
-		const { WIDTH: width, centralPositionOf } = BlockModel;
 		const { props: { model, onConnectPinStart, onConnectPinEnd } } = this;
 		const color = model.get('color');
 		const height = model.get('height');
 		const pins = _.map(['inputPins', 'outputPins'], (name) => {
 			return model.get(name).map((a) => {
-				const [cx, cy] = centralPositionOf(a);
+				const [cx, cy] = model.centralPositionOf(a);
 
 				return (
 					<Pin
@@ -396,7 +396,7 @@ class Block extends Component {
 				position: 'absolute',
 				left: model.get('x'),
 				top: model.get('y'),
-				width,
+				width: model.get('width'),
 				border: `1px solid ${lblack}`,
 				backgroundColor: black,
 				height,
