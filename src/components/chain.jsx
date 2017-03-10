@@ -71,7 +71,7 @@ class Chain extends Component {
 			const pintopin = _.map([[oBlockId, 'outputPins', oPinIndex], [iBlockId, 'inputPins', iPinIndex]], (key) => {
 				const [id] = key;
 
-				return blocks.get(id).absoluteCentralPositionOf(blocks.getIn(key));
+				return blocks.get(id).absolutePositionOf(blocks.getIn(key));
 			});
 
 			return <Link pintopin={pintopin} />;
@@ -243,7 +243,7 @@ class Chain extends Component {
 	onConnectPinStart(block, pin) {
 		const blockId = block.get('id');
 		const { state: { blocks, tempLink } } = this;
-		const [x, y] = blocks.get(blockId).absoluteCentralPositionOf(pin);
+		const [x, y] = blocks.get(blockId).absolutePositionOf(pin);
 		const pinIndex = pin.get('index');
 
 		document.addEventListener('mousemove', this.onConnectMoveDocument);

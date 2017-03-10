@@ -6,7 +6,7 @@ const { black, white, lblack, red, vblue, vlblue, vpink, vyellow } = require('..
 const { Record, List } = Immutable;
 const { Component } = React;
 
-class PinModel extends Record({ type: 0, index: 0, color: white, dst: null }) {
+class PinModel extends Record({ type: 0, index: 0, color: white, dst: null, cx: 0, cy: 0 }) {
 	/**
 	 * @param {Object} o
 	 */
@@ -75,7 +75,7 @@ class Pin extends Component {
 
 	render() {
 		const { state: { isMouseHover, isConnecting } } = this;
-		const { props: { model, cx, cy } } = this;
+		const { props: { model } } = this;
 		const { RADIUS: r, S_RADIUS: sr } = PinModel;
 		const width = r * 2;
 		const color = model.get('color');
@@ -92,8 +92,8 @@ class Pin extends Component {
 					width,
 					height: width,
 					position: 'absolute',
-					left: cx - r,
-					top: cy - r,
+					left: model.get('cx') - r,
+					top: model.get('cy') - r,
 					cursor: 'pointer'
 				}}>
 				<circle strokeWidth={1} stroke={color} cx={r} cy={r} r={sr} fill={model.get('type') ? 'none' : color} />
@@ -153,11 +153,17 @@ class BlockModel extends Record({
 	 * @param {Object} o
 	 */
 	constructor(o) {
-		const { BLOCK_LIST: list, MIN_HEIGHT: height, WIDTH: width } = BlockModel;
+		const { BLOCK_LIST: list, MIN_HEIGHT: height, WIDTH: width, pinPosition } = BlockModel;
 		const id = `block${Date.now()}`;
 		const { name } = o;
+		const block = list[name];
 
-		super(_.assign({ id, name, height, width }, o, list[name]));
+		_.forEach(['outputPins', 'inputPins'], (a, type) => block[a] = List(_.map(block[a], (b, index) => {
+			const [cx, cy] = pinPosition(block.width || width, type, index);
+
+			return new PinModel(_.assign(b, { index, cx, cy, type }));
+		})));
+		super(_.assign({ id, name, height, width }, o, block));
 	}
 
 	isTail() {
@@ -168,13 +174,14 @@ class BlockModel extends Record({
 	}
 
 	addInputPin() {
-		const { addedPinColor: color, inputPins: { size } } = this;
+		const { addedPinColor: color, inputPins: { size }, width } = this;
 		const height = Math.max(BlockModel.MIN_HEIGHT, (size + 2) * (PinModel.RADIUS * 2));
 
 		return this.set('height', height).update('inputPins', (pins) => {
 			const { size: index } = pins;
+			const [cx, cy] = BlockModel.pinPosition(width, 1, index);
 
-			return pins.push(new PinModel({ type: 1, index, color }));
+			return pins.push(new PinModel({ type: 1, index, color, cx, cy }));
 		});
 	}
 
@@ -197,13 +204,23 @@ class BlockModel extends Record({
 
 	/**
 	 * @param {PinModel} pin
+	 * @returns {number[]}
 	 */
-	centralPositionOf(pin) {
+	absolutePositionOf(pin) {
+		const { x, y } = this;
+
+		return [x + pin.get('cx'), y + pin.get('cy')];
+	}
+
+	/**
+	 * @param {number} width
+	 * @param {number} type
+	 * @param {number} index
+	 * @returns {number[]}
+	 */
+	static pinPosition(width, type, index) {
 		const { RADIUS: r } = PinModel;
 		const d = r * 2;
-		const type = pin.get('type');
-		const index = pin.get('index');
-		const { width } = this;
 
 		if (type === 0) {
 			return [width + r, d * index + r - 1];
@@ -214,58 +231,44 @@ class BlockModel extends Record({
 		return [0, 0];
 	}
 
-	/**
-	 * @param {PinModel} pin
-	 * @returns {number[]}
-	 */
-	absoluteCentralPositionOf(pin) {
-		const [dx, dy] = this.centralPositionOf(pin);
-		const { x, y } = this;
-
-		return [x + dx, y + dy];
-	}
-
 	static get BLOCK_LIST() {
 		return {
 			window: {
 				value: '',
 				editablevalue: false,
 				inputPinsMinlength: 1,
-				inputPins: List([new PinModel({ type: 1 })]),
+				inputPins: [{}],
 				color: vpink,
 				width: 270,
 				deletable: false
 			},
 			value: {
 				editablepin: false,
-				outputPins: List([new PinModel({ type: 0, color: vpink })]),
+				outputPins: [{ color: vpink }],
 				color: vlblue
 			},
 			function: {
 				inputPinsMinlength: 1,
-				outputPins: List([new PinModel({ type: 0 })]),
-				inputPins: List([new PinModel({ type: 1, color: vblue })]),
+				outputPins: [{}],
+				inputPins: [{ color: vblue }],
 				color: vblue,
 				addedPinColor: vlblue
 			},
 			property: {
-				outputPins: List([new PinModel({ type: 0 })]),
-				inputPins: List([new PinModel({ type: 1 })]),
+				outputPins: [{}],
+				inputPins: [{}],
 				editablepin: false,
 				color: vyellow
 			},
 			operator: {
 				inputPinsMinlength: 2,
-				outputPins: List([new PinModel({ type: 0 })]),
-				inputPins: List([
-					new PinModel({ type: 1 }),
-					new PinModel({ type: 1, index: 1 })
-				]),
+				outputPins: [{}],
+				inputPins: [{}, {}],
 			},
 			debug: {
 				value: '"Hello, World!"',
-				outputPins: List([new PinModel({ type: 0 })]),
-				inputPins: List([new PinModel({ type: 1 })])
+				outputPins: [{}],
+				inputPins: [{}]
 			}
 		};
 	}
@@ -374,22 +377,7 @@ class Block extends Component {
 		const { props: { model, onConnectPinStart, onConnectPinEnd } } = this;
 		const color = model.get('color');
 		const height = model.get('height');
-		const pins = _.map(['inputPins', 'outputPins'], (name) => {
-			return model.get(name).map((a) => {
-				const [cx, cy] = model.centralPositionOf(a);
-
-				return (
-					<Pin
-						model={a}
-						parent={model}
-						cx={cx}
-						cy={cy}
-						onConnectStart={onConnectPinStart}
-						onConnectEnd={onConnectPinEnd}
-					/>
-				);
-			});
-		});
+		const pins = _.map(['inputPins', 'outputPins'], (name) => model.get(name).map((a) => <Pin model={a} parent={model} onConnectStart={onConnectPinStart} onConnectEnd={onConnectPinEnd} />));
 
 		return (
 			<div data-movable={true} onMouseDown={this.onMouseDown} style={{
