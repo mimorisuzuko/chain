@@ -365,7 +365,7 @@ class Chain extends Component {
 				const [targetId, targetIndex] = target[name];
 				const [linkId, linkIndex] = link[name];
 
-				if (targetId === linkId && (!targetIndex || targetIndex === linkIndex)) {
+				if (targetId === linkId && (targetIndex === undefined || targetIndex === linkIndex)) {
 					const { input: [inputId, inputIndex], output: [outputId, outputIndex] } = link;
 
 					blocks = blocks.updateIn([inputId, 'inputPins', inputIndex], (pin) => pin.disconnect()).updateIn([outputId, 'outputPins', outputIndex], (pin) => pin.disconnect()).update(inputId, (block) => {
