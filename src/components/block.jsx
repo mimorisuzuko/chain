@@ -396,7 +396,7 @@ class Block extends Component {
 		const pins = _.map(['inputPins', 'outputPins'], (name) => model.get(name).map((a) => <Pin model={a} parent={model} onConnectStart={onConnectPinStart} onConnectEnd={onConnectPinEnd} />));
 
 		return (
-			<div data-movable={true} onMouseDown={this.onMouseDown} style={{
+			<div data-movable={true} onTouchStart={this.onMouseDown} onMouseDown={this.onMouseDown} style={{
 				position: 'absolute',
 				left: model.get('x'),
 				top: model.get('y'),
@@ -455,31 +455,51 @@ class Block extends Component {
 	}
 
 	/**
-	 * @param {MouseEvent} e
+	 * @param {MouseEvent|TouchEvent} e
+	 * @returns {number[]}
 	 */
-	onMouseDown(e) {
-		const { target: { dataset: { movable } }, clientX, clientY } = e;
+	mouse(e) {
+		if (_.has(e, 'touches')) {
+			const { clientX, clientY } = e.touches.item(0);
 
-		if (!Boolean(movable)) { return; }
-		document.body.classList.add('cursor-move');
-		document.addEventListener('mousemove', this.onMouseMoveDocument);
-		document.addEventListener('mouseup', this.onMouseUpDocument);
-		this.px = clientX;
-		this.py = clientY;
+			return [clientX, clientY];
+		}
+
+		const { clientX, clientY } = e;
+
+		return [clientX, clientY];
 	}
 
 	/**
-	 * @param {MouseEvent} e
+	 * @param {MouseEvent|TouchEvent} e
+	 */
+	onMouseDown(e) {
+		const { target: { dataset: { movable } } } = e;
+
+		if (!Boolean(movable)) { return; }
+		const [x, y] = this.mouse(e);
+
+		document.body.classList.add('cursor-move');
+		document.addEventListener('mousemove', this.onMouseMoveDocument);
+		document.addEventListener('mouseup', this.onMouseUpDocument);
+		document.addEventListener('touchmove', this.onMouseMoveDocument);
+		document.addEventListener('touchend', this.onMouseUpDocument);
+		this.px = x;
+		this.py = y;
+	}
+
+	/**
+	 * @param {MouseEvent|TouchEvent} e
 	 */
 	onMouseMoveDocument(e) {
 		const { props: { model, update }, px, py } = this;
-		const { clientX, clientY } = e;
-		const dx = clientX - px;
-		const dy = clientY - py;
+		const [x, y] = this.mouse(e);
+		const dx = x - px;
+		const dy = y - py;
 
 		update(model.dmove(dx, dy));
-		this.px = clientX;
-		this.py = clientY;
+		this.px = x;
+		this.py = y;
 	}
 
 	/**
@@ -489,6 +509,8 @@ class Block extends Component {
 		document.body.classList.remove('cursor-move');
 		document.removeEventListener('mousemove', this.onMouseMoveDocument);
 		document.removeEventListener('mouseup', this.onMouseUpDocument);
+		document.removeEventListener('touchmove', this.onMouseMoveDocument);
+		document.removeEventListener('touchend', this.onMouseUpDocument);
 	}
 }
 
