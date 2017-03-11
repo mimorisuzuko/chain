@@ -130,6 +130,57 @@ class Pin extends Component {
 	}
 }
 
+const BLOCK_LIST = {
+	window: {
+		value: '',
+		editablevalue: false,
+		inputPinsMinlength: 1,
+		inputPins: [{}],
+		color: vpink,
+		width: 270,
+		deletable: false
+	},
+	value: {
+		editablepin: false,
+		outputPins: [{ color: vpink }],
+		color: vlblue
+	},
+	function: {
+		inputPinsMinlength: 1,
+		outputPins: [{}],
+		inputPins: [{ color: vblue }],
+		color: vblue,
+		addedPinColor: vlblue
+	},
+	property: {
+		outputPins: [{}],
+		inputPins: [{}],
+		editablepin: false,
+		color: vyellow
+	},
+	operator: {
+		inputPinsMinlength: 2,
+		outputPins: [{}],
+		inputPins: [{}, {}],
+	},
+	debug: {
+		value: '"Hello, World!"',
+		outputPins: [{}],
+		inputPins: [{}]
+	}
+};
+
+_.forEach(Object.keys(BLOCK_LIST), (a) => {
+	const b = BLOCK_LIST[a];
+
+	_.forEach(['outputPins', 'inputPins'], (c, type) => {
+		if (!_.has(b, c)) { return; }
+		b[c] = List(_.map(b[c], (d, index) => new PinModel(_.assign({ type, index }, d))));
+	});
+
+	BLOCK_LIST[a] = b;
+});
+
 class BlockModel extends Record({
 	id: '',
 	name: '',
@@ -153,17 +204,20 @@ class BlockModel extends Record({
 	 * @param {Object} o
 	 */
 	constructor(o) {
-		const { BLOCK_LIST: list, MIN_HEIGHT: height, WIDTH: width, pinPosition } = BlockModel;
+		const { BLOCK_LIST: list, MIN_HEIGHT: height, WIDTH: width } = BlockModel;
 		const id = `block${Date.now()}`;
 		const { name } = o;
-		const block = list[name];
+		const block = super(_.assign({ id, name, height, width }, o, list[name]));
 
-		_.forEach(['outputPins', 'inputPins'], (a, type) => block[a] = List(_.map(block[a], (b, index) => {
-			const [cx, cy] = pinPosition(block.width || width, type, index);
+		return block.update('inputPins', (a) => a.map((b, i) => {
+			const [cx, cy] = this.pinPosition(1, i);
 
-			return new PinModel(_.assign(b, { index, cx, cy, type }));
-		})));
-		super(_.assign({ id, name, height, width }, o, block));
+			return b.merge({ cx, cy });
+		})).update('outputPins', (a) => a.map((b, i) => {
+			const [cx, cy] = this.pinPosition(0, i);
+
+			return b.merge({ cx, cy });
+		}));
 	}
 
 	isTail() {
@@ -174,12 +228,12 @@ class BlockModel extends Record({
 	}
 
 	addInputPin() {
-		const { addedPinColor: color, inputPins: { size }, width } = this;
+		const { addedPinColor: color, inputPins: { size } } = this;
 		const height = Math.max(BlockModel.MIN_HEIGHT, (size + 2) * (PinModel.RADIUS * 2));
 
 		return this.set('height', height).update('inputPins', (pins) => {
 			const { size: index } = pins;
-			const [cx, cy] = BlockModel.pinPosition(width, 1, index);
+			const [cx, cy] = this.pinPosition(1, index);
 
 			return pins.push(new PinModel({ type: 1, index, color, cx, cy }));
 		});
@@ -213,12 +267,12 @@ class BlockModel extends Record({
 	}
 
 	/**
-	 * @param {number} width
 	 * @param {number} type
-	 * @param {number} index
+	 * @param {number} index 
 	 * @returns {number[]}
 	 */
-	static pinPosition(width, type, index) {
+	pinPosition(type, index) {
+		const { width } = this;
 		const { RADIUS: r } = PinModel;
 		const d = r * 2;
 
@@ -232,45 +286,7 @@ class BlockModel extends Record({
 	}
 
 	static get BLOCK_LIST() {
-		return {
-			window: {
-				value: '',
-				editablevalue: false,
-				inputPinsMinlength: 1,
-				inputPins: [{}],
-				color: vpink,
-				width: 270,
-				deletable: false
-			},
-			value: {
-				editablepin: false,
-				outputPins: [{ color: vpink }],
-				color: vlblue
-			},
-			function: {
-				inputPinsMinlength: 1,
-				outputPins: [{}],
-				inputPins: [{ color: vblue }],
-				color: vblue,
-				addedPinColor: vlblue
-			},
-			property: {
-				outputPins: [{}],
-				inputPins: [{}],
-				editablepin: false,
-				color: vyellow
-			},
-			operator: {
-				inputPinsMinlength: 2,
-				outputPins: [{}],
-				inputPins: [{}, {}],
-			},
-			debug: {
-				value: '"Hello, World!"',
-				outputPins: [{}],
-				inputPins: [{}]
-			}
-		};
+		return BLOCK_LIST;
 	}
 
 	static get WIDTH() {
