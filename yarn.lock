@@ -2486,6 +2486,10 @@ mkdirp@0.5.x, "mkdirp@>=0.5 0", mkdirp@^0.5.0, mkdirp@^0.5.1, mkdirp@~0.5.0, mkd
   dependencies:
     minimist "0.0.8"
 
+mobile-detect@^1.3.5:
+  version "1.3.5"
+  resolved "https://registry.yarnpkg.com/mobile-detect/-/mobile-detect-1.3.5.tgz#96d6511284f35d352eaf71baef459c61aebd30b2"
+
 ms@0.7.1:
   version "0.7.1"
   resolved "https://registry.yarnpkg.com/ms/-/ms-0.7.1.tgz#9cd13c03adbff25b65effde7ce864ee952017098"

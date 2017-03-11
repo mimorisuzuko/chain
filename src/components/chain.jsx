@@ -85,6 +85,9 @@ class Chain extends Component {
 				backgroundColor: black
 			}}>
 				<svg
+					onTouchStart={this.onMouseDown}
+					onTouchMove={this.onMouseMove}
+					onTouchEnd={this.onMouseUp}
 					onMouseDown={this.onMouseDown}
 					onMouseMove={this.onMouseMove}
 					onMouseUp={this.onMouseUp}
@@ -187,11 +190,22 @@ class Chain extends Component {
 	}
 
 	/**
-	 * @param {MouseEvent} e
+	 * @param {MouseEvent|TouchEvent} e
 	 */
 	mouse(e) {
-		const { clientX, clientY } = e;
 		const { left, top } = ReactDOM.findDOMNode(this).getBoundingClientRect();
+
+		if (_.has(e, 'touches')) {
+			const { clientX, clientY } = e.changedTouches.item(0);
+			const x = clientX - left;
+			const y = clientY - top;
+
+			console.log(x, y);
+
+			return [x, y];
+		}
+
+		const { clientX, clientY } = e;
 		const x = clientX - left;
 		const y = clientY - top;
 
@@ -199,7 +213,7 @@ class Chain extends Component {
 	}
 
 	/**
-	 * @param {MouseEvent} e
+	 * @param {MouseEvent|TouchEvent} e
 	 */
 	onMouseDown(e) {
 		const { target, currentTarget } = e;
@@ -209,14 +223,14 @@ class Chain extends Component {
 	}
 
 	/**
-	 * @param {MouseEvent} e
+	 * @param {MouseEvent|TouchEvent} e
 	 */
 	onMouseMove() {
 		this.isMouseDown = false;
 	}
 
 	/**
-	 * @param {MouseEvent} e
+	 * @param {MouseEvent|TouchEvent} e
 	 */
 	onMouseUp(e) {
 		const { isMouseDown, state: { blockCreator } } = this;

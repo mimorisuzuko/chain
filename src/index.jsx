@@ -1,6 +1,8 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
 const Immutable = require('immutable');
+const MobileDetect = require('mobile-detect');
+const md = new MobileDetect(window.navigator.userAgent);
 const { Tab } = require('./components/tab');
 const { Chain } = require('./components/chain');
 const { HTMLRenderer } = require('./components/htmlrender');
@@ -9,6 +11,10 @@ const { Component } = React;
 const { List } = Immutable;
 
 require('./index.scss');
+
+if (md.mobile() || md.tablet() || md.phone()) {
+	require('./sp.scss');
+}
 
 class App extends Component {
 	constructor(props) {
