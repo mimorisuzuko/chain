@@ -200,8 +200,6 @@ class Chain extends Component {
 			const x = clientX - left;
 			const y = clientY - top;
 
-			console.log(x, y);
-
 			return [x, y];
 		}
 
