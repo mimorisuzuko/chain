@@ -4,7 +4,7 @@ const Radium = require('radium');
 const _ = require('lodash');
 const { black, white, lblack, red, vblue, vlblue, vpink, vyellow } = require('../color');
 const { Record, List } = Immutable;
-const { Component } = React;
+const { Component, PropTypes } = React;
 
 class PinModel extends Record({ type: 0, index: 0, color: white, dst: null, cx: 0, cy: 0 }) {
 	/**
@@ -390,13 +390,17 @@ class Block extends Component {
 	}
 
 	render() {
-		const { props: { model, onConnectPinStart, onConnectPinEnd } } = this;
+		const {
+			props: { model, onConnectPinStart, onConnectPinEnd },
+			context: { isTouch }
+		} = this;
 		const color = model.get('color');
 		const height = model.get('height');
 		const pins = _.map(['inputPins', 'outputPins'], (name) => model.get(name).map((a) => <Pin model={a} parent={model} onConnectStart={onConnectPinStart} onConnectEnd={onConnectPinEnd} />));
+		const events = isTouch ? { onTouchStart: this.onMouseDown } : { onMouseDown: this.onMouseDown };
 
 		return (
-			<div data-movable={true} onTouchStart={this.onMouseDown} onMouseDown={this.onMouseDown} style={{
+			<div data-movable={true} {...events} style={{
 				position: 'absolute',
 				left: model.get('x'),
 				top: model.get('y'),
@@ -459,7 +463,9 @@ class Block extends Component {
 	 * @returns {number[]}
 	 */
 	mouse(e) {
-		if (TouchEvent) {
+		const { context: { isTouch } } = this;
+
+		if (isTouch) {
 			const { clientX, clientY } = e.touches.item(0);
 
 			return [clientX, clientY];
@@ -474,16 +480,21 @@ class Block extends Component {
 	 * @param {MouseEvent|TouchEvent} e
 	 */
 	onMouseDown(e) {
+		const { context: { isTouch } } = this;
 		const { target: { dataset: { movable } } } = e;
 
 		if (!Boolean(movable)) { return; }
 		const [x, y] = this.mouse(e);
 
-		document.body.classList.add('cursor-move');
-		document.addEventListener('mousemove', this.onMouseMoveDocument);
-		document.addEventListener('mouseup', this.onMouseUpDocument);
-		document.addEventListener('touchmove', this.onMouseMoveDocument);
-		document.addEventListener('touchend', this.onMouseUpDocument);
+		if (isTouch) {
+			document.addEventListener('touchmove', this.onMouseMoveDocument);
+			document.addEventListener('touchend', this.onMouseUpDocument);
+		} else {
+			document.body.classList.add('cursor-move');
+			document.addEventListener('mousemove', this.onMouseMoveDocument);
+			document.addEventListener('mouseup', this.onMouseUpDocument);
+		}
+
 		this.px = x;
 		this.py = y;
 	}
@@ -506,11 +517,20 @@ class Block extends Component {
 	 * @param {MouseEvent} e
 	 */
 	onMouseUpDocument() {
-		document.body.classList.remove('cursor-move');
-		document.removeEventListener('mousemove', this.onMouseMoveDocument);
-		document.removeEventListener('mouseup', this.onMouseUpDocument);
-		document.removeEventListener('touchmove', this.onMouseMoveDocument);
-		document.removeEventListener('touchend', this.onMouseUpDocument);
+		const { context: { isTouch } } = this;
+
+		if (isTouch) {
+			document.removeEventListener('touchmove', this.onMouseMoveDocument);
+			document.removeEventListener('touchend', this.onMouseUpDocument);
+		} else {
+			document.body.classList.remove('cursor-move');
+			document.removeEventListener('mousemove', this.onMouseMoveDocument);
+			document.removeEventListener('mouseup', this.onMouseUpDocument);
+		}
+	}
+
+	static get contextTypes() {
+		return { isTouch: PropTypes.bool };
 	}
 }
 

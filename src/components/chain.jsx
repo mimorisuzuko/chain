@@ -6,7 +6,7 @@ const { black } = require('../color');
 const { Block, BlockModel } = require('./block');
 const { Link, LinkModel } = require('./link');
 const { BlockCreator, BlockCreatorModel } = require('./block-creator');
-const { Component } = React;
+const { Component, PropTypes } = React;
 const { List, Map } = Immutable;
 
 class Chain extends Component {
@@ -66,6 +66,7 @@ class Chain extends Component {
 	render() {
 		const {
 			state: { blocks, links: _links, tempLink, blockCreator },
+			context: { isTouch }
 		} = this;
 		const links = _links.map(({ output: [oBlockId, oPinIndex], input: [iBlockId, iPinIndex] }) => {
 			const pintopin = _.map([[oBlockId, 'outputPins', oPinIndex], [iBlockId, 'inputPins', iPinIndex]], (key) => {
@@ -76,6 +77,16 @@ class Chain extends Component {
 
 			return <Link pintopin={pintopin} />;
 		});
+		const events = isTouch ?
+			{
+				onTouchStart: this.onMouseDown,
+				onTouchMove: this.onMouseMove,
+				onTouchEnd: this.onMouseUp
+			} : {
+				onMouseDown: this.onMouseDown,
+				onMouseMove: this.onMouseMove,
+				onMouseUp: this.onMouseUp
+			};
 
 		return (
 			<div style={{
@@ -85,12 +96,7 @@ class Chain extends Component {
 				backgroundColor: black
 			}}>
 				<svg
-					onTouchStart={this.onMouseDown}
-					onTouchMove={this.onMouseMove}
-					onTouchEnd={this.onMouseUp}
-					onMouseDown={this.onMouseDown}
-					onMouseMove={this.onMouseMove}
-					onMouseUp={this.onMouseUp}
+					{...events}
 					style={{
 						position: 'absolute',
 						width: '100%',
@@ -193,9 +199,10 @@ class Chain extends Component {
 	 * @param {MouseEvent|TouchEvent} e
 	 */
 	mouse(e) {
+		const { context: { isTouch } } = this;
 		const { left, top } = ReactDOM.findDOMNode(this).getBoundingClientRect();
 
-		if (TouchEvent) {
+		if (isTouch) {
 			const { clientX, clientY } = e.changedTouches.item(0);
 			const x = clientX - left;
 			const y = clientY - top;
@@ -394,6 +401,10 @@ class Chain extends Component {
 		});
 
 		return { blocks, links };
+	}
+
+	static get contextTypes() {
+		return { isTouch: PropTypes.bool };
 	}
 }
 
