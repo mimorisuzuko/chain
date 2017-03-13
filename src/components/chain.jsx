@@ -256,11 +256,10 @@ class Chain extends Component {
 	}
 
 	/**
-	 * @param {BlockModel} block
+	 * @param {string} blockId
 	 * @param {PinModel} pin
 	 */
-	onConnectPinStart(block, pin) {
-		const blockId = block.get('id');
+	onConnectPinStart(blockId, pin) {
 		const {
 			state: { blocks, tempLink },
 			context: { isTouch }
@@ -294,14 +293,13 @@ class Chain extends Component {
 	}
 
 	/**
-	 * @param {BlockModel} block0
+	 * @param {string} id0
 	 * @param {PinModel} pin0
 	 */
-	onConnectPinEnd(block0, pin0) {
+	onConnectPinEnd(id0, pin0) {
 		const { tempBlockAndPin: [id1, pin1], isConnecting } = this;
 		if (!isConnecting) { return; }
 
-		const id0 = block0.get('id');
 		const [[type0, index0], [type1, index1]] = _.map([pin0, pin1], (a) => [a.get('type'), a.get('index')]);
 
 		if (id0 === id1 || type0 === type1) { return; }
@@ -337,7 +335,7 @@ class Chain extends Component {
 			document.removeEventListener('mousemove', this.onConnectMoveDocument);
 			document.removeEventListener('mouseup', this.onConnectEndDocument);
 		}
-		
+
 		this.isConnecting = false;
 		this.setState({ tempLink: tempLink.set('visible', false) });
 	}

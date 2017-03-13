@@ -77,7 +77,7 @@ class Pin extends Component {
 		const {
 			state: { isMouseHover, isConnecting },
 			context: { isTouch },
-			props: { parent, model }
+			props: { parentId, model }
 		} = this;
 		const { RADIUS: r, S_RADIUS: sr } = PinModel;
 		const width = r * 2;
@@ -86,7 +86,7 @@ class Pin extends Component {
 		const events = isTouch ?
 			{
 				onTouchStart: this.onMouseDown,
-				'data-pin': JSON.stringify({ parent, model: model.toJS() })
+				'data-pin': JSON.stringify({ parentId, model: model.toJS() })
 			} : {
 				onMouseDown: this.onMouseDown,
 				onMouseUp: this.onMouseUp,
@@ -114,7 +114,7 @@ class Pin extends Component {
 
 	onMouseDown() {
 		const {
-			props: { parent, model, onConnectStart },
+			props: { parentId, model, onConnectStart },
 			context: { isTouch }
 		} = this;
 
@@ -124,7 +124,7 @@ class Pin extends Component {
 			document.addEventListener('mouseup', this.onMouseUpDocument);
 		}
 
-		onConnectStart(parent, model);
+		onConnectStart(parentId, model);
 		this.setState({ isConnecting: true });
 	}
 
@@ -145,9 +145,9 @@ class Pin extends Component {
 
 				if (left <= pageX && pageX <= left + width && top <= pageY && pageY <= top + height) {
 					const { dataset: { pin } } = $e;
-					const { parent, model } = JSON.parse(pin);
+					const { parentId, model } = JSON.parse(pin);
 
-					onConnectEnd(fromJS(parent), fromJS(model));
+					onConnectEnd(parentId, fromJS(model));
 					return true;
 				}
 
@@ -162,9 +162,9 @@ class Pin extends Component {
 	}
 
 	onMouseUp() {
-		const { props: { parent, model, onConnectEnd } } = this;
+		const { props: { parentId, model, onConnectEnd } } = this;
 
-		onConnectEnd(parent, model);
+		onConnectEnd(parentId, model);
 	}
 
 	onMouseEnter() {
@@ -446,7 +446,7 @@ class Block extends Component {
 		} = this;
 		const color = model.get('color');
 		const height = model.get('height');
-		const pins = _.map(['inputPins', 'outputPins'], (name) => model.get(name).map((a) => <Pin model={a} parent={model} onConnectStart={onConnectPinStart} onConnectEnd={onConnectPinEnd} />));
+		const pins = _.map(['inputPins', 'outputPins'], (name) => model.get(name).map((a) => <Pin model={a} parentId={model.get('id')} onConnectStart={onConnectPinStart} onConnectEnd={onConnectPinEnd} />));
 		const events = isTouch ? { onTouchStart: this.onMouseDown } : { onMouseDown: this.onMouseDown };
 
 		return (
