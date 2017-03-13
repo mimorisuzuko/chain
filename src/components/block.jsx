@@ -3,7 +3,7 @@ const Immutable = require('immutable');
 const Radium = require('radium');
 const _ = require('lodash');
 const { black, white, lblack, red, vblue, vlblue, vpink, vyellow } = require('../color');
-const { Record, List } = Immutable;
+const { Record, List, fromJS } = Immutable;
 const { Component, PropTypes } = React;
 
 class PinModel extends Record({ type: 0, index: 0, color: white, dst: null, cx: 0, cy: 0 }) {
@@ -76,9 +76,9 @@ class Pin extends Component {
 	render() {
 		const {
 			state: { isMouseHover, isConnecting },
-			context: { isTouch }
+			context: { isTouch },
+			props: { parent, model }
 		} = this;
-		const { props: { model } } = this;
 		const { RADIUS: r, S_RADIUS: sr } = PinModel;
 		const width = r * 2;
 		const color = model.get('color');
@@ -86,7 +86,7 @@ class Pin extends Component {
 		const events = isTouch ?
 			{
 				onTouchStart: this.onMouseDown,
-				onTouchEnd: this.onMouseUp
+				'data-pin': JSON.stringify({ parent, model: model.toJS() })
 			} : {
 				onMouseDown: this.onMouseDown,
 				onMouseUp: this.onMouseUp,
@@ -128,10 +128,31 @@ class Pin extends Component {
 		this.setState({ isConnecting: true });
 	}
 
-	onMouseUpDocument() {
-		const { context: { isTouch } } = this;
+	/**
+	 * @param {MouseEvent|TouchEvent} e
+	 */
+	onMouseUpDocument(e) {
+		const {
+			props: { onConnectEnd },
+			context: { isTouch }
+		} = this;
 
 		if (isTouch) {
+			const { pageX, pageY } = e.changedTouches.item(0);
+
+			_.some(document.querySelectorAll('[data-pin]'), ($e) => {
+				const { left, top, width, height } = $e.getBoundingClientRect();
+
+				if (left <= pageX && pageX <= left + width && top <= pageY && pageY <= top + height) {
+					const { dataset: { pin } } = $e;
+					const { parent, model } = JSON.parse(pin);
+
+					onConnectEnd(fromJS(parent), fromJS(model));
+					return true;
+				}
+
+				return false;
+			});
 			document.removeEventListener('touchend', this.onMouseUpDocument);
 		} else {
 			document.removeEventListener('mouseup', this.onMouseUpDocument);
