@@ -261,12 +261,20 @@ class Chain extends Component {
 	 */
 	onConnectPinStart(block, pin) {
 		const blockId = block.get('id');
-		const { state: { blocks, tempLink } } = this;
+		const {
+			state: { blocks, tempLink },
+			context: { isTouch }
+		} = this;
 		const [x, y] = blocks.get(blockId).absolutePositionOf(pin);
 		const pinIndex = pin.get('index');
 
-		document.addEventListener('mousemove', this.onConnectMoveDocument);
-		document.addEventListener('mouseup', this.onConnectEndDocument);
+		if (isTouch) {
+			document.addEventListener('touchmove', this.onConnectMoveDocument);
+			document.addEventListener('touchend', this.onConnectEndDocument);
+		} else {
+			document.addEventListener('mousemove', this.onConnectMoveDocument);
+			document.addEventListener('mouseup', this.onConnectEndDocument);
+		}
 		this.tempBlockAndPin = [blockId, pin];
 		this.isConnecting = true;
 
@@ -317,10 +325,19 @@ class Chain extends Component {
 	}
 
 	onConnectEndDocument() {
-		const { state: { tempLink } } = this;
+		const {
+			state: { tempLink },
+			context: { isTouch }
+		} = this;
 
-		document.removeEventListener('mousemove', this.onConnectMoveDocument);
-		document.removeEventListener('mouseup', this.onConnectEndDocument);
+		if (isTouch) {
+			document.removeEventListener('touchmove', this.onConnectMoveDocument);
+			document.removeEventListener('touchend', this.onConnectEndDocument);
+		} else {
+			document.removeEventListener('mousemove', this.onConnectMoveDocument);
+			document.removeEventListener('mouseup', this.onConnectEndDocument);
+		}
+		
 		this.isConnecting = false;
 		this.setState({ tempLink: tempLink.set('visible', false) });
 	}

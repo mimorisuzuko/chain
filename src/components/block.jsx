@@ -74,19 +74,29 @@ class Pin extends Component {
 	}
 
 	render() {
-		const { state: { isMouseHover, isConnecting } } = this;
+		const {
+			state: { isMouseHover, isConnecting },
+			context: { isTouch }
+		} = this;
 		const { props: { model } } = this;
 		const { RADIUS: r, S_RADIUS: sr } = PinModel;
 		const width = r * 2;
 		const color = model.get('color');
 		const outline = isMouseHover || isConnecting || model.connected() ? <circle strokeWidth={1} stroke={color} cx={r} cy={r} r={r - 1} fill='none' /> : null;
+		const events = isTouch ?
+			{
+				onTouchStart: this.onMouseDown,
+				onTouchEnd: this.onMouseUp
+			} : {
+				onMouseDown: this.onMouseDown,
+				onMouseUp: this.onMouseUp,
+				onMouseEnter: this.onMouseEnter,
+				onMouseLeave: this.onMouseLeave
+			};
 
 		return (
 			<svg
-				onMouseDown={this.onMouseDown}
-				onMouseUp={this.onMouseUp}
-				onMouseEnter={this.onMouseEnter}
-				onMouseLeave={this.onMouseLeave}
+				{...events}
 				style={{
 					display: 'block',
 					width,
@@ -103,15 +113,30 @@ class Pin extends Component {
 	}
 
 	onMouseDown() {
-		const { props: { parent, model, onConnectStart } } = this;
+		const {
+			props: { parent, model, onConnectStart },
+			context: { isTouch }
+		} = this;
+
+		if (isTouch) {
+			document.addEventListener('touchend', this.onMouseUpDocument);
+		} else {
+			document.addEventListener('mouseup', this.onMouseUpDocument);
+		}
 
 		onConnectStart(parent, model);
 		this.setState({ isConnecting: true });
-		document.addEventListener('mouseup', this.onMouseUpDocument);
 	}
 
 	onMouseUpDocument() {
-		document.removeEventListener('mouseup', this.onMouseUpDocument);
+		const { context: { isTouch } } = this;
+
+		if (isTouch) {
+			document.removeEventListener('touchend', this.onMouseUpDocument);
+		} else {
+			document.removeEventListener('mouseup', this.onMouseUpDocument);
+		}
+
 		this.setState({ isConnecting: false });
 	}
 
@@ -127,6 +152,10 @@ class Pin extends Component {
 
 	onMouseLeave() {
 		this.setState({ isMouseHover: false });
+	}
+
+	static get contextTypes() {
+		return { isTouch: PropTypes.bool };
 	}
 }
 
