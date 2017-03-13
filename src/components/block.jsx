@@ -338,7 +338,7 @@ const Textarea = Radium(class Textarea extends Component {
 		const { props: { value, editable, color } } = this;
 
 		return (
-			<textarea readOnly={!editable} value={value} onChange={this.onChange} style={{
+			<textarea disabled={!editable} value={value} onChange={this.onChange} style={{
 				display: 'block',
 				outline: 'none',
 				backgroundColor: lblack,
