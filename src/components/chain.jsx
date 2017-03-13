@@ -195,7 +195,7 @@ class Chain extends Component {
 	mouse(e) {
 		const { left, top } = ReactDOM.findDOMNode(this).getBoundingClientRect();
 
-		if (_.has(e, 'touches')) {
+		if (TouchEvent) {
 			const { clientX, clientY } = e.changedTouches.item(0);
 			const x = clientX - left;
 			const y = clientY - top;

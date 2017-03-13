@@ -459,7 +459,7 @@ class Block extends Component {
 	 * @returns {number[]}
 	 */
 	mouse(e) {
-		if (_.has(e, 'touches')) {
+		if (TouchEvent) {
 			const { clientX, clientY } = e.touches.item(0);
 
 			return [clientX, clientY];
