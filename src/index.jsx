@@ -1,14 +1,21 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
 const Immutable = require('immutable');
+const MobileDetect = require('mobile-detect');
+const md = new MobileDetect(window.navigator.userAgent);
+const isTouch = Boolean(md.mobile() || md.tablet() || md.phone());
 const { Tab } = require('./components/tab');
 const { Chain } = require('./components/chain');
 const { HTMLRenderer } = require('./components/htmlrender');
 const { Balloon, BalloonModel } = require('./components/balloon');
-const { Component } = React;
+const { Component, PropTypes } = React;
 const { List } = Immutable;
 
 require('./index.scss');
+
+if (isTouch) {
+	require('./sp.scss');
+}
 
 class App extends Component {
 	constructor(props) {
@@ -98,6 +105,14 @@ class App extends Component {
 	 */
 	updateHTMLRenderer(html) {
 		this.setState({ html });
+	}
+
+	getChildContext() {
+		return { isTouch };
+	}
+
+	static get childContextTypes() {
+		return { isTouch: PropTypes.bool };
 	}
 }
 

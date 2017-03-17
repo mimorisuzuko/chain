@@ -3,8 +3,8 @@ const Immutable = require('immutable');
 const Radium = require('radium');
 const _ = require('lodash');
 const { black, white, lblack, red, vblue, vlblue, vpink, vyellow } = require('../color');
-const { Record, List } = Immutable;
-const { Component } = React;
+const { Record, List, fromJS } = Immutable;
+const { Component, PropTypes } = React;
 
 class PinModel extends Record({ type: 0, index: 0, color: white, dst: null, cx: 0, cy: 0 }) {
 	/**
@@ -74,19 +74,29 @@ class Pin extends Component {
 	}
 
 	render() {
-		const { state: { isMouseHover, isConnecting } } = this;
-		const { props: { model } } = this;
+		const {
+			state: { isMouseHover, isConnecting },
+			context: { isTouch },
+			props: { parentId, model }
+		} = this;
 		const { RADIUS: r, S_RADIUS: sr } = PinModel;
 		const width = r * 2;
 		const color = model.get('color');
 		const outline = isMouseHover || isConnecting || model.connected() ? <circle strokeWidth={1} stroke={color} cx={r} cy={r} r={r - 1} fill='none' /> : null;
+		const events = isTouch ?
+			{
+				onTouchStart: this.onMouseDown,
+				'data-pin': JSON.stringify({ parentId, model: model.toJS() })
+			} : {
+				onMouseDown: this.onMouseDown,
+				onMouseUp: this.onMouseUp,
+				onMouseEnter: this.onMouseEnter,
+				onMouseLeave: this.onMouseLeave
+			};
 
 		return (
 			<svg
-				onMouseDown={this.onMouseDown}
-				onMouseUp={this.onMouseUp}
-				onMouseEnter={this.onMouseEnter}
-				onMouseLeave={this.onMouseLeave}
+				{...events}
 				style={{
 					display: 'block',
 					width,
@@ -103,22 +113,58 @@ class Pin extends Component {
 	}
 
 	onMouseDown() {
-		const { props: { parent, model, onConnectStart } } = this;
+		const {
+			props: { parentId, model, onConnectStart },
+			context: { isTouch }
+		} = this;
 
-		onConnectStart(parent, model);
+		if (isTouch) {
+			document.addEventListener('touchend', this.onMouseUpDocument);
+		} else {
+			document.addEventListener('mouseup', this.onMouseUpDocument);
+		}
+
+		onConnectStart(parentId, model);
 		this.setState({ isConnecting: true });
-		document.addEventListener('mouseup', this.onMouseUpDocument);
 	}
 
-	onMouseUpDocument() {
-		document.removeEventListener('mouseup', this.onMouseUpDocument);
+	/**
+	 * @param {MouseEvent|TouchEvent} e
+	 */
+	onMouseUpDocument(e) {
+		const {
+			props: { onConnectEnd },
+			context: { isTouch }
+		} = this;
+
+		if (isTouch) {
+			const { pageX, pageY } = e.changedTouches.item(0);
+
+			_.some(document.querySelectorAll('[data-pin]'), ($e) => {
+				const { left, top, width, height } = $e.getBoundingClientRect();
+
+				if (left <= pageX && pageX <= left + width && top <= pageY && pageY <= top + height) {
+					const { dataset: { pin } } = $e;
+					const { parentId, model } = JSON.parse(pin);
+
+					onConnectEnd(parentId, fromJS(model));
+					return true;
+				}
+
+				return false;
+			});
+			document.removeEventListener('touchend', this.onMouseUpDocument);
+		} else {
+			document.removeEventListener('mouseup', this.onMouseUpDocument);
+		}
+
 		this.setState({ isConnecting: false });
 	}
 
 	onMouseUp() {
-		const { props: { parent, model, onConnectEnd } } = this;
+		const { props: { parentId, model, onConnectEnd } } = this;
 
-		onConnectEnd(parent, model);
+		onConnectEnd(parentId, model);
 	}
 
 	onMouseEnter() {
@@ -127,6 +173,10 @@ class Pin extends Component {
 
 	onMouseLeave() {
 		this.setState({ isMouseHover: false });
+	}
+
+	static get contextTypes() {
+		return { isTouch: PropTypes.bool };
 	}
 }
 
@@ -338,7 +388,7 @@ const Textarea = Radium(class Textarea extends Component {
 		const { props: { value, editable, color } } = this;
 
 		return (
-			<textarea readOnly={!editable} value={value} onChange={this.onChange} style={{
+			<textarea disabled={!editable} value={value} onChange={this.onChange} style={{
 				display: 'block',
 				outline: 'none',
 				backgroundColor: lblack,
@@ -390,13 +440,17 @@ class Block extends Component {
 	}
 
 	render() {
-		const { props: { model, onConnectPinStart, onConnectPinEnd } } = this;
+		const {
+			props: { model, onConnectPinStart, onConnectPinEnd },
+			context: { isTouch }
+		} = this;
 		const color = model.get('color');
 		const height = model.get('height');
-		const pins = _.map(['inputPins', 'outputPins'], (name) => model.get(name).map((a) => <Pin model={a} parent={model} onConnectStart={onConnectPinStart} onConnectEnd={onConnectPinEnd} />));
+		const pins = _.map(['inputPins', 'outputPins'], (name) => model.get(name).map((a) => <Pin model={a} parentId={model.get('id')} onConnectStart={onConnectPinStart} onConnectEnd={onConnectPinEnd} />));
+		const events = isTouch ? { onTouchStart: this.onMouseDown } : { onMouseDown: this.onMouseDown };
 
 		return (
-			<div data-movable={true} onMouseDown={this.onMouseDown} style={{
+			<div data-movable={true} {...events} style={{
 				position: 'absolute',
 				left: model.get('x'),
 				top: model.get('y'),
@@ -455,40 +509,78 @@ class Block extends Component {
 	}
 
 	/**
-	 * @param {MouseEvent} e
+	 * @param {MouseEvent|TouchEvent} e
+	 * @returns {number[]}
 	 */
-	onMouseDown(e) {
-		const { target: { dataset: { movable } }, clientX, clientY } = e;
+	mouse(e) {
+		const { context: { isTouch } } = this;
 
-		if (!Boolean(movable)) { return; }
-		document.body.classList.add('cursor-move');
-		document.addEventListener('mousemove', this.onMouseMoveDocument);
-		document.addEventListener('mouseup', this.onMouseUpDocument);
-		this.px = clientX;
-		this.py = clientY;
+		if (isTouch) {
+			const { clientX, clientY } = e.touches.item(0);
+
+			return [clientX, clientY];
+		}
+
+		const { clientX, clientY } = e;
+
+		return [clientX, clientY];
 	}
 
 	/**
-	 * @param {MouseEvent} e
+	 * @param {MouseEvent|TouchEvent} e
+	 */
+	onMouseDown(e) {
+		const { context: { isTouch } } = this;
+		const { target: { dataset: { movable } } } = e;
+
+		if (!Boolean(movable)) { return; }
+		const [x, y] = this.mouse(e);
+
+		if (isTouch) {
+			document.addEventListener('touchmove', this.onMouseMoveDocument);
+			document.addEventListener('touchend', this.onMouseUpDocument);
+		} else {
+			document.body.classList.add('cursor-move');
+			document.addEventListener('mousemove', this.onMouseMoveDocument);
+			document.addEventListener('mouseup', this.onMouseUpDocument);
+		}
+
+		this.px = x;
+		this.py = y;
+	}
+
+	/**
+	 * @param {MouseEvent|TouchEvent} e
 	 */
 	onMouseMoveDocument(e) {
 		const { props: { model, update }, px, py } = this;
-		const { clientX, clientY } = e;
-		const dx = clientX - px;
-		const dy = clientY - py;
+		const [x, y] = this.mouse(e);
+		const dx = x - px;
+		const dy = y - py;
 
 		update(model.dmove(dx, dy));
-		this.px = clientX;
-		this.py = clientY;
+		this.px = x;
+		this.py = y;
 	}
 
 	/**
 	 * @param {MouseEvent} e
 	 */
 	onMouseUpDocument() {
-		document.body.classList.remove('cursor-move');
-		document.removeEventListener('mousemove', this.onMouseMoveDocument);
-		document.removeEventListener('mouseup', this.onMouseUpDocument);
+		const { context: { isTouch } } = this;
+
+		if (isTouch) {
+			document.removeEventListener('touchmove', this.onMouseMoveDocument);
+			document.removeEventListener('touchend', this.onMouseUpDocument);
+		} else {
+			document.body.classList.remove('cursor-move');
+			document.removeEventListener('mousemove', this.onMouseMoveDocument);
+			document.removeEventListener('mouseup', this.onMouseUpDocument);
+		}
+	}
+
+	static get contextTypes() {
+		return { isTouch: PropTypes.bool };
 	}
 }
 

@@ -6,7 +6,7 @@ const { black } = require('../color');
 const { Block, BlockModel } = require('./block');
 const { Link, LinkModel } = require('./link');
 const { BlockCreator, BlockCreatorModel } = require('./block-creator');
-const { Component } = React;
+const { Component, PropTypes } = React;
 const { List, Map } = Immutable;
 
 class Chain extends Component {
@@ -66,6 +66,7 @@ class Chain extends Component {
 	render() {
 		const {
 			state: { blocks, links: _links, tempLink, blockCreator },
+			context: { isTouch }
 		} = this;
 		const links = _links.map(({ output: [oBlockId, oPinIndex], input: [iBlockId, iPinIndex] }) => {
 			const pintopin = _.map([[oBlockId, 'outputPins', oPinIndex], [iBlockId, 'inputPins', iPinIndex]], (key) => {
@@ -76,6 +77,16 @@ class Chain extends Component {
 
 			return <Link pintopin={pintopin} />;
 		});
+		const events = isTouch ?
+			{
+				onTouchStart: this.onMouseDown,
+				onTouchMove: this.onMouseMove,
+				onTouchEnd: this.onMouseUp
+			} : {
+				onMouseDown: this.onMouseDown,
+				onMouseMove: this.onMouseMove,
+				onMouseUp: this.onMouseUp
+			};
 
 		return (
 			<div style={{
@@ -85,9 +96,7 @@ class Chain extends Component {
 				backgroundColor: black
 			}}>
 				<svg
-					onMouseDown={this.onMouseDown}
-					onMouseMove={this.onMouseMove}
-					onMouseUp={this.onMouseUp}
+					{...events}
 					style={{
 						position: 'absolute',
 						width: '100%',
@@ -187,11 +196,21 @@ class Chain extends Component {
 	}
 
 	/**
-	 * @param {MouseEvent} e
+	 * @param {MouseEvent|TouchEvent} e
 	 */
 	mouse(e) {
-		const { clientX, clientY } = e;
+		const { context: { isTouch } } = this;
 		const { left, top } = ReactDOM.findDOMNode(this).getBoundingClientRect();
+
+		if (isTouch) {
+			const { clientX, clientY } = e.changedTouches.item(0);
+			const x = clientX - left;
+			const y = clientY - top;
+
+			return [x, y];
+		}
+
+		const { clientX, clientY } = e;
 		const x = clientX - left;
 		const y = clientY - top;
 
@@ -199,7 +218,7 @@ class Chain extends Component {
 	}
 
 	/**
-	 * @param {MouseEvent} e
+	 * @param {MouseEvent|TouchEvent} e
 	 */
 	onMouseDown(e) {
 		const { target, currentTarget } = e;
@@ -209,14 +228,14 @@ class Chain extends Component {
 	}
 
 	/**
-	 * @param {MouseEvent} e
+	 * @param {MouseEvent|TouchEvent} e
 	 */
 	onMouseMove() {
 		this.isMouseDown = false;
 	}
 
 	/**
-	 * @param {MouseEvent} e
+	 * @param {MouseEvent|TouchEvent} e
 	 */
 	onMouseUp(e) {
 		const { isMouseDown, state: { blockCreator } } = this;
@@ -237,17 +256,24 @@ class Chain extends Component {
 	}
 
 	/**
-	 * @param {BlockModel} block
+	 * @param {string} blockId
 	 * @param {PinModel} pin
 	 */
-	onConnectPinStart(block, pin) {
-		const blockId = block.get('id');
-		const { state: { blocks, tempLink } } = this;
+	onConnectPinStart(blockId, pin) {
+		const {
+			state: { blocks, tempLink },
+			context: { isTouch }
+		} = this;
 		const [x, y] = blocks.get(blockId).absolutePositionOf(pin);
 		const pinIndex = pin.get('index');
 
-		document.addEventListener('mousemove', this.onConnectMoveDocument);
-		document.addEventListener('mouseup', this.onConnectEndDocument);
+		if (isTouch) {
+			document.addEventListener('touchmove', this.onConnectMoveDocument);
+			document.addEventListener('touchend', this.onConnectEndDocument);
+		} else {
+			document.addEventListener('mousemove', this.onConnectMoveDocument);
+			document.addEventListener('mouseup', this.onConnectEndDocument);
+		}
 		this.tempBlockAndPin = [blockId, pin];
 		this.isConnecting = true;
 
@@ -267,14 +293,13 @@ class Chain extends Component {
 	}
 
 	/**
-	 * @param {BlockModel} block0
+	 * @param {string} id0
 	 * @param {PinModel} pin0
 	 */
-	onConnectPinEnd(block0, pin0) {
+	onConnectPinEnd(id0, pin0) {
 		const { tempBlockAndPin: [id1, pin1], isConnecting } = this;
 		if (!isConnecting) { return; }
 
-		const id0 = block0.get('id');
 		const [[type0, index0], [type1, index1]] = _.map([pin0, pin1], (a) => [a.get('type'), a.get('index')]);
 
 		if (id0 === id1 || type0 === type1) { return; }
@@ -298,10 +323,19 @@ class Chain extends Component {
 	}
 
 	onConnectEndDocument() {
-		const { state: { tempLink } } = this;
+		const {
+			state: { tempLink },
+			context: { isTouch }
+		} = this;
 
-		document.removeEventListener('mousemove', this.onConnectMoveDocument);
-		document.removeEventListener('mouseup', this.onConnectEndDocument);
+		if (isTouch) {
+			document.removeEventListener('touchmove', this.onConnectMoveDocument);
+			document.removeEventListener('touchend', this.onConnectEndDocument);
+		} else {
+			document.removeEventListener('mousemove', this.onConnectMoveDocument);
+			document.removeEventListener('mouseup', this.onConnectEndDocument);
+		}
+
 		this.isConnecting = false;
 		this.setState({ tempLink: tempLink.set('visible', false) });
 	}
@@ -382,6 +416,10 @@ class Chain extends Component {
 		});
 
 		return { blocks, links };
+	}
+
+	static get contextTypes() {
+		return { isTouch: PropTypes.bool };
 	}
 }
 
