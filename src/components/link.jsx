@@ -1,10 +1,10 @@
 const React = require('react');
 const _ = require('lodash');
 const Immutable = require('immutable');
-const {white} = require('../color');
-const {PinModel} = require('./block');
-const {Component} = React;
-const {Record, Map} = Immutable;
+const { white } = require('../color');
+const { PinModel } = require('./block');
+const { Component } = React;
+const { Record, Map } = Immutable;
 
 class LinkModel extends Record({ ax: 0, ay: 0, bx: 0, by: 0, visible: false }) {
 
@@ -25,8 +25,8 @@ class LinkModel extends Record({ ax: 0, ay: 0, bx: 0, by: 0, visible: false }) {
 	}
 
 	points() {
-		const {points} = LinkModel;
-		const {ax, ay, bx, by} = this;
+		const { points } = LinkModel;
+		const { ax, ay, bx, by } = this;
 
 		return points(ax, ay, bx, by);
 	}
@@ -39,7 +39,7 @@ class LinkModel extends Record({ ax: 0, ay: 0, bx: 0, by: 0, visible: false }) {
 	 * @returns {number[]}
 	 */
 	static points(_ax, _ay, _bx, _by) {
-		const {RADIUS: _radius} = PinModel;
+		const { RADIUS: _radius } = PinModel;
 		const radius = _radius;
 		const _dx = _bx - _ax;
 		const _dy = _by - _ay;
@@ -63,7 +63,7 @@ class LinkModel extends Record({ ax: 0, ay: 0, bx: 0, by: 0, visible: false }) {
 
 		const dy = by - ay;
 		const dist = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-		const {INTERVAL: _interval} = LinkModel;
+		const { INTERVAL: _interval } = LinkModel;
 		const interval = Math.min(_.floor(dist), _interval);
 
 		if (interval === 0) {
@@ -92,15 +92,15 @@ class LinkModel extends Record({ ax: 0, ay: 0, bx: 0, by: 0, visible: false }) {
 
 class Link extends Component {
 	shouldComponentUpdate(nextProps) {
-		const {props} = this;
+		const { props } = this;
 
 		return !Immutable.is(Map(props), Map(nextProps));
 	}
 
 	render() {
-		const {polyline} = Link;
-		const {points} = LinkModel;
-		const {props: {model, pintopin}} = this;
+		const { polyline } = Link;
+		const { points } = LinkModel;
+		const { props: { model, pintopin } } = this;
 
 		if (pintopin) {
 			const [[ax, ay], [bx, by]] = pintopin;

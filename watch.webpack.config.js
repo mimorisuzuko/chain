@@ -6,7 +6,7 @@ const dst = 'docs';
 
 module.exports = {
 	entry: [
-		'webpack-dev-server/client?http://localhost:3000',
+		'webpack-dev-server/client?http://0.0.0.0:3000',
 		'webpack/hot/only-dev-server',
 		libpath.join(__dirname, 'src/')
 	],
@@ -18,6 +18,7 @@ module.exports = {
 		hot: true,
 		contentBase: 'docs',
 		port: 3000,
+		host: '0.0.0.0',
 		inline: true
 	},
 	module: {

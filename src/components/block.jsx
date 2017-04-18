@@ -2,16 +2,16 @@ const React = require('react');
 const Immutable = require('immutable');
 const Radium = require('radium');
 const _ = require('lodash');
-const {black, white, lblack, red, vblue, vlblue, vpink, vyellow} = require('../color');
-const {Record, List} = Immutable;
-const {Component} = React;
+const { black, white, lblack, red, vblue, vlblue, vpink, vyellow } = require('../color');
+const { Record, List, fromJS } = Immutable;
+const { Component, PropTypes } = React;
 
-class PinModel extends Record({ type: 0, index: 0, color: white, dst: null }) {
+class PinModel extends Record({ type: 0, index: 0, color: white, dst: null, cx: 0, cy: 0 }) {
 	/**
 	 * @param {Object} o
 	 */
 	constructor(o) {
-		const {type} = o;
+		const { type } = o;
 
 		if (type === 0) {
 			super(_.assign(o, { dst: 0 }));
@@ -24,7 +24,7 @@ class PinModel extends Record({ type: 0, index: 0, color: white, dst: null }) {
 	 * @param {string} id
 	 */
 	connect(id) {
-		const {type, dst} = this;
+		const { type, dst } = this;
 
 		if (type === 0) {
 			return this.set('dst', dst + 1);
@@ -34,7 +34,7 @@ class PinModel extends Record({ type: 0, index: 0, color: white, dst: null }) {
 	}
 
 	disconnect() {
-		const {type, dst} = this;
+		const { type, dst } = this;
 
 		if (type === 0) {
 			return this.set('dst', dst - 1);
@@ -44,7 +44,7 @@ class PinModel extends Record({ type: 0, index: 0, color: white, dst: null }) {
 	}
 
 	connected() {
-		const {type, dst} = this;
+		const { type, dst } = this;
 
 		return type === 0 ? dst > 0 : dst;
 	}
@@ -74,26 +74,36 @@ class Pin extends Component {
 	}
 
 	render() {
-		const {state: {isMouseHover, isConnecting}} = this;
-		const {props: {model, cx, cy}} = this;
-		const {RADIUS: r, S_RADIUS: sr} = PinModel;
+		const {
+			state: { isMouseHover, isConnecting },
+			context: { isTouch },
+			props: { parentId, model }
+		} = this;
+		const { RADIUS: r, S_RADIUS: sr } = PinModel;
 		const width = r * 2;
 		const color = model.get('color');
 		const outline = isMouseHover || isConnecting || model.connected() ? <circle strokeWidth={1} stroke={color} cx={r} cy={r} r={r - 1} fill='none' /> : null;
+		const events = isTouch ?
+			{
+				onTouchStart: this.onMouseDown,
+				'data-pin': JSON.stringify({ parentId, model: model.toJS() })
+			} : {
+				onMouseDown: this.onMouseDown,
+				onMouseUp: this.onMouseUp,
+				onMouseEnter: this.onMouseEnter,
+				onMouseLeave: this.onMouseLeave
+			};
 
 		return (
 			<svg
-				onMouseDown={this.onMouseDown}
-				onMouseUp={this.onMouseUp}
-				onMouseEnter={this.onMouseEnter}
-				onMouseLeave={this.onMouseLeave}
+				{...events}
 				style={{
 					display: 'block',
 					width,
 					height: width,
 					position: 'absolute',
-					left: cx - r,
-					top: cy - r,
+					left: model.get('cx') - r,
+					top: model.get('cy') - r,
 					cursor: 'pointer'
 				}}>
 				<circle strokeWidth={1} stroke={color} cx={r} cy={r} r={sr} fill={model.get('type') ? 'none' : color} />
@@ -103,22 +113,58 @@ class Pin extends Component {
 	}
 
 	onMouseDown() {
-		const {props: {parent, model, onConnectStart}} = this;
+		const {
+			props: { parentId, model, onConnectStart },
+			context: { isTouch }
+		} = this;
 
-		onConnectStart(parent, model);
+		if (isTouch) {
+			document.addEventListener('touchend', this.onMouseUpDocument);
+		} else {
+			document.addEventListener('mouseup', this.onMouseUpDocument);
+		}
+
+		onConnectStart(parentId, model);
 		this.setState({ isConnecting: true });
-		document.addEventListener('mouseup', this.onMouseUpDocument);
 	}
 
-	onMouseUpDocument() {
-		document.removeEventListener('mouseup', this.onMouseUpDocument);
+	/**
+	 * @param {MouseEvent|TouchEvent} e
+	 */
+	onMouseUpDocument(e) {
+		const {
+			props: { onConnectEnd },
+			context: { isTouch }
+		} = this;
+
+		if (isTouch) {
+			const { pageX, pageY } = e.changedTouches.item(0);
+
+			_.some(document.querySelectorAll('[data-pin]'), ($e) => {
+				const { left, top, width, height } = $e.getBoundingClientRect();
+
+				if (left <= pageX && pageX <= left + width && top <= pageY && pageY <= top + height) {
+					const { dataset: { pin } } = $e;
+					const { parentId, model } = JSON.parse(pin);
+
+					onConnectEnd(parentId, fromJS(model));
+					return true;
+				}
+
+				return false;
+			});
+			document.removeEventListener('touchend', this.onMouseUpDocument);
+		} else {
+			document.removeEventListener('mouseup', this.onMouseUpDocument);
+		}
+
 		this.setState({ isConnecting: false });
 	}
 
 	onMouseUp() {
-		const {props: {parent, model, onConnectEnd}} = this;
+		const { props: { parentId, model, onConnectEnd } } = this;
 
-		onConnectEnd(parent, model);
+		onConnectEnd(parentId, model);
 	}
 
 	onMouseEnter() {
@@ -128,13 +174,70 @@ class Pin extends Component {
 	onMouseLeave() {
 		this.setState({ isMouseHover: false });
 	}
+
+	static get contextTypes() {
+		return { isTouch: PropTypes.bool };
+	}
 }
+
+const BLOCK_LIST = {
+	window: {
+		value: '',
+		editablevalue: false,
+		inputPinsMinlength: 1,
+		inputPins: [{}],
+		color: vpink,
+		width: 270,
+		deletable: false
+	},
+	value: {
+		editablepin: false,
+		outputPins: [{ color: vpink }],
+		color: vlblue
+	},
+	function: {
+		inputPinsMinlength: 1,
+		outputPins: [{}],
+		inputPins: [{ color: vblue }],
+		color: vblue,
+		addedPinColor: vlblue
+	},
+	property: {
+		outputPins: [{}],
+		inputPins: [{}],
+		editablepin: false,
+		color: vyellow
+	},
+	operator: {
+		inputPinsMinlength: 2,
+		outputPins: [{}],
+		inputPins: [{}, {}],
+	},
+	debug: {
+		value: '"Hello, World!"',
+		outputPins: [{}],
+		inputPins: [{}]
+	}
+};
+
+_.forEach(Object.keys(BLOCK_LIST), (a) => {
+	const b = BLOCK_LIST[a];
+
+	_.forEach(['outputPins', 'inputPins'], (c, type) => {
+		if (!_.has(b, c)) { return; }
+		b[c] = List(_.map(b[c], (d, index) => new PinModel(_.assign({ type, index }, d))));
+	});
+
+	BLOCK_LIST[a] = b;
+});
 
 class BlockModel extends Record({
 	id: '',
 	name: '',
 	x: 0,
 	y: 0,
+	width: 0,
+	height: 0,
 	value: '',
 	inputPinsMinlength: 0,
 	outputPinsMinlength: 0,
@@ -142,6 +245,7 @@ class BlockModel extends Record({
 	outputPins: List(),
 	editablepin: true,
 	editablevalue: true,
+	deletable: true,
 	color: white,
 	addedPinColor: white
 }) {
@@ -150,18 +254,46 @@ class BlockModel extends Record({
 	 * @param {Object} o
 	 */
 	constructor(o) {
-		const {BLOCK_LIST: list} = BlockModel;
+		const { BLOCK_LIST: list, MIN_HEIGHT: height, WIDTH: width } = BlockModel;
 		const id = `block${Date.now()}`;
-		const {name} = o;
+		const { name } = o;
+		const block = super(_.assign({ id, name, height, width }, o, list[name]));
 
-		super(_.assign({ id, name }, o, list[name]));
+		return block.update('inputPins', (a) => a.map((b, i) => {
+			const [cx, cy] = this.pinPosition(1, i);
+
+			return b.merge({ cx, cy });
+		})).update('outputPins', (a) => a.map((b, i) => {
+			const [cx, cy] = this.pinPosition(0, i);
+
+			return b.merge({ cx, cy });
+		}));
 	}
 
 	isTail() {
-		const {outputPins} = this;
-		const {size} = outputPins;
+		const { outputPins } = this;
+		const { size } = outputPins;
 
 		return size === 0 || !outputPins.get(0).connected();
+	}
+
+	addInputPin() {
+		const { addedPinColor: color, inputPins: { size } } = this;
+		const height = Math.max(BlockModel.MIN_HEIGHT, (size + 2) * (PinModel.RADIUS * 2));
+
+		return this.set('height', height).update('inputPins', (pins) => {
+			const { size: index } = pins;
+			const [cx, cy] = this.pinPosition(1, index);
+
+			return pins.push(new PinModel({ type: 1, index, color, cx, cy }));
+		});
+	}
+
+	removeInputPin() {
+		const { inputPins: { size }, inputPinsMinlength: min } = this;
+		const height = Math.max(BlockModel.MIN_HEIGHT, size * (PinModel.RADIUS * 2));
+
+		return min < size ? this.set('height', height).update('inputPins', (pins) => pins.pop()) : this;
 	}
 
 	/**
@@ -169,7 +301,7 @@ class BlockModel extends Record({
 	 * @param {number} dy
 	 */
 	dmove(dx, dy) {
-		const {x, y} = this;
+		const { x, y } = this;
 
 		return this.merge({ x: x + dx, y: y + dy });
 	}
@@ -178,78 +310,41 @@ class BlockModel extends Record({
 	 * @param {PinModel} pin
 	 * @returns {number[]}
 	 */
-	absoluteCentralPositionOf(pin) {
-		const {centralPositionOf} = BlockModel;
-		const [dx, dy] = centralPositionOf(pin);
-		const {x, y} = this;
+	absolutePositionOf(pin) {
+		const { x, y } = this;
 
-		return [x + dx, y + dy];
+		return [x + pin.get('cx'), y + pin.get('cy')];
+	}
+
+	/**
+	 * @param {number} type
+	 * @param {number} index 
+	 * @returns {number[]}
+	 */
+	pinPosition(type, index) {
+		const { width } = this;
+		const { RADIUS: r } = PinModel;
+		const d = r * 2;
+
+		if (type === 0) {
+			return [width + r, d * index + r - 1];
+		} else if (type === 1) {
+			return [-r - 1, d * index + r - 1];
+		}
+
+		return [0, 0];
 	}
 
 	static get BLOCK_LIST() {
-		return {
-			value: {
-				editablepin: false,
-				outputPins: List([new PinModel({ type: 0, color: vpink })]),
-				color: vlblue
-			},
-			view: {
-				value: '',
-				editablepin: false,
-				editablevalue: false,
-				inputPins: List([new PinModel({ type: 1 })]),
-				color: vpink
-			},
-			function: {
-				inputPinsMinlength: 1,
-				outputPins: List([new PinModel({ type: 0 })]),
-				inputPins: List([new PinModel({ type: 1, color: vblue })]),
-				color: vblue,
-				addedPinColor: vlblue
-			},
-			property: {
-				outputPins: List([new PinModel({ type: 0 })]),
-				inputPins: List([new PinModel({ type: 1 })]),
-				editablepin: false,
-				color: vyellow
-			},
-			operator: {
-				inputPinsMinlength: 2,
-				outputPins: List([new PinModel({ type: 0 })]),
-				inputPins: List([
-					new PinModel({ type: 1 }),
-					new PinModel({ type: 1, index: 1 })
-				]),
-			},
-			debug: {
-				value: '"Hello, World!"',
-				outputPins: List([new PinModel({ type: 0 })]),
-				inputPins: List([new PinModel({ type: 1 })])
-			}
-		};
+		return BLOCK_LIST;
 	}
 
 	static get WIDTH() {
 		return 180;
 	}
 
-	/**
-	 * @param {PinModel} pin
-	 */
-	static centralPositionOf(pin) {
-		const {WIDTH: w} = BlockModel;
-		const {RADIUS: r} = PinModel;
-		const d = r * 2;
-		const type = pin.get('type');
-		const index = pin.get('index');
-
-		if (type === 0) {
-			return [w + r, d * index + r - 1];
-		} else if (type === 1) {
-			return [-r - 1, d * index + r - 1];
-		}
-
-		return [0, 0];
+	static get MIN_HEIGHT() {
+		return 64;
 	}
 }
 
@@ -261,13 +356,14 @@ class Button extends Component {
 	}
 
 	render() {
-		const {props: {value, backgroundColor}} = this;
+		const { props: { value, backgroundColor } } = this;
 
 		return (
 			<a href='#' onClick={this.onClick} style={{
 				padding: '1px 8px',
 				backgroundColor,
-				marginRight: 1
+				marginRight: 1,
+				display: 'inline-block'
 			}}>
 				{value}
 			</a>
@@ -275,7 +371,7 @@ class Button extends Component {
 	}
 
 	onClick() {
-		const {props: {onClick}} = this;
+		const { props: { onClick } } = this;
 
 		onClick();
 	}
@@ -289,14 +385,15 @@ const Textarea = Radium(class Textarea extends Component {
 	}
 
 	render() {
-		const {props: {value, editable, color}} = this;
+		const { props: { value, editable, color } } = this;
 
 		return (
-			<textarea readOnly={!editable} value={value} onChange={this.onChange} style={{
+			<textarea disabled={!editable} value={value} onChange={this.onChange} style={{
 				display: 'block',
 				outline: 'none',
 				backgroundColor: lblack,
 				width: '100%',
+				height: '100%',
 				boxSizing: 'border-box',
 				borderLeft: 'none',
 				borderTopWidth: 1,
@@ -321,7 +418,7 @@ const Textarea = Radium(class Textarea extends Component {
 	 * @param {Event} e
 	 */
 	onChange(e) {
-		const {props: {onChange}} = this;
+		const { props: { onChange } } = this;
 
 		onChange(e);
 	}
@@ -343,52 +440,40 @@ class Block extends Component {
 	}
 
 	render() {
-		const {WIDTH: width, centralPositionOf} = BlockModel;
-		const {props: {model, onConnectPinStart, onConnectPinEnd}} = this;
+		const {
+			props: { model, onConnectPinStart, onConnectPinEnd },
+			context: { isTouch }
+		} = this;
 		const color = model.get('color');
-		const pins = _.map(['inputPins', 'outputPins'], (name) => {
-			return model.get(name).map((a) => {
-				const [cx, cy] = centralPositionOf(a);
-
-				return (
-					<Pin
-						model={a}
-						parent={model}
-						cx={cx}
-						cy={cy}
-						onConnectStart={onConnectPinStart}
-						onConnectEnd={onConnectPinEnd}
-					/>
-				);
-			});
-		});
+		const height = model.get('height');
+		const pins = _.map(['inputPins', 'outputPins'], (name) => model.get(name).map((a) => <Pin model={a} parentId={model.get('id')} onConnectStart={onConnectPinStart} onConnectEnd={onConnectPinEnd} />));
+		const events = isTouch ? { onTouchStart: this.onMouseDown } : { onMouseDown: this.onMouseDown };
 
 		return (
-			<div data-movable={true} onMouseDown={this.onMouseDown} style={{
+			<div data-movable={true} {...events} style={{
 				position: 'absolute',
 				left: model.get('x'),
 				top: model.get('y'),
-				width,
+				width: model.get('width'),
 				border: `1px solid ${lblack}`,
-				boxSizing: 'border-box',
 				backgroundColor: black,
+				height,
+				boxSizing: 'border-box',
 				boxShadow: '0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2)'
 			}}>
 				<div data-movable={true}>
-					<Button value='×' backgroundColor={red} onClick={this.remove} />
+					{model.get('deletable') ? <Button value='×' backgroundColor={red} onClick={this.remove} /> : null}
 					{model.get('editablepin') ? [
 						<Button value='-' backgroundColor={lblack} onClick={this.removeInputPin} />,
 						<Button value='+' backgroundColor={lblack} onClick={this.addInputPin} />
 					] : null}
 				</div>
 				<div data-movable={true} style={{
-					padding: '10px 5px 5px'
+					borderLeft: `5px solid ${color}`,
+					height: height - 16 - 12,
+					margin: 5
 				}}>
-					<div style={{
-						borderLeft: `5px solid ${color}`
-					}}>
-						<Textarea color={color} value={model.get('value')} onChange={this.onChangeTextarea} editable={model.get('editablevalue')} />
-					</div>
+					<Textarea color={color} value={model.get('value')} onChange={this.onChangeTextarea} editable={model.get('editablevalue')} />
 				</div>
 				{pins}
 			</div>
@@ -396,76 +481,106 @@ class Block extends Component {
 	}
 
 	remove() {
-		const {props: {model, remove}} = this;
+		const { props: { model, remove } } = this;
 
 		remove(model);
 	}
 
 	removeInputPin() {
-		const {props: {model, update}} = this;
+		const { props: { model, update } } = this;
 
-		const {size} = model.get('inputPins');
-		const min = model.get('inputPinsMinlength');
-
-		update(min < size ? model.updateIn(['inputPins'], (pins) => pins.pop()) : model, true);
+		update(model.removeInputPin(), true);
 	}
 
 	addInputPin() {
-		const {props: {model, update}} = this;
-		const color = model.get('addedPinColor');
+		const { props: { model, update } } = this;
 
-		update(model.updateIn(['inputPins'], (pins) => {
-			const {size: index} = pins;
-
-			return pins.push(new PinModel({ type: 1, index, color }));
-		}));
+		update(model.addInputPin());
 	}
 
 	/**
 	 * @param {Event} e
 	 */
 	onChangeTextarea(e) {
-		const {props: {model, update}} = this;
-		const {currentTarget: {value}} = e;
+		const { props: { model, update } } = this;
+		const { currentTarget: { value } } = e;
 
 		update(model.set('value', value));
 	}
 
 	/**
-	 * @param {MouseEvent} e
+	 * @param {MouseEvent|TouchEvent} e
+	 * @returns {number[]}
 	 */
-	onMouseDown(e) {
-		const {target: {dataset: {movable}}, clientX, clientY} = e;
+	mouse(e) {
+		const { context: { isTouch } } = this;
 
-		if (!Boolean(movable)) { return; }
-		document.body.classList.add('cursor-move');
-		document.addEventListener('mousemove', this.onMouseMoveDocument);
-		document.addEventListener('mouseup', this.onMouseUpDocument);
-		this.px = clientX;
-		this.py = clientY;
+		if (isTouch) {
+			const { clientX, clientY } = e.touches.item(0);
+
+			return [clientX, clientY];
+		}
+
+		const { clientX, clientY } = e;
+
+		return [clientX, clientY];
 	}
 
 	/**
-	 * @param {MouseEvent} e
+	 * @param {MouseEvent|TouchEvent} e
+	 */
+	onMouseDown(e) {
+		const { context: { isTouch } } = this;
+		const { target: { dataset: { movable } } } = e;
+
+		if (!Boolean(movable)) { return; }
+		const [x, y] = this.mouse(e);
+
+		if (isTouch) {
+			document.addEventListener('touchmove', this.onMouseMoveDocument);
+			document.addEventListener('touchend', this.onMouseUpDocument);
+		} else {
+			document.body.classList.add('cursor-move');
+			document.addEventListener('mousemove', this.onMouseMoveDocument);
+			document.addEventListener('mouseup', this.onMouseUpDocument);
+		}
+
+		this.px = x;
+		this.py = y;
+	}
+
+	/**
+	 * @param {MouseEvent|TouchEvent} e
 	 */
 	onMouseMoveDocument(e) {
-		const {props: {model, update}, px, py} = this;
-		const {clientX, clientY} = e;
-		const dx = clientX - px;
-		const dy = clientY - py;
+		const { props: { model, update }, px, py } = this;
+		const [x, y] = this.mouse(e);
+		const dx = x - px;
+		const dy = y - py;
 
 		update(model.dmove(dx, dy));
-		this.px = clientX;
-		this.py = clientY;
+		this.px = x;
+		this.py = y;
 	}
 
 	/**
 	 * @param {MouseEvent} e
 	 */
 	onMouseUpDocument() {
-		document.body.classList.remove('cursor-move');
-		document.removeEventListener('mousemove', this.onMouseMoveDocument);
-		document.removeEventListener('mouseup', this.onMouseUpDocument);
+		const { context: { isTouch } } = this;
+
+		if (isTouch) {
+			document.removeEventListener('touchmove', this.onMouseMoveDocument);
+			document.removeEventListener('touchend', this.onMouseUpDocument);
+		} else {
+			document.body.classList.remove('cursor-move');
+			document.removeEventListener('mousemove', this.onMouseMoveDocument);
+			document.removeEventListener('mouseup', this.onMouseUpDocument);
+		}
+	}
+
+	static get contextTypes() {
+		return { isTouch: PropTypes.bool };
 	}
 }
 
