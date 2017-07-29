@@ -1,7 +1,12 @@
 import React, { Component } from 'react';
-import { white, lblack, red } from '../color';
+import { white, lblack, red, black } from '../color';
 import { connect } from 'react-redux';
 import actions from '../actions';
+import BlockButton from '../components/BlockButton';
+import Pin, { RADIUS } from '../components/Pin';
+import Textarea from '../components/Textarea';
+
+const WIDTH = 200;
 
 export default connect()(class Block extends Component {
 	constructor() {
@@ -14,52 +19,39 @@ export default connect()(class Block extends Component {
 		this.onMouseDown = this.onMouseDown.bind(this);
 		this.onMouseMoveDocument = this.onMouseMoveDocument.bind(this);
 		this.onMouseUpDocument = this.onMouseUpDocument.bind(this);
+		this.addPin = this.addPin.bind(this);
+		this.deletePin = this.deletePin.bind(this);
 	}
 
 	render() {
 		const { props: { model } } = this;
 
 		return (
-			<div onMouseDown={this.onMouseDown} style={{
+			<div className='shadow' onMouseDown={this.onMouseDown} style={{
 				position: 'absolute',
 				left: model.get('x'),
 				top: model.get('y'),
 				fontSize: 12,
-				fontFamily: 'Menlo, Monaco, "Courier New", monospace',
 				color: white,
 				border: `1px solid ${lblack}`,
-				width: 200,
+				width: WIDTH,
+				backgroundColor: black,
 				boxSizing: 'border-box'
 			}}>
 				<div>
-					{model.get('deletable') ? <button onClick={this.onClickDeleteButton} style={{
-						display: 'inline-block',
-						textDecoration: 'none',
-						color: 'inherit',
-						backgroundColor: red,
-						border: 'none',
-						font: 'inherit',
-						padding: '1px 8px',
-						outline: 'none',
-						cursor: 'pointer'
-					}}>
-						×
-					</button> : null}
+					{model.get('deletable') ? <BlockButton onClick={this.onClickDeleteButton} style={{ backgroundColor: red, marginRight: 1 }} value='×' /> : null}
+					{model.get('changeable') ? <BlockButton onClick={this.addPin} style={{ backgroundColor: lblack, marginRight: 1 }} value='+' /> : null}
+					{model.get('changeable') ? <BlockButton onClick={this.deletePin} style={{ backgroundColor: lblack }} value='-' /> : null}
 				</div>
 				<div style={{
 					padding: 5
 				}}>
-					<textarea readOnly={!model.get('editable')} onChange={this.onChange} value={model.get('value')} style={{
-						display: 'block',
-						font: 'inherit',
-						color: 'inherit',
-						backgroundColor: lblack,
-						border: 'none',
-						outline: 'none',
-						width: '100%',
-						boxSizing: 'border-box'
+					<Textarea readOnly={!model.get('editable')} onChange={this.onChange} value={model.get('value')} style={{
+						fontFamily: 'Menlo, Monaco, "Courier New", monospace'
 					}} />
 				</div>
+				{model.get('leftPins').map((model, i) => <Pin key={model.get('id')} cx={-RADIUS - 2} cy={RADIUS + (RADIUS * 2 + 3) * i} color={model.get('color')} />)}
+				{model.get('rightPins').map((model, i) => <Pin key={model.get('id')} cx={WIDTH + RADIUS} cy={RADIUS + (RADIUS * 2 + 3) * i} color={model.get('color')} />)}
 			</div>
 		);
 	}
@@ -110,5 +102,17 @@ export default connect()(class Block extends Component {
 		document.body.classList.remove('cursor-move');
 		document.removeEventListener('mousemove', this.onMouseMoveDocument);
 		document.removeEventListener('mouseup', this.onMouseUpDocument);
+	}
+
+	addPin() {
+		const { props: { model, dispatch } } = this;
+
+		dispatch(actions.addPin(model.get('id')));
+	}
+
+	deletePin() {
+		const { props: { model, dispatch } } = this;
+
+		dispatch(actions.deletePin(model.get('id')));
 	}
 });
