@@ -7,13 +7,6 @@ main {
 
 body {
 	margin: 0;
-	font-family: Menlo, Monaco, 'Courier New', monospace;
-	font-size: 0.75em;
-	user-select: none;
-
-	* {
-		color: rgb(212, 212, 212);
-	}
 
 	&.cursor-move {
 		* {
@@ -22,10 +15,9 @@ body {
 	}
 }
 
-textarea {
-	font: inherit;
-}
-
-a {
-	text-decoration: none;
+main {
+	> div {
+		width: 100%;
+		height: 100%;
+	}
 }
