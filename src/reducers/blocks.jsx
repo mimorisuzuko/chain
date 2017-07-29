@@ -3,7 +3,7 @@ import { BlockCreator, Block, Pin } from '../models';
 import { handleActions } from 'redux-actions';
 import actions from '../actions';
 import _ from 'lodash';
-import { purple, white } from '../color';
+import { purple, white, blue, yellow, lblue } from '../color';
 
 /**
  * @param {string[]} colors
@@ -18,11 +18,28 @@ export default handleActions({
 			case BlockCreator.VIEW_BLOCK:
 				payload.editable = false;
 				payload.deletable = false;
+				payload.color = purple;
 				payload.leftPins = createPins([white]);
 				break;
 			case BlockCreator.CREATABLE_TYPES.VALUE_BLOCK:
 				payload.changeable = false;
 				payload.rightPins = createPins([purple]);
+				break;
+			case BlockCreator.CREATABLE_TYPES.FUNCTION_BLOCK:
+				payload.color = blue;
+				payload.leftPins = createPins([blue]);
+				payload.rightPins = createPins([purple]);
+				break;
+			case BlockCreator.CREATABLE_TYPES.PROPERTY_BLOCK:
+				payload.changeable = false;
+				payload.color = yellow;
+				payload.leftPins = createPins([white]);
+				payload.rightPins = createPins([white]);
+				break;
+			case BlockCreator.CREATABLE_TYPES.OPERATOR_BLCOK:
+				payload.changeable = false;
+				payload.leftPins = createPins([white, white]);
+				payload.rightPins = createPins([white]);
 				break;
 			default:
 				break;
@@ -48,7 +65,7 @@ export default handleActions({
 	[actions.addPin]: (state, action) => {
 		const { payload } = action;
 
-		return state.updateIn([payload], (block) => block.updateIn(['leftPins'], (leftPins) => leftPins.push(new Pin({ id: leftPins.size, color: white }))));
+		return state.updateIn([payload], (block) => block.updateIn(['leftPins'], (leftPins) => leftPins.push(new Pin({ id: leftPins.size, color: block.type === BlockCreator.CREATABLE_TYPES.FUNCTION_BLOCK ? lblue : white }))));
 	},
 	[actions.deletePin]: (state, action) => {
 		const { payload } = action;

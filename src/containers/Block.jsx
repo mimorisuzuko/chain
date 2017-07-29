@@ -25,6 +25,7 @@ export default connect()(class Block extends Component {
 
 	render() {
 		const { props: { model } } = this;
+		const color = model.get('color');
 
 		return (
 			<div className='shadow' onMouseDown={this.onMouseDown} style={{
@@ -47,7 +48,11 @@ export default connect()(class Block extends Component {
 					padding: 5
 				}}>
 					<Textarea readOnly={!model.get('editable')} onChange={this.onChange} value={model.get('value')} style={{
-						fontFamily: 'Menlo, Monaco, "Courier New", monospace'
+						fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+						borderTop: `1px solid ${color}`,
+						borderRight: `1px solid ${color}`,
+						borderBottom: `1px solid ${color}`,
+						borderLeft: `5px solid ${color}`,
 					}} />
 				</div>
 				{model.get('leftPins').map((model, i) => <Pin key={model.get('id')} cx={-RADIUS - 2} cy={RADIUS + (RADIUS * 2 + 3) * i} color={model.get('color')} />)}

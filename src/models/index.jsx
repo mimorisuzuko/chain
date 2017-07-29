@@ -1,11 +1,15 @@
 import { Record, List } from 'immutable';
 import _ from 'lodash';
+import { white } from '../color';
 
 const VALUE_BLOCK = 'VALUE_BLOCK';
-const CREATABLE_TYPES = { VALUE_BLOCK };
+const FUNCTION_BLOCK = 'FUNCTION_BLOCK';
+const PROPERTY_BLOCK = 'PROPERTY_BLOCK';
+const OPERATOR_BLCOK = 'OPERATOR_BLCOK';
+const CREATABLE_TYPES = { VALUE_BLOCK, FUNCTION_BLOCK, PROPERTY_BLOCK, OPERATOR_BLCOK };
 const CREATABLE_TYPE_KEYS = _.keys(CREATABLE_TYPES);
 
-export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: true, editable: true, type: '', changeable: true, rightPins: List(), leftPins: List() }) {
+export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: true, editable: true, type: '', color: white, changeable: true, rightPins: List(), leftPins: List() }) {
 
 	/**
 	 * @param {number} dx
@@ -18,7 +22,7 @@ export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: tru
 	}
 }
 
-export class Pin extends Record({ id: 0, color: 'lightgray' }) { }
+export class Pin extends Record({ id: 0, color: white }) { }
 
 export class BlockCreator extends Record({ x: 0, y: 0, visible: false, value: '', selected: CREATABLE_TYPE_KEYS[0], rightPins: List(), leftPins: List() }) {
 
