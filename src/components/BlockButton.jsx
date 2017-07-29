@@ -1,5 +1,5 @@
 import React from 'react';
-import merge from 'lodash.merge';
+import _ from 'lodash';
 
 /**
  * @param {{style: Object, value: string, onClick: Function}} props
@@ -8,7 +8,7 @@ const BlockButton = (props) => {
 	const { style, value, onClick } = props;
 
 	return (
-		<button onClick={onClick} style={merge({
+		<button onClick={onClick} style={_.merge({
 			display: 'inline-block',
 			textDecoration: 'none',
 			color: 'inherit',

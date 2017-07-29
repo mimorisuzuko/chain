@@ -3,14 +3,12 @@ import { findDOMNode } from 'react-dom';
 import { black, lblack, white } from '../color';
 import { connect } from 'react-redux';
 import Textarea from '../components/Textarea';
-import map from 'lodash.map';
-import camelCase from 'lodash.camelcase';
-import upperFirst from 'lodash.upperfirst';
+import _ from 'lodash';
 import actions from '../actions';
 import { BlockCreator } from '../models';
 
 const { CREATABLE_TYPE_KEYS: OPTION_LIST } = BlockCreator;
-const PASCAL_OPTION_LIST = map(OPTION_LIST, (a) => upperFirst((camelCase(a))));
+const PASCAL_OPTION_LIST = _.map(OPTION_LIST, (a) => _.upperFirst((_.camelCase(a))));
 
 export default connect(
 	(state) => ({
@@ -52,7 +50,7 @@ export default connect(
 					font: 'inherit',
 					outline: 'none'
 				}}>
-					{map(OPTION_LIST, (a, i) => <option value={a} key={i}>{PASCAL_OPTION_LIST[i]}</option>)}
+					{_.map(OPTION_LIST, (a, i) => <option value={a} key={i}>{PASCAL_OPTION_LIST[i]}</option>)}
 				</select>
 				<Textarea onChange={this.onChangeTextarea} style={{
 					fontFamily: 'Menlo, Monaco, "Courier New", monospace',

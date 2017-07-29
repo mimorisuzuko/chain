@@ -1,9 +1,9 @@
 import { Record, List } from 'immutable';
-import keys from 'lodash.keys';
+import _ from 'lodash';
 
 const VALUE_BLOCK = 'VALUE_BLOCK';
 const CREATABLE_TYPES = { VALUE_BLOCK };
-const CREATABLE_TYPE_KEYS = keys(CREATABLE_TYPES);
+const CREATABLE_TYPE_KEYS = _.keys(CREATABLE_TYPES);
 
 export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: true, editable: true, type: '', changeable: true, rightPins: List(), leftPins: List() }) {
 

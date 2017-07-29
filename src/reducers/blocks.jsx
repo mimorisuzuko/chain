@@ -2,13 +2,13 @@ import { List } from 'immutable';
 import { BlockCreator, Block, Pin } from '../models';
 import { handleActions } from 'redux-actions';
 import actions from '../actions';
-import map from 'lodash.map';
+import _ from 'lodash';
 import { purple, white } from '../color';
 
 /**
  * @param {string[]} colors
  */
-const createPins = (colors) => List(map(colors, (color, id) => new Pin({ id, color })));
+const createPins = (colors) => List(_.map(colors, (color, id) => new Pin({ id, color })));
 
 export default handleActions({
 	[actions.addBlock]: (state, action) => {

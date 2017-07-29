@@ -1,12 +1,12 @@
 import React from 'react';
 import { lblack } from '../color';
-import merge from 'lodash.merge';
+import _ from 'lodash';
 
 /**
  * @param {{readOnly: boolean, onChange: Function, value: string, style: Object}} props 
  */
 const Textarea = (props) => {
-	const { readOnly, onChange, value, style } = merge({
+	const { readOnly, onChange, value, style } = _.merge({
 		readonly: false,
 		style: {
 			display: 'block',
