@@ -45,14 +45,20 @@ export default connect()(class Block extends Component {
 					{model.get('changeable') ? <BlockButton onClick={this.deletePin} style={{ backgroundColor: lblack }} value='-' /> : null}
 				</div>
 				<div style={{
-					padding: 5
+					margin: 5,
+					borderLeft: `5px solid ${color}`
 				}}>
 					<Textarea readOnly={!model.get('editable')} onChange={this.onChange} value={model.get('value')} style={{
 						fontFamily: 'Menlo, Monaco, "Courier New", monospace',
-						borderTop: `1px solid ${color}`,
-						borderRight: `1px solid ${color}`,
-						borderBottom: `1px solid ${color}`,
-						borderLeft: `5px solid ${color}`,
+						borderTop: '1px solid transparent',
+						borderRight: '1px solid transparent',
+						borderBottom: '1px solid transparent',
+						borderLeft: 'none',
+						':focus': {
+							borderTop: `1px solid ${color}`,
+							borderRight: `1px solid ${color}`,
+							borderBottom: `1px solid ${color}`,
+						}
 					}} />
 				</div>
 				{model.get('leftPins').map((model, i) => <Pin key={model.get('id')} cx={-RADIUS - 2} cy={RADIUS + (RADIUS * 2 + 3) * i} color={model.get('color')} />)}

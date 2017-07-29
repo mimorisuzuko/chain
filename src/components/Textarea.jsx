@@ -1,6 +1,7 @@
 import React from 'react';
 import { lblack } from '../color';
 import _ from 'lodash';
+import Radium from 'radium';
 
 /**
  * @param {{readOnly: boolean, onChange: Function, value: string, style: Object}} props 
@@ -10,20 +11,18 @@ const Textarea = (props) => {
 		readonly: false,
 		style: {
 			display: 'block',
-			font: 'inherit',
 			color: 'inherit',
 			backgroundColor: lblack,
-			border: 'none',
 			outline: 'none',
 			width: '100%',
 			boxSizing: 'border-box',
-			padding: '2px 8px'
+			padding: '2px 7px'
 		}
 	}, props);
 
 	return (
-		<textarea readOnly={readOnly} onChange={onChange} value={value} style={style} />
+		<textarea readOnly={readOnly} onChange={onChange} value={value} style={style} spellCheck={false}/>
 	);
 };
 
-export default Textarea;
+export default Radium(Textarea);

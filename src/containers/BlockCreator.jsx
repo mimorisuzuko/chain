@@ -1,14 +1,43 @@
 import React, { Component } from 'react';
 import { findDOMNode } from 'react-dom';
-import { black, lblack, white } from '../color';
+import { black, lblack, white, vsblue } from '../color';
 import { connect } from 'react-redux';
 import Textarea from '../components/Textarea';
 import _ from 'lodash';
 import actions from '../actions';
 import { BlockCreator } from '../models';
+import Radium from 'radium';
 
 const { CREATABLE_TYPE_KEYS: OPTION_LIST } = BlockCreator;
 const PASCAL_OPTION_LIST = _.map(OPTION_LIST, (a) => _.upperFirst((_.camelCase(a))));
+
+/**
+ * 
+ * @param {{value: string, onChange: Function}} props 
+ */
+const Select = Radium((props) => {
+	const { value, children, onChange } = props;
+
+	return (
+		<select value={value} onChange={onChange} style={{
+			display: 'block',
+			backgroundColor: lblack,
+			color: 'inherit',
+			width: '100%',
+			borderWidth: 1,
+			borderStyle: 'solid',
+			borderColor: 'transparent',
+			marginBottom: 5,
+			font: 'inherit',
+			outline: 'none',
+			':focus': {
+				borderColor: vsblue
+			}
+		}}>
+			{children}
+		</select>
+	);
+});
 
 export default connect(
 	(state) => ({
@@ -40,21 +69,18 @@ export default connect(
 				boxSizing: 'border-box',
 				fontSize: 12
 			}}>
-				<select value={model.get('selected')} onChange={this.onChangeSelect} style={{
-					display: 'block',
-					backgroundColor: lblack,
-					color: 'inherit',
-					width: '100%',
-					border: 'none',
-					marginBottom: 5,
-					font: 'inherit',
-					outline: 'none'
-				}}>
+				<Select value={model.get('value')} onChange={this.onChangeSelect}>
 					{_.map(OPTION_LIST, (a, i) => <option value={a} key={i}>{PASCAL_OPTION_LIST[i]}</option>)}
-				</select>
+				</Select>
 				<Textarea onChange={this.onChangeTextarea} style={{
 					fontFamily: 'Menlo, Monaco, "Courier New", monospace',
-					marginBottom: 5
+					marginBottom: 5,
+					borderWidth: 1,
+					borderStyle: 'solid',
+					borderColor: 'transparent',
+					':focus': {
+						borderColor: vsblue
+					}
 				}} />
 				<button onClick={this.onClick} style={{
 					display: 'inline-block',
