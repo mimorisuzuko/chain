@@ -29,11 +29,11 @@ export default handleActions({
 	[actions.addPin]: (state, action) => {
 		const { payload } = action;
 
-		return state.updateIn([payload], (block) => block.updateIn(['leftPins'], (leftPins) => leftPins.push(new Pin({ id: leftPins.size, color: block.type === BlockCreator.CREATABLE_TYPES.FUNCTION_BLOCK ? lblue : white }))));
+		return state.updateIn([payload], (block) => block.updateIn(['inputPins'], (pins) => pins.push(new Pin({ id: pins.size, color: block.type === BlockCreator.CREATABLE_TYPES.FUNCTION_BLOCK ? lblue : white }))));
 	},
 	[actions.deletePin]: (state, action) => {
 		const { payload } = action;
 
-		return state.updateIn([payload], (block) => block.updateIn(['leftPins'], (leftPins) => leftPins.slice(0, Math.max(1, leftPins.size - 1))));
+		return state.updateIn([payload], (block) => block.updateIn(['inputPins'], (pins) => pins.slice(0, Math.max(1, pins.size - 1))));
 	}
 }, List([new Block({ id: 0, x: 100, y: 100, type: BlockCreator.VIEW_BLOCK })]));

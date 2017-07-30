@@ -7,8 +7,6 @@ export default handleActions({
 	[actions.addPinLink]: (state, action) => {
 		const { payload } = action;
 
-		console.log(payload);
-
 		return state.push(new PinLink(payload));
 	}
 }, List());

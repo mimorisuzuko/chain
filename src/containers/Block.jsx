@@ -64,13 +64,13 @@ export default connect()(class Block extends Component {
 						}
 					}} />
 				</div>
-				{model.get('leftPins').map((model, i) => {
-					const [x, y] = Block.pinPosition(i, Block.LEFT_PIN);
+				{model.get('inputPins').map((model, i) => {
+					const [x, y] = Block.pinPosition(i, PinModel.INPUT);
 
 					return <Pin key={model.get('index')} cx={x} cy={y} model={model} onMouseDown={this.onConnectStart} onMouseUp={this.onConnectPin} />;
 				})}
-				{model.get('rightPins').map((model, i) => {
-					const [x, y] = Block.pinPosition(i, Block.RIGHT_PIN);
+				{model.get('outputPins').map((model, i) => {
+					const [x, y] = Block.pinPosition(i, PinModel.OUTPUT);
 
 					return <Pin key={model.get('index')} cx={x} cy={y} model={model} onMouseDown={this.onConnectStart} onMouseUp={this.onConnectPin} />;
 				})}
@@ -181,8 +181,6 @@ export default connect()(class Block extends Component {
 		const pin1 = pin.get('index');
 		const pinType1 = pin.get('type');
 
-
-
 		if (block0 !== block1 && pinType0 !== pinType1) {
 			dispatch(actions.addPinLink({
 				[pinType0 === PinModel.OUTPUT ? 'output' : 'input']: { block: block0, pin: pin0 },
@@ -197,17 +195,9 @@ export default connect()(class Block extends Component {
 	 */
 	static pinPosition(index, direction) {
 		return [
-			direction === Block.LEFT_PIN ? -RADIUS - 2 : Block.WIDTH + RADIUS,
+			direction === PinModel.INPUT ? -RADIUS - 2 : Block.WIDTH + RADIUS,
 			RADIUS + (RADIUS * 2 + 3) * index
 		];
-	}
-
-	static get LEFT_PIN() {
-		return 'LEFT_PIN';
-	}
-
-	static get RIGHT_PIN() {
-		return 'RIGHT_PIN';
 	}
 
 	static get WIDTH() {

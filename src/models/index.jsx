@@ -15,34 +15,34 @@ const CREATABLE_TYPE_KEYS = _.keys(CREATABLE_TYPES);
  */
 const createPins = (colors, type) => List(_.map(colors, (color, index) => new Pin({ index, color, type })));
 
-export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: true, editable: true, type: '', color: white, changeable: true, rightPins: List(), leftPins: List() }) {
+export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: true, editable: true, type: '', color: white, changeable: true, outputPins: List(), inputPins: List() }) {
 	constructor(args) {
 		switch (args.type) {
 			case BlockCreator.VIEW_BLOCK:
 				args.editable = false;
 				args.deletable = false;
 				args.color = purple;
-				args.leftPins = createPins([white], Pin.INPUT);
+				args.inputPins = createPins([white], Pin.INPUT);
 				break;
 			case BlockCreator.CREATABLE_TYPES.VALUE_BLOCK:
 				args.changeable = false;
-				args.rightPins = createPins([purple], Pin.OUTPUT);
+				args.outputPins = createPins([purple], Pin.OUTPUT);
 				break;
 			case BlockCreator.CREATABLE_TYPES.FUNCTION_BLOCK:
 				args.color = blue;
-				args.leftPins = createPins([blue], Pin.INPUT);
-				args.rightPins = createPins([purple], Pin.OUTPUT);
+				args.inputPins = createPins([blue], Pin.INPUT);
+				args.outputPins = createPins([purple], Pin.OUTPUT);
 				break;
 			case BlockCreator.CREATABLE_TYPES.PROPERTY_BLOCK:
 				args.changeable = false;
 				args.color = yellow;
-				args.leftPins = createPins([white], Pin.INPUT);
-				args.rightPins = createPins([white], Pin.OUTPUT);
+				args.inputPins = createPins([white], Pin.INPUT);
+				args.outputPins = createPins([white], Pin.OUTPUT);
 				break;
 			case BlockCreator.CREATABLE_TYPES.OPERATOR_BLCOK:
 				args.changeable = false;
-				args.leftPins = createPins([white, white], Pin.INPUT);
-				args.rightPins = createPins([white], Pin.OUTPUT);
+				args.inputPins = createPins([white, white], Pin.INPUT);
+				args.outputPins = createPins([white], Pin.OUTPUT);
 				break;
 			default:
 				break;
@@ -72,7 +72,7 @@ export class Pin extends Record({ index: 0, color: white, type: '' }) {
 	}
 }
 
-export class BlockCreator extends Record({ x: 0, y: 0, visible: false, value: '', selected: CREATABLE_TYPE_KEYS[0], rightPins: List(), leftPins: List() }) {
+export class BlockCreator extends Record({ x: 0, y: 0, visible: false, value: '', selected: CREATABLE_TYPE_KEYS[0] }) {
 
 	/**
 	 * @param {number} x 
