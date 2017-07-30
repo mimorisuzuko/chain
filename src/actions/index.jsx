@@ -1,4 +1,4 @@
-import _ from 'lodash'
+import _ from 'lodash';
 import { createActions } from 'redux-actions';
 
 const ADD_BLOCK = 'ADD_BLOCK';
