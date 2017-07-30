@@ -7,6 +7,7 @@ import _ from 'lodash';
 import actions from '../actions';
 import { BlockCreator } from '../models';
 import Radium from 'radium';
+import { batchActions } from 'redux-batched-actions';
 
 const { CREATABLE_TYPE_KEYS: OPTION_LIST } = BlockCreator;
 const PASCAL_OPTION_LIST = _.map(OPTION_LIST, (a) => _.upperFirst((_.camelCase(a))));
@@ -101,8 +102,10 @@ export default connect(
 	onClick() {
 		const { props: { model, dispatch } } = this;
 
-		dispatch(actions.addBlock({ x: model.get('x'), y: model.get('y'), value: model.get('value'), type: model.get('selected') }));
-		dispatch(actions.toggleBlockCreator());
+		dispatch(batchActions([
+			actions.addBlock({ x: model.get('x'), y: model.get('y'), value: model.get('value'), type: model.get('selected') }),
+			actions.toggleBlockCreator()
+		]));
 	}
 
 	/**
