@@ -11,8 +11,9 @@ const CREATABLE_TYPE_KEYS = _.keys(CREATABLE_TYPES);
 
 /**
  * @param {string[]} colors
+ * @param {string} type
  */
-const createPins = (colors) => List(_.map(colors, (color, id) => new Pin({ id, color })));
+const createPins = (colors, type) => List(_.map(colors, (color, index) => new Pin({ index, color, type })));
 
 export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: true, editable: true, type: '', color: white, changeable: true, rightPins: List(), leftPins: List() }) {
 	constructor(args) {
@@ -21,27 +22,27 @@ export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: tru
 				args.editable = false;
 				args.deletable = false;
 				args.color = purple;
-				args.leftPins = createPins([white]);
+				args.leftPins = createPins([white], Pin.INPUT);
 				break;
 			case BlockCreator.CREATABLE_TYPES.VALUE_BLOCK:
 				args.changeable = false;
-				args.rightPins = createPins([purple]);
+				args.rightPins = createPins([purple], Pin.OUTPUT);
 				break;
 			case BlockCreator.CREATABLE_TYPES.FUNCTION_BLOCK:
 				args.color = blue;
-				args.leftPins = createPins([blue]);
-				args.rightPins = createPins([purple]);
+				args.leftPins = createPins([blue], Pin.INPUT);
+				args.rightPins = createPins([purple], Pin.OUTPUT);
 				break;
 			case BlockCreator.CREATABLE_TYPES.PROPERTY_BLOCK:
 				args.changeable = false;
 				args.color = yellow;
-				args.leftPins = createPins([white]);
-				args.rightPins = createPins([white]);
+				args.leftPins = createPins([white], Pin.INPUT);
+				args.rightPins = createPins([white], Pin.OUTPUT);
 				break;
 			case BlockCreator.CREATABLE_TYPES.OPERATOR_BLCOK:
 				args.changeable = false;
-				args.leftPins = createPins([white, white]);
-				args.rightPins = createPins([white]);
+				args.leftPins = createPins([white, white], Pin.INPUT);
+				args.rightPins = createPins([white], Pin.OUTPUT);
 				break;
 			default:
 				break;
@@ -61,7 +62,15 @@ export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: tru
 	}
 }
 
-export class Pin extends Record({ id: 0, color: white }) { }
+export class Pin extends Record({ index: 0, color: white, type: '' }) {
+	static get OUTPUT() {
+		return 'OUTPUT_PIN';
+	}
+
+	static get INPUT() {
+		return 'INPUT_PIN';
+	}
+}
 
 export class BlockCreator extends Record({ x: 0, y: 0, visible: false, value: '', selected: CREATABLE_TYPE_KEYS[0], rightPins: List(), leftPins: List() }) {
 
@@ -87,3 +96,21 @@ export class BlockCreator extends Record({ x: 0, y: 0, visible: false, value: ''
 		return 'VIEW_BLOCK';
 	}
 }
+
+export class PointLink extends Record({ ax: 0, ay: 0, bx: 0, by: 0 }) {
+	start(x, y) {
+		return this.merge({ ax: x, ay: y, bx: x, by: y });
+	}
+
+	end(x, y) {
+		return this.merge({ bx: x, by: y });
+	}
+
+	points() {
+		const { ax, ay, bx, by } = this;
+
+		return [ax, ay, bx, by];
+	}
+}
+
+export class PinLink extends Record({ output: { block: 0, pin: 0 }, input: { block: 0, pin: 0 } }) { }

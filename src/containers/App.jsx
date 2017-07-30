@@ -5,10 +5,14 @@ import Block from '../containers/Block';
 import { black } from '../color';
 import BlockCreator from '../containers/BlockCreator';
 import actions from '../actions';
+import PointLink from '../components/PointLink';
+import PinLink from '../containers/PinLink';
 
 export default connect(
 	(state) => ({
-		blocks: state.blocks
+		blocks: state.blocks,
+		link: state.pointLink,
+		links: state.pinLinks
 	})
 )(class App extends Component {
 	constructor() {
@@ -18,19 +22,25 @@ export default connect(
 	}
 
 	render() {
-		const { props: { blocks } } = this;
+		const { props: { blocks, link, links } } = this;
 
 		return (
 			<div style={{
 				backgroundColor: black,
 				position: 'relative'
 			}}>
-				{blocks.map((model) => (
-					<Block
-						key={model.get('id')}
-						model={model}
-					/>
-				))}
+				<svg style={{
+					display: 'block',
+					width: '100%',
+					height: '100%',
+					position: 'absolute',
+					left: 0,
+					top: 0
+				}}>
+					{links.map((a, i) => <PinLink key={i} model={a} />)}
+					<PointLink model={link} />
+				</svg>
+				{blocks.map((model) => <Block key={model.get('id')} model={model} />)}
 				<BlockCreator />
 			</div>
 		);

@@ -5,8 +5,7 @@ import actions from '../actions';
 import BlockButton from '../components/BlockButton';
 import Pin, { RADIUS } from '../components/Pin';
 import Textarea from '../components/Textarea';
-
-const WIDTH = 200;
+import { Pin as PinModel } from '../models';
 
 export default connect()(class Block extends Component {
 	constructor() {
@@ -21,6 +20,10 @@ export default connect()(class Block extends Component {
 		this.onMouseUpDocument = this.onMouseUpDocument.bind(this);
 		this.addPin = this.addPin.bind(this);
 		this.deletePin = this.deletePin.bind(this);
+		this.onConnectStart = this.onConnectStart.bind(this);
+		this.onConnecting = this.onConnecting.bind(this);
+		this.onConnectEnd = this.onConnectEnd.bind(this);
+		this.onConnectPin = this.onConnectPin.bind(this);
 	}
 
 	render() {
@@ -35,7 +38,7 @@ export default connect()(class Block extends Component {
 				fontSize: 12,
 				color: white,
 				border: `1px solid ${lblack}`,
-				width: WIDTH,
+				width: Block.WIDTH,
 				backgroundColor: black,
 				boxSizing: 'border-box'
 			}}>
@@ -61,8 +64,16 @@ export default connect()(class Block extends Component {
 						}
 					}} />
 				</div>
-				{model.get('leftPins').map((model, i) => <Pin key={model.get('id')} cx={-RADIUS - 2} cy={RADIUS + (RADIUS * 2 + 3) * i} color={model.get('color')} />)}
-				{model.get('rightPins').map((model, i) => <Pin key={model.get('id')} cx={WIDTH + RADIUS} cy={RADIUS + (RADIUS * 2 + 3) * i} color={model.get('color')} />)}
+				{model.get('leftPins').map((model, i) => {
+					const [x, y] = Block.pinPosition(i, Block.LEFT_PIN);
+
+					return <Pin key={model.get('index')} cx={x} cy={y} model={model} onMouseDown={this.onConnectStart} onMouseUp={this.onConnectPin} />;
+				})}
+				{model.get('rightPins').map((model, i) => {
+					const [x, y] = Block.pinPosition(i, Block.RIGHT_PIN);
+
+					return <Pin key={model.get('index')} cx={x} cy={y} model={model} onMouseDown={this.onConnectStart} onMouseUp={this.onConnectPin} />;
+				})}
 			</div>
 		);
 	}
@@ -125,5 +136,81 @@ export default connect()(class Block extends Component {
 		const { props: { model, dispatch } } = this;
 
 		dispatch(actions.deletePin(model.get('id')));
+	}
+
+	/**
+	 * @param {MouseEvent} e
+	 * @param {any} pin
+	 */
+	onConnectStart(e, pin) {
+		const { props: { dispatch, model } } = this;
+		const { clientX, clientY } = e;
+
+		dispatch(actions.startPointLink({ x: clientX, y: clientY }));
+		document.addEventListener('mousemove', this.onConnecting);
+		document.addEventListener('mouseup', this.onConnectEnd);
+		window.__connection__ = { block: model.get('id'), pin: pin.get('index'), pinType: pin.get('type') };
+	}
+
+	/**
+	 * @param {MouseEvent} e
+	 */
+	onConnecting(e) {
+		const { props: { dispatch } } = this;
+		const { clientX, clientY } = e;
+
+		dispatch(actions.endPointLink({ x: clientX, y: clientY }));
+	}
+
+	onConnectEnd() {
+		const { props: { dispatch } } = this;
+
+		dispatch(actions.startPointLink({ x: 0, y: 0 }));
+		document.removeEventListener('mousemove', this.onConnecting);
+		document.removeEventListener('mouseup', this.onConnectEnd);
+	}
+
+	/**
+	 * @param {MouseEvent} e
+	 * @param {any} pin
+	 */
+	onConnectPin(e, pin) {
+		const { __connection__: { block: block0, pin: pin0, pinType: pinType0 } } = window;
+		const { props: { model, dispatch } } = this;
+		const block1 = model.get('id');
+		const pin1 = pin.get('index');
+		const pinType1 = pin.get('type');
+
+
+
+		if (block0 !== block1 && pinType0 !== pinType1) {
+			dispatch(actions.addPinLink({
+				[pinType0 === PinModel.OUTPUT ? 'output' : 'input']: { block: block0, pin: pin0 },
+				[pinType1 === PinModel.OUTPUT ? 'output' : 'input']: { block: block1, pin: pin1 }
+			}));
+		}
+	}
+
+	/**
+	 * @param {number} index 
+	 * @param {string} direction 
+	 */
+	static pinPosition(index, direction) {
+		return [
+			direction === Block.LEFT_PIN ? -RADIUS - 2 : Block.WIDTH + RADIUS,
+			RADIUS + (RADIUS * 2 + 3) * index
+		];
+	}
+
+	static get LEFT_PIN() {
+		return 'LEFT_PIN';
+	}
+
+	static get RIGHT_PIN() {
+		return 'RIGHT_PIN';
+	}
+
+	static get WIDTH() {
+		return 200;
 	}
 });

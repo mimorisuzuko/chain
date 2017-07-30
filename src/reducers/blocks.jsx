@@ -36,4 +36,4 @@ export default handleActions({
 
 		return state.updateIn([payload], (block) => block.updateIn(['leftPins'], (leftPins) => leftPins.slice(0, Math.max(1, leftPins.size - 1))));
 	}
-}, List([new Block({ x: 100, y: 100, type: BlockCreator.VIEW_BLOCK })]));
+}, List([new Block({ id: 0, x: 100, y: 100, type: BlockCreator.VIEW_BLOCK })]));

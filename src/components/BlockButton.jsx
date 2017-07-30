@@ -8,7 +8,7 @@ const BlockButton = (props) => {
 	const { style, value, onClick } = props;
 
 	return (
-		<button onClick={onClick} style={_.merge({
+		<button className='user-select-none' onClick={onClick} style={_.merge({
 			display: 'inline-block',
 			textDecoration: 'none',
 			color: 'inherit',
