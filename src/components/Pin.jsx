@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
+import { Pin as PinModel } from '../models';
 
 export const RADIUS = 7;
-const S_RADIUS = 5;
+const S_RADIUS = RADIUS - 3;
 const d = RADIUS + 1;
 
 export default class Pin extends Component {
@@ -25,7 +26,7 @@ export default class Pin extends Component {
 				height: RADIUS * 2 + 2,
 				cursor: 'pointer'
 			}}>
-				<circle cx={d} cy={d} r={S_RADIUS} fill={color} />
+				<circle cx={d} cy={d} r={S_RADIUS} fill={model.get('type') === PinModel.INPUT ? 'none' : color} stroke={color} />
 				<circle cx={d} cy={d} r={RADIUS} fill={'none'} stroke={color} />
 			</svg>
 		);
