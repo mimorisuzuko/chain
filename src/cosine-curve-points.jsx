@@ -1,3 +1,5 @@
+const dist = (ax, ay, bx, by) => Math.sqrt(Math.pow(ax - bx, 2) + Math.pow(ay - by, 2));
+
 /**
  * @param {number} ax
  * @param {number} ay
@@ -5,38 +7,27 @@
  * @param {number} by
  * @returns {number[]}
  */
- const cosineCurvePoints = (ax, ay, bx, by, margin = 10) => {
-	const r = Math.sqrt(Math.pow(ax - bx, 2) + Math.pow(ay - by, 2));
-
-	if (r < margin * 2) {
-		return [];
-	}
-
-	const angle = Math.atan2(by - ay, bx - ax);
-
-	ax = ax + margin * Math.cos(angle);
-	ay = ay + margin * Math.sin(angle);
-	bx = bx - margin * Math.cos(angle);
-	by = by - margin * Math.sin(angle);
-
-	const interval = Math.min(100, Math.sqrt(Math.pow(ax - bx, 2) + Math.pow(ay - by, 2)));
-
-	if (interval === 0) {
-		return [];
-	}
-
+const cosineCurvePoints = (ax, ay, bx, by, margin = 10) => {
+	ax += 1;
+	ay += 1;
+	let interval = dist(ax, ay, bx, by);
+	let index = 1;
+	let add = false;
 	const dx = (bx - ax) / interval;
 	const dy = by - ay;
+	const points = [];
 
-	if (dx === 0 || dy === 0) {
-		return [ax, ay, bx, by];
-	}
+	for (index; index <= interval; index += 1) {
+		const x = ax + dx * index;
+		const y = ay + dy * (-Math.cos(Math.PI / interval * index) + 1) / 2;
 
-	const points = [ax, ay];
-	const max = interval + 1;
-
-	for (let i = 1; i < max; i += 1) {
-		points.push(ax + dx * i, ay + dy * (-Math.cos(Math.PI / interval * i) + 1) / 2);
+		if (!add && margin < dist(ax, ay, x, y)) {
+			add = true;
+			interval -= index;
+			points.push(x, y);
+		} else if (add) {
+			points.push(x, y);
+		}
 	}
 
 	return points;

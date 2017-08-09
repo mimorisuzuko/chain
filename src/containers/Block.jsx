@@ -171,11 +171,11 @@ export default connect()(class Block extends Component {
 	 */
 	onConnectStart(e, pinModel) {
 		const { props: { dispatch, model } } = this;
-		const { clientX, clientY } = e;
 		const pinType = pinModel.get('type');
 		const block = model.get('id');
 		const pin = pinModel.get('index');
-		const batch = [actions.startPointLink({ x: clientX, y: clientY })];
+		const [x, y] = Block.pinPosition(pin, pinType);
+		const batch = [actions.startPointLink({ x: x + model.get('x'), y: y + model.get('y') })];
 
 		document.addEventListener('mousemove', this.onConnecting);
 		document.addEventListener('mouseup', this.onConnectEnd);
