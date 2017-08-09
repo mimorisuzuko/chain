@@ -62,7 +62,7 @@ export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: tru
 	}
 }
 
-export class Pin extends Record({ index: 0, color: white, type: '' }) {
+export class Pin extends Record({ index: 0, color: white, type: '', linked: false }) {
 	static get OUTPUT() {
 		return 'OUTPUT_PIN';
 	}

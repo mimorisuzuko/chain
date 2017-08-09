@@ -1,12 +1,12 @@
 import React from 'react';
 import Link from './Link';
 
-const Point = (props) => {
+const PointLink = (props) => {
 	const { model } = props;
 
 	return (
-		<Link points={model.points()} />
+		<Link points={model.points()} strokeDasharray={[5, 5]} />
 	);
 };
 
-export default Point;
+export default PointLink;

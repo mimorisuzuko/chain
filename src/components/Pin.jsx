@@ -9,25 +9,34 @@ export default class Pin extends Component {
 	constructor() {
 		super();
 
+		this.state = { enter: false, connecting: false };
 		this.onMouseDown = this.onMouseDown.bind(this);
 		this.onMouseup = this.onMouseup.bind(this);
+		this.onMouseEnter = this.onMouseEnter.bind(this);
+		this.onMouseLeave = this.onMouseLeave.bind(this);
+		this.onMouseUpDocument = this.onMouseUpDocument.bind(this);
 	}
 
 	render() {
-		const { props: { cx, cy, model } } = this;
+		const { props: { cx, cy, model }, state: { enter, connecting } } = this;
 		const color = model.get('color');
 
 		return (
-			<svg onMouseDown={this.onMouseDown} onMouseUp={this.onMouseup} style={{
-				position: 'absolute',
-				left: cx - d,
-				top: cy - d,
-				width: RADIUS * 2 + 2,
-				height: RADIUS * 2 + 2,
-				cursor: 'pointer'
-			}}>
+			<svg
+				onMouseDown={this.onMouseDown}
+				onMouseUp={this.onMouseup}
+				onMouseEnter={this.onMouseEnter}
+				onMouseLeave={this.onMouseLeave}
+				style={{
+					position: 'absolute',
+					left: cx - d,
+					top: cy - d,
+					width: RADIUS * 2 + 2,
+					height: RADIUS * 2 + 2,
+					cursor: 'pointer'
+				}}>
 				<circle cx={d} cy={d} r={S_RADIUS} fill={model.get('type') === PinModel.INPUT ? 'none' : color} stroke={color} />
-				<circle cx={d} cy={d} r={RADIUS} fill={'none'} stroke={color} />
+				{enter || connecting || model.get('linked') ? <circle cx={d} cy={d} r={RADIUS} fill={'none'} stroke={color} /> : null}
 			</svg>
 		);
 	}
@@ -39,6 +48,8 @@ export default class Pin extends Component {
 		const { props: { model, onMouseDown } } = this;
 
 		onMouseDown(e, model);
+		document.addEventListener('mouseup', this.onMouseUpDocument);
+		this.setState({ connecting: true });
 	}
 
 	/**
@@ -48,5 +59,18 @@ export default class Pin extends Component {
 		const { props: { model, onMouseUp } } = this;
 
 		onMouseUp(e, model);
+	}
+
+	onMouseEnter() {
+		this.setState({ enter: true });
+	}
+
+	onMouseLeave() {
+		this.setState({ enter: false });
+	}
+
+	onMouseUpDocument() {
+		document.removeEventListener('mouseup', this.onMouseUpDocument);
+		this.setState({ connecting: false });
 	}
 }

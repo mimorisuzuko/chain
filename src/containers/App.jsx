@@ -7,6 +7,7 @@ import BlockCreator from '../containers/BlockCreator';
 import actions from '../actions';
 import PointLink from '../components/PointLink';
 import PinLink from '../containers/PinLink';
+import _ from 'lodash';
 
 export default connect(
 	(state) => ({
@@ -22,7 +23,8 @@ export default connect(
 	}
 
 	render() {
-		const { props: { blocks, link, links } } = this;
+		const { props: { link, links } } = this;
+		let { props: { blocks } } = this;
 
 		return (
 			<div style={{
@@ -37,7 +39,14 @@ export default connect(
 					left: 0,
 					top: 0
 				}}>
-					{links.map((a, i) => <PinLink key={i} model={a} />)}
+					{links.map((a, i) => {
+						_.forEach(['input', 'output'], (key) => {
+							const { block, pin } = a.get(key);
+							blocks =  blocks.setIn([block, `${key}Pins`, pin, 'linked'], true);
+						});
+
+						return <PinLink key={i} model={a} />;
+					})}
 					<PointLink model={link} />
 				</svg>
 				{blocks.map((model) => <Block key={model.get('id')} model={model} />)}
