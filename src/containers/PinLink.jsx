@@ -17,7 +17,7 @@ export default connect(
 		_.forEach(['output', 'input'], (name) => {
 			const { block: blockId, pin: pinIndex } = model.get(name);
 			const block = blocks.get(blockId);
-			const [x, y] = Block.pinPosition(pinIndex, name === 'output' ? Pin.OUTPUT : Pin.INPUT);
+			const [x, y] = Block.pinPosition(pinIndex, name === 'output' ? Pin.OUTPUT : name === 'input' ? Pin.INPUT : null);
 
 			points.push(x + block.get('x'), y + block.get('y'));
 		});

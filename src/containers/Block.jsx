@@ -33,7 +33,7 @@ const Button = (props) => {
 export default connect()(class Block extends Component {
 	constructor() {
 		super();
-		
+
 		this.mouseDownX = 0;
 		this.mouseDownY = 0;
 		this.onChange = this.onChange.bind(this);
@@ -219,10 +219,20 @@ export default connect()(class Block extends Component {
 
 		if (block0 !== block1 && pinType0 !== pinType1) {
 			dispatch(actions.addPinLink({
-				[pinType0 === PinModel.OUTPUT ? 'output' : 'input']: { block: block0, pin: pin0 },
-				[pinType1 === PinModel.OUTPUT ? 'output' : 'input']: { block: block1, pin: pin1 }
+				[Block.convertPinType(pinType0)]: { block: block0, pin: pin0 },
+				[Block.convertPinType(pinType1)]: { block: block1, pin: pin1 }
 			}));
 		}
+	}
+
+	static convertPinType(pinType) {
+		if (pinType === PinModel.OUTPUT) {
+			return 'output';
+		} else if (pinType === PinModel.INPUT) {
+			return 'input';
+		}
+
+		return 'unknown';
 	}
 
 	/**
@@ -231,7 +241,7 @@ export default connect()(class Block extends Component {
 	 */
 	static pinPosition(index, direction) {
 		return [
-			direction === PinModel.INPUT ? -RADIUS - 2 : Block.WIDTH + RADIUS,
+			direction === PinModel.INPUT ? -RADIUS - 2 : direction === PinModel.OUTPUT ? Block.WIDTH + RADIUS : null,
 			RADIUS + (RADIUS * 2 + 3) * index
 		];
 	}

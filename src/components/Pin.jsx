@@ -20,6 +20,7 @@ export default class Pin extends Component {
 	render() {
 		const { props: { cx, cy, model }, state: { enter, connecting } } = this;
 		const color = model.get('color');
+		const type = model.get('type');
 
 		return (
 			<svg
@@ -35,7 +36,7 @@ export default class Pin extends Component {
 					height: RADIUS * 2 + 2,
 					cursor: 'pointer'
 				}}>
-				<circle cx={d} cy={d} r={S_RADIUS} fill={model.get('type') === PinModel.INPUT ? 'none' : color} stroke={color} />
+				<circle cx={d} cy={d} r={S_RADIUS} fill={type === PinModel.INPUT ? 'none' : type === PinModel.OUTPUT ? color : 'red'} stroke={color} />
 				{enter || connecting || model.get('linked') ? <circle cx={d} cy={d} r={RADIUS} fill={'none'} stroke={color} /> : null}
 			</svg>
 		);
