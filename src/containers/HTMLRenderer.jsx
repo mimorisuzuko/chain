@@ -3,27 +3,24 @@ import { connect } from 'react-redux';
 import _ from 'lodash';
 import { BlockCreator as BlockCreatorModel } from '../models';
 
+const parser = new DOMParser();
+
 export default connect(
 	(state) => ({
 		blocks: state.blocks,
-		links: state.pinLinks
+		links: state.pinLinks,
+		html: state.htmlEditor
 	})
 )(class HTMLRenderer extends Component {
 	render() {
-		const srcDoc = `
-		<!doctype html>
-		<html>
-			<head>
-				<meta charset="utf-8">
-			</head>
-			<body>
-				<script>
-					${this.toEvalableString()}
-				</script>
-			</body>
-		</html>`;
+		const { props: { html } } = this;
+		const $doc = parser.parseFromString(html, 'text/html');
+		const $body = $doc.querySelector('body');
+		const $script = document.createElement('script');
+		$script.innerHTML = this.toEvalableString();
+		$body.appendChild($script);
 
-		return <iframe srcDoc={srcDoc} style={{ display: 'block', width: '100%', height: '100%', border: 'none', backgroundColor: 'white' }} />;
+		return <iframe srcDoc={`<!doctype html>${$doc.documentElement.outerHTML}`} style={{ display: 'block', width: '100%', height: '100%', border: 'none', backgroundColor: 'white' }} />;
 	}
 
 	toEvalableString() {
@@ -39,7 +36,7 @@ export default connect(
 
 		const { props: { blocks } } = this;
 		const block = blocks.get(id);
-		const args = block.get('inputPins').map((pin) => this.toEvalableStringSub(this.findOutputBlockIdFromLinks({ input: { block: id, pin: pin.get('id') } }))).toJS();
+		const args = block.get('inputPins').map((pin) => this.toEvalableStringSub(this.findOutputBlockIdFromLinks({ input: { block: id, pin: pin.get('index') } }))).toJS();
 
 		switch (block.get('type')) {
 			case BlockCreatorModel.VIEW_BLOCK:

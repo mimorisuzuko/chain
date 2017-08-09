@@ -8,6 +8,7 @@ import { enableBatching } from 'redux-batched-actions';
 import { HashRouter, Route, NavLink, Redirect } from 'react-router-dom';
 import { black, white, blue, lblack } from './color';
 import HTMLRenderer from './containers/HTMLRenderer';
+import HTMLEditor from './containers/HTMLEditor';
 import './index.scss';
 
 const store = createStore(enableBatching(state));
@@ -36,6 +37,7 @@ render(
 				}}>
 					<Route exact path='/' render={redirectRender} />
 					<Route path='/chain' component={Chain} />
+					<Route path='/editor' component={HTMLEditor} />
 					<Route path='/view' component={HTMLRenderer} />
 				</div>
 				<footer style={{
@@ -44,6 +46,9 @@ render(
 				}}>
 					<NavLink to='/chain' style={linkStyle} activeStyle={linkActiveStyle}>
 						Chain
+					</NavLink>
+					<NavLink to='/editor' style={linkStyle} activeStyle={linkActiveStyle}>
+						Editor
 					</NavLink>
 					<NavLink to='/view' style={linkStyle} activeStyle={linkActiveStyle}>
 						View

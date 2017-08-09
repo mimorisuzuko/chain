@@ -61,6 +61,17 @@ const config = {
 					'postcss-loader',
 					'sass-loader'
 				]
+			},
+			{
+				test: /\.css$/,
+				use: [
+					'style-loader',
+					'css-loader'
+				]
+			},
+			{
+				test: /\.txt$/,
+				use: 'raw-loader'
 			}
 		]
 	},
