@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Link from '../components/Link';
 import Block from '../containers/Block';
-import { Pin } from '../models'
+import { Pin } from '../models';
 import _ from 'lodash';
 
 export default connect(
