@@ -2,10 +2,32 @@ import React, { Component } from 'react';
 import { white, lblack, red, black } from '../color';
 import { connect } from 'react-redux';
 import actions from '../actions';
-import BlockButton from '../components/BlockButton';
 import Pin, { RADIUS } from '../components/Pin';
 import Textarea from '../components/Textarea';
 import { Pin as PinModel } from '../models';
+import _ from 'lodash';
+
+/**
+ * @param {{style: Object, value: string, onClick: Function}} props
+ */
+const Button = (props) => {
+	const { style, value, onClick } = props;
+
+	return (
+		<button className='user-select-none' onClick={onClick} style={_.merge({
+			display: 'inline-block',
+			textDecoration: 'none',
+			color: 'inherit',
+			border: 'none',
+			font: 'inherit',
+			padding: '1px 8px',
+			outline: 'none',
+			cursor: 'pointer'
+		}, style)}>
+			{value}
+		</button>
+	);
+};
 
 export default connect()(class Block extends Component {
 	constructor() {
@@ -43,9 +65,9 @@ export default connect()(class Block extends Component {
 				boxSizing: 'border-box'
 			}}>
 				<div>
-					{model.get('deletable') ? <BlockButton onClick={this.onClickDeleteButton} style={{ backgroundColor: red, marginRight: 1 }} value='×' /> : null}
-					{model.get('changeable') ? <BlockButton onClick={this.addPin} style={{ backgroundColor: lblack, marginRight: 1 }} value='+' /> : null}
-					{model.get('changeable') ? <BlockButton onClick={this.deletePin} style={{ backgroundColor: lblack }} value='-' /> : null}
+					{model.get('deletable') ? <Button onClick={this.onClickDeleteButton} style={{ backgroundColor: red, marginRight: 1 }} value='×' /> : null}
+					{model.get('changeable') ? <Button onClick={this.addPin} style={{ backgroundColor: lblack, marginRight: 1 }} value='+' /> : null}
+					{model.get('changeable') ? <Button onClick={this.deletePin} style={{ backgroundColor: lblack }} value='-' /> : null}
 				</div>
 				<div style={{
 					margin: 5,
