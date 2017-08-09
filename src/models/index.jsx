@@ -113,4 +113,28 @@ export class PointLink extends Record({ ax: 0, ay: 0, bx: 0, by: 0 }) {
 	}
 }
 
-export class PinLink extends Record({ output: { block: 0, pin: 0 }, input: { block: 0, pin: 0 } }) { }
+export class PinLink extends Record({ output: { block: 0, pin: 0 }, input: { block: 0, pin: 0 } }) {
+	hasBlock(id) {
+		return this.get('output').block === id || this.get('input').block === id;
+	}
+
+	match(query) {
+		return PinLink._matcher(this.get('output'), query.output) && PinLink._matcher(this.get('input'), query.input);
+	}
+
+	static _matcher(target, query) {
+		if (_.isObject(query)) {
+			return !_.some(_.toPairs(query), ([k, v]) => !PinLink._matcher(target[k], v));
+		}
+
+		if (target === undefined) {
+			return false;
+		}
+
+		if(query === undefined){
+			return true;
+		}
+
+		return target === query;
+	}
+}

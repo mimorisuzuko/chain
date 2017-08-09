@@ -4,7 +4,6 @@ import { handleActions } from 'redux-actions';
 import actions from '../actions';
 import { white, lblue } from '../color';
 
-
 export default handleActions({
 	[actions.addBlock]: (state, action) => {
 		const { payload } = action;
@@ -29,7 +28,7 @@ export default handleActions({
 	[actions.addPin]: (state, action) => {
 		const { payload } = action;
 
-		return state.updateIn([payload], (block) => block.updateIn(['inputPins'], (pins) => pins.push(new Pin({ id: pins.size, color: block.type === BlockCreator.CREATABLE_TYPES.FUNCTION_BLOCK ? lblue : white }))));
+		return state.updateIn([payload], (block) => block.updateIn(['inputPins'], (pins) => pins.push(new Pin({ index: pins.size, color: block.type === BlockCreator.CREATABLE_TYPES.FUNCTION_BLOCK ? lblue : white, type: Pin.INPUT }))));
 	},
 	[actions.deletePin]: (state, action) => {
 		const { payload } = action;

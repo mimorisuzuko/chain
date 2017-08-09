@@ -6,6 +6,7 @@ import Pin, { RADIUS } from '../components/Pin';
 import Textarea from '../components/Textarea';
 import { Pin as PinModel } from '../models';
 import _ from 'lodash';
+import { batchActions } from 'redux-batched-actions';
 
 /**
  * @param {{style: Object, value: string, onClick: Function}} props
@@ -86,15 +87,15 @@ export default connect()(class Block extends Component {
 						}
 					}} />
 				</div>
-				{model.get('inputPins').map((model, i) => {
+				{model.get('inputPins').map((pin, i) => {
 					const [x, y] = Block.pinPosition(i, PinModel.INPUT);
 
-					return <Pin key={model.get('index')} cx={x} cy={y} model={model} onMouseDown={this.onConnectStart} onMouseUp={this.onConnectPin} />;
+					return <Pin key={pin.get('index')} cx={x} cy={y} model={pin} onMouseDown={this.onConnectStart} onMouseUp={this.onConnectPin} />;
 				})}
-				{model.get('outputPins').map((model, i) => {
+				{model.get('outputPins').map((pin, i) => {
 					const [x, y] = Block.pinPosition(i, PinModel.OUTPUT);
 
-					return <Pin key={model.get('index')} cx={x} cy={y} model={model} onMouseDown={this.onConnectStart} onMouseUp={this.onConnectPin} />;
+					return <Pin key={pin.get('index')} cx={x} cy={y} model={pin} onMouseDown={this.onConnectStart} onMouseUp={this.onConnectPin} />;
 				})}
 			</div>
 		);
@@ -111,8 +112,12 @@ export default connect()(class Block extends Component {
 
 	onClickDeleteButton() {
 		const { props: { model, dispatch } } = this;
+		const id = model.get('id');
 
-		dispatch(actions.deleteBlock(model.get('id')));
+		dispatch(batchActions([
+			actions.removePinLinkByBlock(id),
+			actions.deleteBlock(id)
+		]));
 	}
 
 	/**
@@ -162,16 +167,25 @@ export default connect()(class Block extends Component {
 
 	/**
 	 * @param {MouseEvent} e
-	 * @param {any} pin
+	 * @param {any} pinModel
 	 */
-	onConnectStart(e, pin) {
+	onConnectStart(e, pinModel) {
 		const { props: { dispatch, model } } = this;
 		const { clientX, clientY } = e;
+		const pinType = pinModel.get('type');
+		const block = model.get('id');
+		const pin = pinModel.get('index');
+		const batch = [actions.startPointLink({ x: clientX, y: clientY })];
 
-		dispatch(actions.startPointLink({ x: clientX, y: clientY }));
 		document.addEventListener('mousemove', this.onConnecting);
 		document.addEventListener('mouseup', this.onConnectEnd);
-		window.__connection__ = { block: model.get('id'), pin: pin.get('index'), pinType: pin.get('type') };
+		window.__connection__ = { block, pin, pinType };
+
+		if (pinType === PinModel.INPUT) {
+			batch.push(actions.removePinLinkByQuery({ input: { block, pin } }));
+		}
+
+		dispatch(batchActions(batch));
 	}
 
 	/**
