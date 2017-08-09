@@ -10,11 +10,20 @@ export default connect(
 	})
 )(class HTMLRenderer extends Component {
 	render() {
-		return (
-			<div style={{ position: 'fixed', right: 10, top: 10, backgroundColor: 'white' }}>
-				{this.toEvalableString()}
-			</div>
-		);
+		const srcDoc = `
+		<!doctype html>
+		<html>
+			<head>
+				<meta charset="utf-8">
+			</head>
+			<body>
+				<script>
+					${this.toEvalableString()}
+				</script>
+			</body>
+		</html>`;
+
+		return <iframe srcDoc={srcDoc} style={{ display: 'block', width: '100%', height: '100%', border: 'none', backgroundColor: 'white' }} />;
 	}
 
 	toEvalableString() {

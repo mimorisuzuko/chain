@@ -8,7 +8,6 @@ import actions from '../actions';
 import PointLink from '../components/PointLink';
 import PinLink from '../containers/PinLink';
 import _ from 'lodash';
-import HTMLRenderer from './HTMLRenderer';
 
 export default connect(
 	(state) => ({
@@ -16,11 +15,19 @@ export default connect(
 		link: state.pointLink,
 		links: state.pinLinks
 	})
-)(class App extends Component {
+)(class Chain extends Component {
 	constructor() {
 		super();
 
-		window.addEventListener('contextmenu', this.onContextmenu.bind(this));
+		this.onContextmenu = this.onContextmenu.bind(this);
+	}
+
+	componentDidMount() {
+		window.addEventListener('contextmenu', this.onContextmenu);
+	}
+
+	componentWillUnmount() {
+		window.removeEventListener('contextmenu', this.onContextmenu);
 	}
 
 	render() {
@@ -30,7 +37,9 @@ export default connect(
 		return (
 			<div style={{
 				backgroundColor: black,
-				position: 'relative'
+				position: 'relative',
+				width: '100%',
+				height: '100%'
 			}}>
 				<svg style={{
 					display: 'block',
@@ -52,7 +61,6 @@ export default connect(
 				</svg>
 				{blocks.map((model) => <Block key={model.get('id')} model={model} />)}
 				<BlockCreator />
-				<HTMLRenderer />
 			</div>
 		);
 	}

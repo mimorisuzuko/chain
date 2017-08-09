@@ -33,7 +33,7 @@ const Button = (props) => {
 export default connect()(class Block extends Component {
 	constructor() {
 		super();
-
+		
 		this.mouseDownX = 0;
 		this.mouseDownY = 0;
 		this.onChange = this.onChange.bind(this);

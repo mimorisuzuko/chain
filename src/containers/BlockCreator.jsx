@@ -51,7 +51,15 @@ export default connect(
 		this.onClick = this.onClick.bind(this);
 		this.onChangeTextarea = this.onChangeTextarea.bind(this);
 		this.onChangeSelect = this.onChangeSelect.bind(this);
-		document.addEventListener('mousedown', this.onMouseDownDocument.bind(this));
+		this.onMouseDownDocument = this.onMouseDownDocument.bind(this);
+	}
+
+	componentDidMount() {
+		document.addEventListener('mousedown', this.onMouseDownDocument);
+	}
+
+	componentWillUnmount() {
+		document.removeEventListener('mousedown', this.onMouseDownDocument);
 	}
 
 	render() {
