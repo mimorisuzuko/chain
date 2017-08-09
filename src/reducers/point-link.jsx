@@ -1,4 +1,3 @@
-import { List } from 'immutable';
 import { PointLink } from '../models';
 import { handleActions } from 'redux-actions';
 import actions from '../actions';
