@@ -49,7 +49,10 @@ const config = {
 				use: {
 					loader: 'babel-loader',
 					options: {
-						presets
+						presets,
+						plugins: [
+							'transform-decorators-legacy'
+						]
 					}
 				}
 			},

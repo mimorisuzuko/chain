@@ -8,20 +8,16 @@ import actions from '../actions';
 import PointLink from '../components/PointLink';
 import PinLink from '../containers/PinLink';
 import _ from 'lodash';
+import autobind from 'autobind-decorator';
 
-export default connect(
+@connect(
 	(state) => ({
 		blocks: state.blocks,
 		link: state.pointLink,
 		links: state.pinLinks
 	})
-)(class Chain extends Component {
-	constructor() {
-		super();
-
-		this.onContextmenu = this.onContextmenu.bind(this);
-	}
-
+)
+export default class Chain extends Component {
 	componentDidMount() {
 		window.addEventListener('contextmenu', this.onContextmenu);
 	}
@@ -68,6 +64,7 @@ export default connect(
 	/**
 	 * @param {MouseEvent} e
 	 */
+	@autobind
 	onContextmenu(e) {
 		const { clientX, clientY } = e;
 		const { props: { dispatch } } = this;
@@ -76,4 +73,4 @@ export default connect(
 		e.preventDefault();
 		dispatch(actions.toggleBlockCreator(clientX - left, clientY - top));
 	}
-});
+}

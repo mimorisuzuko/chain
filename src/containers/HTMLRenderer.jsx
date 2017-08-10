@@ -5,13 +5,14 @@ import { BlockCreator as BlockCreatorModel } from '../models';
 
 const parser = new DOMParser();
 
-export default connect(
+@connect(
 	(state) => ({
 		blocks: state.blocks,
 		links: state.pinLinks,
 		html: state.htmlEditor
 	})
-)(class HTMLRenderer extends Component {
+)
+export default class HTMLRenderer extends Component {
 	render() {
 		const { props: { html } } = this;
 		const $doc = parser.parseFromString(html, 'text/html');
@@ -71,4 +72,4 @@ export default connect(
 
 		return block;
 	}
-});
+}

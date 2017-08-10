@@ -6,18 +6,14 @@ import 'codemirror/lib/codemirror.css';
 import 'codemirror/theme/monokai.css';
 import 'codemirror/mode/htmlmixed/htmlmixed';
 import 'codemirror/addon/selection/active-line';
+import autobind from 'autobind-decorator';
 
-export default connect(
+@connect(
 	(state) => ({
 		code: state.htmlEditor
 	})
-)(class HTMLRenderer extends Component {
-	constructor() {
-		super();
-
-		this.onChange = this.onChange.bind(this);
-	}
-
+)
+export default class HTMLRenderer extends Component {
 	render() {
 		const { props: { code } } = this;
 
@@ -29,9 +25,10 @@ export default connect(
 		}} />;
 	}
 
+	@autobind
 	onChange(code) {
 		const { props: { dispatch } } = this;
 
 		dispatch(actions.onChangeHtml(code));
 	}
-});
+}

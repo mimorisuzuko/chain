@@ -5,11 +5,12 @@ import { connect } from 'react-redux';
 import Textarea from '../components/Textarea';
 import _ from 'lodash';
 import actions from '../actions';
-import { BlockCreator } from '../models';
+import { BlockCreator as BlockCreatorModel } from '../models';
 import Radium from 'radium';
 import { batchActions } from 'redux-batched-actions';
+import autobind from 'autobind-decorator';
 
-const { CREATABLE_TYPE_KEYS: OPTION_LIST } = BlockCreator;
+const { CREATABLE_TYPE_KEYS: OPTION_LIST } = BlockCreatorModel;
 const PASCAL_OPTION_LIST = _.map(OPTION_LIST, (a) => _.upperFirst((_.camelCase(a))));
 
 /**
@@ -40,20 +41,13 @@ const Select = Radium((props) => {
 	);
 });
 
-export default connect(
+@connect(
 	(state) => ({
 		model: state.blockCreator
 	})
-)(class BlockCreator extends Component {
-	constructor() {
-		super();
 
-		this.onClick = this.onClick.bind(this);
-		this.onChangeTextarea = this.onChangeTextarea.bind(this);
-		this.onChangeSelect = this.onChangeSelect.bind(this);
-		this.onMouseDownDocument = this.onMouseDownDocument.bind(this);
-	}
-
+)
+export default class BlockCreator extends Component {
 	componentDidMount() {
 		document.addEventListener('mousedown', this.onMouseDownDocument);
 	}
@@ -107,6 +101,7 @@ export default connect(
 		) : null;
 	}
 
+	@autobind
 	onClick() {
 		const { props: { model, dispatch } } = this;
 
@@ -119,6 +114,7 @@ export default connect(
 	/**
 	 * @param {Event} e
 	 */
+	@autobind
 	onChangeTextarea(e) {
 		const { currentTarget: { value } } = e;
 		const { props: { dispatch } } = this;
@@ -129,6 +125,7 @@ export default connect(
 	/**
 	 * @param {Event} e
 	 */
+	@autobind
 	onChangeSelect(e) {
 		const { currentTarget: { value } } = e;
 		const { props: { dispatch } } = this;
@@ -139,6 +136,7 @@ export default connect(
 	/**
 	 * @param {MouseEvent} e 
 	 */
+	@autobind
 	onMouseDownDocument(e) {
 		const { target } = e;
 		const { props: { dispatch } } = this;
@@ -148,4 +146,4 @@ export default connect(
 			dispatch(actions.updateBlockCreator({ visible: false }));
 		}
 	}
-});
+}

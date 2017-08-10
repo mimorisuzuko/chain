@@ -7,6 +7,7 @@ import Textarea from '../components/Textarea';
 import { Pin as PinModel } from '../models';
 import _ from 'lodash';
 import { batchActions } from 'redux-batched-actions';
+import autobind from 'autobind-decorator';
 
 /**
  * @param {{style: Object, value: string, onClick: Function}} props
@@ -30,23 +31,13 @@ const Button = (props) => {
 	);
 };
 
-export default connect()(class Block extends Component {
+@connect()
+export default class Block extends Component {
 	constructor() {
 		super();
 
 		this.mouseDownX = 0;
 		this.mouseDownY = 0;
-		this.onChange = this.onChange.bind(this);
-		this.onClickDeleteButton = this.onClickDeleteButton.bind(this);
-		this.onMouseDown = this.onMouseDown.bind(this);
-		this.onMouseMoveDocument = this.onMouseMoveDocument.bind(this);
-		this.onMouseUpDocument = this.onMouseUpDocument.bind(this);
-		this.addPin = this.addPin.bind(this);
-		this.deletePin = this.deletePin.bind(this);
-		this.onConnectStart = this.onConnectStart.bind(this);
-		this.onConnecting = this.onConnecting.bind(this);
-		this.onConnectEnd = this.onConnectEnd.bind(this);
-		this.onConnectPin = this.onConnectPin.bind(this);
 	}
 
 	render() {
@@ -104,12 +95,14 @@ export default connect()(class Block extends Component {
 	/**
 	 * @param {Event} e 
 	 */
+	@autobind
 	onChange(e) {
 		const { props: { model, dispatch } } = this;
 
 		dispatch(actions.updateBlock(model.get('id'), { value: e.currentTarget.value }));
 	}
 
+	@autobind
 	onClickDeleteButton() {
 		const { props: { model, dispatch } } = this;
 		const id = model.get('id');
@@ -123,6 +116,7 @@ export default connect()(class Block extends Component {
 	/**
 	 * @param {MouseEvent} e
 	 */
+	@autobind
 	onMouseDown(e) {
 		const { target: { nodeName }, pageX, pageY } = e;
 
@@ -138,6 +132,7 @@ export default connect()(class Block extends Component {
 	/**
 	 * @param {MouseEvent} e
 	 */
+	@autobind
 	onMouseMoveDocument(e) {
 		const { pageX, pageY } = e;
 		const { props: { model, dispatch }, mouseDownX, mouseDownY } = this;
@@ -147,18 +142,21 @@ export default connect()(class Block extends Component {
 		this.mouseDownY = pageY;
 	}
 
+	@autobind
 	onMouseUpDocument() {
 		document.body.classList.remove('cursor-move');
 		document.removeEventListener('mousemove', this.onMouseMoveDocument);
 		document.removeEventListener('mouseup', this.onMouseUpDocument);
 	}
 
+	@autobind
 	addPin() {
 		const { props: { model, dispatch } } = this;
 
 		dispatch(actions.addPin(model.get('id')));
 	}
 
+	@autobind
 	deletePin() {
 		const { props: { model, dispatch } } = this;
 
@@ -169,6 +167,7 @@ export default connect()(class Block extends Component {
 	 * @param {MouseEvent} e
 	 * @param {any} pinModel
 	 */
+	@autobind
 	onConnectStart(e, pinModel) {
 		const { props: { dispatch, model } } = this;
 		const pinType = pinModel.get('type');
@@ -191,13 +190,15 @@ export default connect()(class Block extends Component {
 	/**
 	 * @param {MouseEvent} e
 	 */
+	@autobind
 	onConnecting(e) {
 		const { props: { dispatch } } = this;
 		const { clientX, clientY } = e;
 
 		dispatch(actions.endPointLink({ x: clientX, y: clientY }));
 	}
-
+	
+	@autobind
 	onConnectEnd() {
 		const { props: { dispatch } } = this;
 
@@ -210,6 +211,7 @@ export default connect()(class Block extends Component {
 	 * @param {MouseEvent} e
 	 * @param {any} pin
 	 */
+	@autobind
 	onConnectPin(e, pin) {
 		const { __connection__: { block: block0, pin: pin0, pinType: pinType0 } } = window;
 		const { props: { model, dispatch } } = this;
@@ -249,4 +251,4 @@ export default connect()(class Block extends Component {
 	static get WIDTH() {
 		return 200;
 	}
-});
+}

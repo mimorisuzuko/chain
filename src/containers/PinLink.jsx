@@ -5,11 +5,12 @@ import Block from '../containers/Block';
 import { Pin } from '../models';
 import _ from 'lodash';
 
-export default connect(
+@connect(
 	(state) => ({
 		blocks: state.blocks
 	})
-)(class PointLink extends Component {
+)
+export default class PointLink extends Component {
 	render() {
 		const { props: { blocks, model } } = this;
 		const points = [];
@@ -24,4 +25,4 @@ export default connect(
 
 		return <Link points={points} />;
 	}
-});
+}

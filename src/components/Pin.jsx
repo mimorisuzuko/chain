@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Pin as PinModel } from '../models';
+import autobind from 'autobind-decorator';
 
 export const RADIUS = 7;
 const S_RADIUS = RADIUS - 3;
@@ -10,11 +11,6 @@ export default class Pin extends Component {
 		super();
 
 		this.state = { enter: false, connecting: false };
-		this.onMouseDown = this.onMouseDown.bind(this);
-		this.onMouseup = this.onMouseup.bind(this);
-		this.onMouseEnter = this.onMouseEnter.bind(this);
-		this.onMouseLeave = this.onMouseLeave.bind(this);
-		this.onMouseUpDocument = this.onMouseUpDocument.bind(this);
 	}
 
 	render() {
@@ -45,6 +41,7 @@ export default class Pin extends Component {
 	/**
 	 * @param {MouseEvent} e
 	 */
+	@autobind
 	onMouseDown(e) {
 		const { props: { model, onMouseDown } } = this;
 
@@ -56,20 +53,24 @@ export default class Pin extends Component {
 	/**
 	 * @param {MouseEvent} e
 	 */
+	@autobind
 	onMouseup(e) {
 		const { props: { model, onMouseUp } } = this;
 
 		onMouseUp(e, model);
 	}
 
+	@autobind
 	onMouseEnter() {
 		this.setState({ enter: true });
 	}
 
+	@autobind
 	onMouseLeave() {
 		this.setState({ enter: false });
 	}
 
+	@autobind
 	onMouseUpDocument() {
 		document.removeEventListener('mouseup', this.onMouseUpDocument);
 		this.setState({ connecting: false });
