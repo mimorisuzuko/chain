@@ -2,7 +2,9 @@ import { List } from 'immutable';
 import { BlockCreator, Block, Pin } from '../models';
 import { handleActions } from 'redux-actions';
 import actions from '../actions';
-import { white, lblue } from '../color';
+import colors from '../shared/color.scss';
+
+const { blue2, white0 } = colors;
 
 export default handleActions({
 	[actions.addBlock]: (state, action) => {
@@ -28,7 +30,7 @@ export default handleActions({
 	[actions.addPin]: (state, action) => {
 		const { payload } = action;
 
-		return state.updateIn([payload], (block) => block.updateIn(['inputPins'], (pins) => pins.push(new Pin({ index: pins.size, color: block.type === BlockCreator.CREATABLE_TYPES.FUNCTION_BLOCK ? lblue : white, type: Pin.INPUT }))));
+		return state.updateIn([payload], (block) => block.updateIn(['inputPins'], (pins) => pins.push(new Pin({ index: pins.size, color: block.type === BlockCreator.CREATABLE_TYPES.FUNCTION_BLOCK ? blue2 : white0, type: Pin.INPUT }))));
 	},
 	[actions.deletePin]: (state, action) => {
 		const { payload } = action;

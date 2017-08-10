@@ -33,9 +33,11 @@ if (isProduction) {
 	plugins.push(new UglifyJsPlugin({ compress: { warnings: false }, mangle: true }));
 }
 
+const context = libpath.join(__dirname, 'src');
+
 const config = {
 	entry: [
-		libpath.join(__dirname, 'src/')
+		context
 	],
 	output: {
 		path: libpath.join(__dirname, dst),
@@ -51,7 +53,17 @@ const config = {
 					options: {
 						presets,
 						plugins: [
-							'transform-decorators-legacy'
+							'transform-decorators-legacy',
+							['react-css-modules',
+								{
+									context,
+									generateScopedName: '[name]__[local]',
+									filetypes: {
+										'.scss': {
+											syntax: 'postcss-scss'
+										}
+									}
+								}]
 						]
 					}
 				}
@@ -60,7 +72,7 @@ const config = {
 				test: /\.scss$/,
 				use: [
 					'style-loader',
-					'css-loader',
+					'css-loader?importLoader=1&modules&localIdentName=[name]__[local]',
 					'postcss-loader',
 					'sass-loader'
 				]

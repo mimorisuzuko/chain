@@ -1,7 +1,8 @@
 import { Record, List } from 'immutable';
 import _ from 'lodash';
-import { white, purple, blue, yellow } from '../color';
+import colors from '../shared/color.scss';
 
+const { white0, purple0, blue1, yellow0 } = colors;
 const VALUE_BLOCK = 'VALUE_BLOCK';
 const FUNCTION_BLOCK = 'FUNCTION_BLOCK';
 const PROPERTY_BLOCK = 'PROPERTY_BLOCK';
@@ -15,34 +16,34 @@ const CREATABLE_TYPE_KEYS = _.keys(CREATABLE_TYPES);
  */
 const createPins = (colors, type) => List(_.map(colors, (color, index) => new Pin({ index, color, type })));
 
-export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: true, editable: true, type: '', color: white, changeable: true, outputPins: List(), inputPins: List() }) {
+export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: true, editable: true, type: '', color: white0, changeable: true, outputPins: List(), inputPins: List() }) {
 	constructor(args) {
 		switch (args.type) {
 			case BlockCreator.VIEW_BLOCK:
 				args.editable = false;
 				args.deletable = false;
-				args.color = purple;
-				args.inputPins = createPins([white], Pin.INPUT);
+				args.color = purple0;
+				args.inputPins = createPins([white0], Pin.INPUT);
 				break;
 			case BlockCreator.CREATABLE_TYPES.VALUE_BLOCK:
 				args.changeable = false;
-				args.outputPins = createPins([purple], Pin.OUTPUT);
+				args.outputPins = createPins([purple0], Pin.OUTPUT);
 				break;
 			case BlockCreator.CREATABLE_TYPES.FUNCTION_BLOCK:
-				args.color = blue;
-				args.inputPins = createPins([blue], Pin.INPUT);
-				args.outputPins = createPins([purple], Pin.OUTPUT);
+				args.color = blue1;
+				args.inputPins = createPins([blue1], Pin.INPUT);
+				args.outputPins = createPins([purple0], Pin.OUTPUT);
 				break;
 			case BlockCreator.CREATABLE_TYPES.PROPERTY_BLOCK:
 				args.changeable = false;
-				args.color = yellow;
-				args.inputPins = createPins([white], Pin.INPUT);
-				args.outputPins = createPins([white], Pin.OUTPUT);
+				args.color = yellow0;
+				args.inputPins = createPins([white0], Pin.INPUT);
+				args.outputPins = createPins([white0], Pin.OUTPUT);
 				break;
 			case BlockCreator.CREATABLE_TYPES.OPERATOR_BLCOK:
 				args.changeable = false;
-				args.inputPins = createPins([white, white], Pin.INPUT);
-				args.outputPins = createPins([white], Pin.OUTPUT);
+				args.inputPins = createPins([white0, white0], Pin.INPUT);
+				args.outputPins = createPins([white0], Pin.OUTPUT);
 				break;
 			default:
 				break;
@@ -62,7 +63,7 @@ export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: tru
 	}
 }
 
-export class Pin extends Record({ index: 0, color: white, type: '', linked: false }) {
+export class Pin extends Record({ index: 0, color: white0, type: '', linked: false }) {
 	static get OUTPUT() {
 		return 'OUTPUT_PIN';
 	}
@@ -131,7 +132,7 @@ export class PinLink extends Record({ output: { block: 0, pin: 0 }, input: { blo
 			return false;
 		}
 
-		if(query === undefined){
+		if (query === undefined) {
 			return true;
 		}
 

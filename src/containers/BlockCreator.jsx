@@ -1,45 +1,15 @@
 import React, { Component } from 'react';
 import { findDOMNode } from 'react-dom';
-import { black, lblack, white, vsblue } from '../color';
 import { connect } from 'react-redux';
-import Textarea from '../components/Textarea';
 import _ from 'lodash';
 import actions from '../actions';
 import { BlockCreator as BlockCreatorModel } from '../models';
-import Radium from 'radium';
 import { batchActions } from 'redux-batched-actions';
 import autobind from 'autobind-decorator';
+import './BlockCreator.scss';
 
 const { CREATABLE_TYPE_KEYS: OPTION_LIST } = BlockCreatorModel;
 const PASCAL_OPTION_LIST = _.map(OPTION_LIST, (a) => _.upperFirst((_.camelCase(a))));
-
-/**
- * 
- * @param {{value: string, onChange: Function}} props 
- */
-const Select = Radium((props) => {
-	const { value, children, onChange } = props;
-
-	return (
-		<select value={value} onChange={onChange} style={{
-			display: 'block',
-			backgroundColor: lblack,
-			color: 'inherit',
-			width: '100%',
-			borderWidth: 1,
-			borderStyle: 'solid',
-			borderColor: 'transparent',
-			marginBottom: 5,
-			font: 'inherit',
-			outline: 'none',
-			':focus': {
-				borderColor: vsblue
-			}
-		}}>
-			{children}
-		</select>
-	);
-});
 
 @connect(
 	(state) => ({
@@ -60,41 +30,16 @@ export default class BlockCreator extends Component {
 		const { props: { model } } = this;
 
 		return model.get('visible') ? (
-			<div className='shadow' style={{
-				backgroundColor: black,
-				border: `1px solid ${lblack}`,
+			<div styleName='base' style={{
 				position: 'absolute',
 				left: model.get('x'),
 				top: model.get('y'),
-				color: white,
-				width: 200,
-				padding: 10,
-				boxSizing: 'border-box',
-				fontSize: 12
 			}}>
-				<Select value={model.get('value')} onChange={this.onChangeSelect}>
+				<select value={model.get('selected')} onChange={this.onChangeSelect}>
 					{_.map(OPTION_LIST, (a, i) => <option value={a} key={i}>{PASCAL_OPTION_LIST[i]}</option>)}
-				</Select>
-				<Textarea onChange={this.onChangeTextarea} style={{
-					fontFamily: 'Menlo, Monaco, "Courier New", monospace',
-					marginBottom: 5,
-					borderWidth: 1,
-					borderStyle: 'solid',
-					borderColor: 'transparent',
-					':focus': {
-						borderColor: vsblue
-					}
-				}} />
-				<button onClick={this.onClick} style={{
-					display: 'inline-block',
-					backgroundColor: lblack,
-					color: 'inherit',
-					borderRadius: 4,
-					font: 'inherit',
-					border: 'none',
-					outline: 'none',
-					cursor: 'pointer'
-				}}>
+				</select>
+				<textarea onChange={this.onChangeTextarea} value={model.get('value')} />
+				<button onClick={this.onClick}>
 					ADD
 				</button>
 			</div>

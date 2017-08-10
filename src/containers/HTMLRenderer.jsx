@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import { BlockCreator as BlockCreatorModel } from '../models';
+import './HTMLRenderer.scss';
 
 const parser = new DOMParser();
 
@@ -21,7 +22,7 @@ export default class HTMLRenderer extends Component {
 		$script.innerHTML = this.toEvalableString();
 		$body.appendChild($script);
 
-		return <iframe srcDoc={`<!doctype html>${$doc.documentElement.outerHTML}`} style={{ display: 'block', width: '100%', height: '100%', border: 'none', backgroundColor: 'white' }} />;
+		return <iframe srcDoc={`<!doctype html>${$doc.documentElement.outerHTML}`} styleName='base' />;
 	}
 
 	toEvalableString() {

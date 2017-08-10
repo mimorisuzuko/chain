@@ -2,13 +2,13 @@ import React, { Component } from 'react';
 import { findDOMNode } from 'react-dom';
 import { connect } from 'react-redux';
 import Block from '../containers/Block';
-import { black } from '../color';
 import BlockCreator from '../containers/BlockCreator';
 import actions from '../actions';
 import PointLink from '../components/PointLink';
 import PinLink from '../containers/PinLink';
 import _ from 'lodash';
 import autobind from 'autobind-decorator';
+import './Chain.scss';
 
 @connect(
 	(state) => ({
@@ -31,20 +31,8 @@ export default class Chain extends Component {
 		let { props: { blocks } } = this;
 
 		return (
-			<div style={{
-				backgroundColor: black,
-				position: 'relative',
-				width: '100%',
-				height: '100%'
-			}}>
-				<svg style={{
-					display: 'block',
-					width: '100%',
-					height: '100%',
-					position: 'absolute',
-					left: 0,
-					top: 0
-				}}>
+			<div styleName='base'>
+				<svg>
 					{links.map((a, i) => {
 						_.forEach(['input', 'output'], (key) => {
 							const { block, pin } = a.get(key);
