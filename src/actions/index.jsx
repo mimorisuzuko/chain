@@ -6,11 +6,11 @@ const UPDATE_BLOCK = 'UPDATE_BLOCK';
 const DELTA_MOVE_BLOCK = 'DELTA_MOVE_BLOCK';
 const TOGGLE_BLOCK_CREATOR = 'TOGGLE_BLOCK_CREATOR';
 
-let blockId = 0;
+let blockId = -1;
 
 export default createActions(
 	{
-		[ADD_BLOCK]: (block = { value: '', x: 0, y: 0 }) => _.merge({ id: blockId += 1 }, block),
+		[ADD_BLOCK]: (block) => _.merge({ id: blockId += 1 }, block),
 		[UPDATE_BLOCK]: (id, patch) => ({ id, patch }),
 		[DELTA_MOVE_BLOCK]: (id, dx, dy) => ({ id, dx, dy }),
 		[TOGGLE_BLOCK_CREATOR]: (x, y) => ({ x, y })

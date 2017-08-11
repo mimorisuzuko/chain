@@ -10,46 +10,46 @@ const OPERATOR_BLCOK = 'OPERATOR_BLCOK';
 const CREATABLE_TYPES = { VALUE_BLOCK, FUNCTION_BLOCK, PROPERTY_BLOCK, OPERATOR_BLCOK };
 const CREATABLE_TYPE_KEYS = _.keys(CREATABLE_TYPES);
 
-/**
- * @param {string[]} colors
- * @param {string} type
- */
-const createPins = (colors, type) => List(_.map(colors, (color, index) => new Pin({ index, color, type })));
-
 export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: true, editable: true, type: '', color: white0, changeable: true, outputPins: List(), inputPins: List() }) {
 	constructor(args) {
-		switch (args.type) {
+		super(args);
+
+		switch (this.type) {
 			case BlockCreator.VIEW_BLOCK:
-				args.editable = false;
-				args.deletable = false;
-				args.color = purple0;
-				args.inputPins = createPins([white0], Pin.INPUT);
-				break;
+				return this.merge({
+					editable: false,
+					deletable: false,
+					color: purple0,
+					inputPins: this._createPins([white0], Pin.INPUT)
+				});
 			case BlockCreator.CREATABLE_TYPES.VALUE_BLOCK:
-				args.changeable = false;
-				args.outputPins = createPins([purple0], Pin.OUTPUT);
+				return this.merge({
+					changeable: false,
+					outputPins: this._createPins([purple0], Pin.OUTPUT)
+				});
 				break;
 			case BlockCreator.CREATABLE_TYPES.FUNCTION_BLOCK:
-				args.color = blue1;
-				args.inputPins = createPins([blue1], Pin.INPUT);
-				args.outputPins = createPins([purple0], Pin.OUTPUT);
-				break;
+				return this.merge({
+					color: blue1,
+					inputPins: this._createPins([blue1], Pin.INPUT),
+					outputPins: this._createPins([purple0], Pin.OUTPUT)
+				});
 			case BlockCreator.CREATABLE_TYPES.PROPERTY_BLOCK:
-				args.changeable = false;
-				args.color = yellow0;
-				args.inputPins = createPins([white0], Pin.INPUT);
-				args.outputPins = createPins([white0], Pin.OUTPUT);
-				break;
+				return this.merge({
+					changeable: false,
+					color: yellow0,
+					inputPins: this._createPins([white0], Pin.INPUT),
+					outputPins: this._createPins([white0], Pin.OUTPUT)
+				});
 			case BlockCreator.CREATABLE_TYPES.OPERATOR_BLCOK:
-				args.changeable = false;
-				args.inputPins = createPins([white0, white0], Pin.INPUT);
-				args.outputPins = createPins([white0], Pin.OUTPUT);
-				break;
+				return this.merge({
+					changeable: false,
+					inputPins: this._createPins([white0, white0], Pin.INPUT),
+					outputPins: this._createPins([white0], Pin.OUTPUT)
+				});
 			default:
 				break;
 		}
-
-		super(args);
 	}
 
 	/**
@@ -57,19 +57,78 @@ export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: tru
 	 * @param {number} dy
 	 */
 	dmove(dx, dy) {
-		const { x, y } = this;
+		const { x, y, inputPins, outputPins } = this;
 
-		return this.merge({ x: x + dx, y: y + dy });
+		return this.merge({
+			x: x + dx,
+			y: y + dy,
+			inputPins: inputPins.map((a) => a.dmove(dx, dy)),
+			outputPins: outputPins.map((a) => a.dmove(dx, dy))
+		});
+	}
+
+	/**
+	 * @param {string} color
+	 * @param {string} type
+	 */
+	createPin(color, type) {
+		const { x, y } = this;
+		const key = type === Pin.OUTPUT ? 'outputPins' : type === Pin.INPUT ? 'inputPins' : 'unknownPins';
+		const { size: index } = this.get(key);
+		const [cx, cy] = Block._pinPosition(index, type);
+
+		return new Pin({ index, color, type, cx: x + cx, cy: y + cy });
+	}
+
+	/**
+	 * @param {string[]} colors 
+	 * @param {string} type 
+	 */
+	_createPins(colors, type) {
+		return List(_.map(colors, (color) => this.createPin(color, type)));
+	}
+
+	/**
+	 * @param {number} index 
+	 * @param {string} direction 
+	 */
+	static _pinPosition(index, direction) {
+		return [
+			direction === Pin.INPUT ? -Pin.RADIUS - 2 : direction === Pin.OUTPUT ? Block.WIDTH + Pin.RADIUS : 0,
+			Pin.RADIUS + (Pin.RADIUS * 2 + 3) * index
+		];
+	}
+
+	static get WIDTH() {
+		return 200;
 	}
 }
 
-export class Pin extends Record({ index: 0, color: white0, type: '', linked: false }) {
+export class Pin extends Record({ index: 0, color: white0, type: '', linked: false, cx: 0, cy: 0 }) {
+	/**
+	 * @param {number} dx
+	 * @param {number} dy
+	 */
+	dmove(dx, dy) {
+		const { cx, cy } = this;
+
+		return this.merge({ cx: cx + dx, cy: cy + dy });
+	}
+
 	static get OUTPUT() {
 		return 'OUTPUT_PIN';
 	}
 
 	static get INPUT() {
 		return 'INPUT_PIN';
+	}
+
+	static get RADIUS() {
+		return 7;
+	}
+
+	static get S_RADIUS() {
+		return 4;
 	}
 }
 

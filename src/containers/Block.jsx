@@ -1,9 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import actions from '../actions';
-import Pin, { RADIUS } from '../components/Pin';
-import { Pin as PinModel } from '../models';
-import { batchActions } from 'redux-batched-actions';
+import { Pin as PinModel, Block as BlockModel} from '../models';
 import autobind from 'autobind-decorator';
 import './Block.scss';
 
@@ -25,7 +23,7 @@ export default class Block extends Component {
 				position: 'absolute',
 				left: model.get('x'),
 				top: model.get('y'),
-				width: Block.WIDTH,
+				width: BlockModel.WIDTH,
 			}}>
 				<div>
 					{model.get('deletable') ? <button styleName='red' onClick={this.onClickDeleteButton}>x</button> : null}
@@ -38,16 +36,6 @@ export default class Block extends Component {
 				}}>
 					<textarea readOnly={!model.get('editable')} onChange={this.onChange} value={model.get('value')} />
 				</div>
-				{model.get('inputPins').map((pin, i) => {
-					const [x, y] = Block.pinPosition(i, PinModel.INPUT);
-
-					return <Pin key={pin.get('index')} cx={x} cy={y} model={pin} onMouseDown={this.onConnectStart} onMouseUp={this.onConnectPin} />;
-				})}
-				{model.get('outputPins').map((pin, i) => {
-					const [x, y] = Block.pinPosition(i, PinModel.OUTPUT);
-
-					return <Pin key={pin.get('index')} cx={x} cy={y} model={pin} onMouseDown={this.onConnectStart} onMouseUp={this.onConnectPin} />;
-				})}
 			</div>
 		);
 	}
@@ -120,70 +108,6 @@ export default class Block extends Component {
 		dispatch(actions.deletePin(model.get('id')));
 	}
 
-	/**
-	 * @param {MouseEvent} e
-	 * @param {any} pinModel
-	 */
-	@autobind
-	onConnectStart(e, pinModel) {
-		const { props: { dispatch, model } } = this;
-		const pinType = pinModel.get('type');
-		const block = model.get('id');
-		const pin = pinModel.get('index');
-		const [x, y] = Block.pinPosition(pin, pinType);
-		const batch = [actions.startPointLink({ x: x + model.get('x'), y: y + model.get('y') })];
-
-		document.addEventListener('mousemove', this.onConnecting);
-		document.addEventListener('mouseup', this.onConnectEnd);
-		window.__connection__ = { block, pin, pinType };
-
-		if (pinType === PinModel.INPUT) {
-			batch.push(actions.removePinLinkByQuery({ input: { block, pin } }));
-		}
-
-		dispatch(batchActions(batch));
-	}
-
-	/**
-	 * @param {MouseEvent} e
-	 */
-	@autobind
-	onConnecting(e) {
-		const { props: { dispatch } } = this;
-		const { clientX, clientY } = e;
-
-		dispatch(actions.endPointLink({ x: clientX, y: clientY }));
-	}
-
-	@autobind
-	onConnectEnd() {
-		const { props: { dispatch } } = this;
-
-		dispatch(actions.startPointLink({ x: 0, y: 0 }));
-		document.removeEventListener('mousemove', this.onConnecting);
-		document.removeEventListener('mouseup', this.onConnectEnd);
-	}
-
-	/**
-	 * @param {MouseEvent} e
-	 * @param {any} pin
-	 */
-	@autobind
-	onConnectPin(e, pin) {
-		const { __connection__: { block: block0, pin: pin0, pinType: pinType0 } } = window;
-		const { props: { model, dispatch } } = this;
-		const block1 = model.get('id');
-		const pin1 = pin.get('index');
-		const pinType1 = pin.get('type');
-
-		if (block0 !== block1 && pinType0 !== pinType1) {
-			dispatch(actions.addPinLink({
-				[Block.convertPinType(pinType0)]: { block: block0, pin: pin0 },
-				[Block.convertPinType(pinType1)]: { block: block1, pin: pin1 }
-			}));
-		}
-	}
-
 	static convertPinType(pinType) {
 		if (pinType === PinModel.OUTPUT) {
 			return 'output';
@@ -192,20 +116,5 @@ export default class Block extends Component {
 		}
 
 		return 'unknown';
-	}
-
-	/**
-	 * @param {number} index 
-	 * @param {string} direction 
-	 */
-	static pinPosition(index, direction) {
-		return [
-			direction === PinModel.INPUT ? -RADIUS - 2 : direction === PinModel.OUTPUT ? Block.WIDTH + RADIUS : null,
-			RADIUS + (RADIUS * 2 + 3) * index
-		];
-	}
-
-	static get WIDTH() {
-		return 200;
 	}
 }

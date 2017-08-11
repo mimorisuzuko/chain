@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Link from '../components/Link';
-import Block from '../containers/Block';
-import { Pin } from '../models';
 import _ from 'lodash';
 
 @connect(
@@ -17,10 +15,9 @@ export default class PointLink extends Component {
 
 		_.forEach(['output', 'input'], (name) => {
 			const { block: blockId, pin: pinIndex } = model.get(name);
-			const block = blocks.get(blockId);
-			const [x, y] = Block.pinPosition(pinIndex, name === 'output' ? Pin.OUTPUT : name === 'input' ? Pin.INPUT : null);
+			const pin = blocks.getIn([blockId, `${name}Pins`, pinIndex]);
 
-			points.push(x + block.get('x'), y + block.get('y'));
+			points.push(pin.get('cx'), pin.get('cy'));
 		});
 
 		return <Link points={points} />;

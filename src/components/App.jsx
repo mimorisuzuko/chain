@@ -7,9 +7,13 @@ import { enableBatching } from 'redux-batched-actions';
 import { HashRouter, Route, NavLink, Redirect } from 'react-router-dom';
 import HTMLRenderer from '../containers/HTMLRenderer';
 import HTMLEditor from '../containers/HTMLEditor';
+import { BlockCreator } from '../models';
+import actions from '../actions';
 import styles from './App.scss';
 
 const store = createStore(enableBatching(state));
+store.dispatch(actions.addBlock({ x: 100, y: 100, type: BlockCreator.VIEW_BLOCK }));
+
 const redirectRender = () => <Redirect to='/chain' />;
 
 const App = () => (
