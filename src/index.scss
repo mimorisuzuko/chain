@@ -7,13 +7,7 @@ main {
 
 body {
 	margin: 0;
-	font-family: Menlo, Monaco, 'Courier New', monospace;
-	font-size: 0.75em;
-	user-select: none;
-
-	* {
-		color: rgb(212, 212, 212);
-	}
+	font-family: sans-serif;
 
 	&.cursor-move {
 		* {
@@ -22,10 +16,10 @@ body {
 	}
 }
 
-textarea {
-	font: inherit;
+:global .ReactCodeMirror {
+	height: 100%;
 }
 
-a {
-	text-decoration: none;
+:global .CodeMirror {
+	height: 100%;
 }

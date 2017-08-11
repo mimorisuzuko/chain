@@ -1,0 +1,29 @@
+@import '../shared/vars.scss';
+
+.wrap {
+	width: 100%;
+	height: 100%;
+	background-color: $black0;
+
+	footer {
+		background-color: $black1;
+		color: $white0;
+	}
+}
+
+.base {
+	width: 100%;
+	height: calc(100% - #{$footer-height});
+}
+
+.link {
+	color: inherit;
+	border-bottom: 3px transparent solid;
+	padding: 5px 10px;
+	display: inline-block;
+	text-decoration: none;
+}
+
+.active {
+	border-bottom-color: $blue0;
+}

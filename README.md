@@ -1,15 +1,15 @@
 # Chain
 
-A New Visual Programming Language to Build a Program Like JavaScript.
+A New Visual Programming Environment to Build JavaScript By Linking Blocks.
 
-## Example: !dlroW ,olleH
+## Example:
 
-### Chain
+`'Hello, Chain!'` => `'!niahC ,olleH'`
 
-![](ss.png)
+![](img.png)
 
 ### JavaScript
 
 ```javascript
-Array.from("Hello, " + "World!").reverse().join("")
+Array.from('Hello, ' + 'World!').reverse().join('')
 ```

@@ -1,0 +1,59 @@
+@import '../shared/vars.scss';
+@import '../shared/util.scss';
+
+.base {
+	@extend .shadow;
+
+	background-color: $black0;
+	border: 1px solid $black1;
+	color: $white0;
+	width: 200px;
+	padding: 10px;
+	box-sizing: border-box;
+	font-family: $font;
+	font-size: 12px;
+
+	select {
+		display: block;
+		background-color: $black1;
+		color: inherit;
+		width: 100%;
+		border: 1px solid transparent;
+		margin-bottom: 5px;
+		font: inherit;
+		outline: none;
+
+		&:focus {
+			border-color: $blue0;
+		}
+	}
+
+	textarea {
+		width: 100%;
+		background-color: $black1;
+		font: inherit;
+		color: inherit;
+		height: 100%;
+		box-sizing: border-box;
+		resize: vertical;
+		outline: none;
+		display: block;
+		margin-bottom: 5px;
+		border: 1px solid transparent;
+
+		&:focus {
+			border-color: $blue0;
+		}
+	}
+
+	button {
+		display: inline-block;
+		background-color: $black1;
+		color: inherit;
+		border-radius: 4px;
+		font: inherit;
+		border: none;
+		outline: none;
+		cursor: pointer;
+	}
+}
