@@ -21,6 +21,7 @@
 		outline: none;
 		cursor: pointer;
 		background-color: $black1;
+		user-select: none;
 
 		&:not(:first-of-type) {
 			margin-left: 1px;
@@ -38,6 +39,7 @@
 		resize: vertical;
 		outline: none;
 		display: block;
+		user-select: none;
 	}
 }
 
