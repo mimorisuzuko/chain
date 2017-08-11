@@ -70,15 +70,16 @@ export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: tru
 	/**
 	 * @param {string} color
 	 * @param {string} type
-	 * @param {number} index
+	 * @param {number} pindex
 	 */
-	createPin(color, type, index = null) {
+	createPin(color, type, pindex = null) {
 		const { x, y } = this;
 		const key = type === Pin.OUTPUT ? 'outputPins' : type === Pin.INPUT ? 'inputPins' : 'unknownPins';
 		const { size } = this.get(key);
+		const index = _.isNull(pindex) ? size : pindex;
 		const [cx, cy] = Block._pinPosition(index, type);
 
-		return new Pin({ index: _.isNull(index) ? size : index, color, type, cx: x + cx, cy: y + cy });
+		return new Pin({ index, color, type, cx: x + cx, cy: y + cy });
 	}
 
 	/**
