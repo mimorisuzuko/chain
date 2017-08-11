@@ -1,19 +1,19 @@
 @import '../shared/vars.scss';
 
-.base {
+.wrap {
 	width: 100%;
 	height: 100%;
 	background-color: $black0;
-
-	> div {
-		width: 100%;
-		height: calc(100% - #{$footer-height});
-	}
 
 	footer {
 		background-color: $black1;
 		color: $white0;
 	}
+}
+
+.base {
+	width: 100%;
+	height: calc(100% - #{$footer-height});
 }
 
 .link {

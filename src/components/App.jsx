@@ -9,6 +9,7 @@ import HTMLRenderer from '../containers/HTMLRenderer';
 import HTMLEditor from '../containers/HTMLEditor';
 import { BlockCreator } from '../models';
 import actions from '../actions';
+import Balloons from '../containers/Balloons';
 import styles from './App.scss';
 
 const store = createStore(enableBatching(state));
@@ -19,8 +20,8 @@ const redirectRender = () => <Redirect to='/chain' />;
 const App = () => (
 	<Provider store={store}>
 		<HashRouter>
-			<div styleName='base'>
-				<div>
+			<div styleName='wrap'>
+				<div styleName='base'>
 					<HTMLRenderer />
 					<Route exact path='/' render={redirectRender} />
 					<Route path='/chain' component={Chain} />
@@ -37,6 +38,7 @@ const App = () => (
 						View
 					</NavLink>
 				</footer>
+				<Balloons />
 			</div>
 		</HashRouter>
 	</Provider>

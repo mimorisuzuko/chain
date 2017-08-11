@@ -149,7 +149,7 @@ export default class Chain extends Component {
 		if (type === 'chain-result') {
 			dispatch(actions.pushViewBlock(JSON.stringify(value)));
 		} else if (type === 'chain-error') {
-			console.error('chain-error', value);
+			dispatch(actions.addBalloon({ value }));
 		} else if (type === 'chain-clear') {
 			dispatch(actions.clearViewBlock());
 		}
