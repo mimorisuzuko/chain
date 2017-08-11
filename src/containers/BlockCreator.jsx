@@ -51,7 +51,7 @@ export default class BlockCreator extends Component {
 		const { props: { model, dispatch } } = this;
 
 		dispatch(batchActions([
-			actions.addBlock({ x: model.get('x'), y: model.get('y'), value: model.get('value'), type: model.get('selected') }),
+			actions.addBlock({ x: model.get('x'), y: model.get('y'), value: _.trim(model.get('value')), type: model.get('selected') }),
 			actions.toggleBlockCreator()
 		]));
 	}
