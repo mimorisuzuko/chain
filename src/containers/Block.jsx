@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import actions from '../actions';
-import { Pin as PinModel, Block as BlockModel} from '../models';
+import { Pin as PinModel, Block as BlockModel } from '../models';
 import autobind from 'autobind-decorator';
 import './Block.scss';
 
@@ -34,7 +34,7 @@ export default class Block extends Component {
 					margin: 5,
 					borderLeft: `5px solid ${color}`
 				}}>
-					<textarea readOnly={!model.get('editable')} onChange={this.onChange} value={model.get('value')} />
+					<textarea readOnly={!model.get('editable')} onChange={this.onChange} value={model.get('value')} spellCheck={false} />
 				</div>
 			</div>
 		);

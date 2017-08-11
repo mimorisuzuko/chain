@@ -38,7 +38,7 @@ export default class BlockCreator extends Component {
 				<select value={model.get('selected')} onChange={this.onChangeSelect}>
 					{_.map(OPTION_LIST, (a, i) => <option value={a} key={i}>{PASCAL_OPTION_LIST[i]}</option>)}
 				</select>
-				<textarea onChange={this.onChangeTextarea} value={model.get('value')} />
+				<textarea onChange={this.onChangeTextarea} value={model.get('value')} spellCheck={false} />
 				<button onClick={this.onClick}>
 					ADD
 				</button>
