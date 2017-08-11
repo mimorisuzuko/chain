@@ -70,14 +70,15 @@ export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: tru
 	/**
 	 * @param {string} color
 	 * @param {string} type
+	 * @param {number} index
 	 */
-	createPin(color, type) {
+	createPin(color, type, index = null) {
 		const { x, y } = this;
 		const key = type === Pin.OUTPUT ? 'outputPins' : type === Pin.INPUT ? 'inputPins' : 'unknownPins';
-		const { size: index } = this.get(key);
+		const { size } = this.get(key);
 		const [cx, cy] = Block._pinPosition(index, type);
 
-		return new Pin({ index, color, type, cx: x + cx, cy: y + cy });
+		return new Pin({ index: _.isNull(index) ? size : index, color, type, cx: x + cx, cy: y + cy });
 	}
 
 	/**
@@ -85,7 +86,7 @@ export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: tru
 	 * @param {string} type 
 	 */
 	_createPins(colors, type) {
-		return List(_.map(colors, (color) => this.createPin(color, type)));
+		return List(_.map(colors, (color, i) => this.createPin(color, type, i)));
 	}
 
 	/**
