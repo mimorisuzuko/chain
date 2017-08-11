@@ -1,7 +1,7 @@
 {
   "name": "chain",
   "version": "0.0.1",
-  "description": "A new visual programming language to build a program like JavaScript",
+  "description": "A New Visual Programming Environment to Build JavaScript By Linking Blocks",
   "main": "docs/index.htnl",
   "scripts": {
     "webpack": "./node_modules/.bin/webpack --config webpack.config.babel.js",
