@@ -2,7 +2,7 @@ import { DefinePlugin, optimize, HotModuleReplacementPlugin } from 'webpack';
 import libpath from 'path';
 import CleanWebpackPlugin from 'clean-webpack-plugin';
 
-const { UglifyJsPlugin } = optimize;
+const { UglifyJsPlugin, AggressiveMergingPlugin } = optimize;
 const dst = 'docs';
 let { env: { NODE_ENV, WATCH } } = process;
 
@@ -30,7 +30,10 @@ const plugins = [
 
 if (isProduction) {
 	presets.push('es2015');
-	plugins.push(new UglifyJsPlugin({ compress: { warnings: false }, mangle: true }));
+	plugins.push(
+		new UglifyJsPlugin({ compress: { warnings: false }, mangle: true }),
+		new AggressiveMergingPlugin()
+	);
 }
 
 const context = libpath.join(__dirname, 'src');
