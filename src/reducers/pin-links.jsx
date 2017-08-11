@@ -10,7 +10,7 @@ export default handleActions({
 
 		return state.filter((link) => !link.match(query)).push(new PinLink(payload));
 	},
-	[actions.removePinLinkByBlock]: (state, action) => {
+	[actions.deleteBlock]: (state, action) => {
 		const { payload } = action;
 
 		return state.filter((link) => !link.hasBlock(payload));

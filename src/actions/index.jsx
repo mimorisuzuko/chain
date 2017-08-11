@@ -22,7 +22,6 @@ export default createActions(
 	'START_POINT_LINK',
 	'END_POINT_LINK',
 	'ADD_PIN_LINK',
-	'REMOVE_PIN_LINK_BY_BLOCK',
 	'REMOVE_PIN_LINK_BY_QUERY',
 	'ON_CHANGE_HTML'
 );

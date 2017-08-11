@@ -67,10 +67,7 @@ export default class Block extends Component {
 		const { props: { model, dispatch } } = this;
 		const id = model.get('id');
 
-		dispatch(batchActions([
-			actions.removePinLinkByBlock(id),
-			actions.deleteBlock(id)
-		]));
+		dispatch(actions.deleteBlock(id));
 	}
 
 	/**
