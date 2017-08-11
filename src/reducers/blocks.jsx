@@ -2,7 +2,7 @@ import { List } from 'immutable';
 import { BlockCreator, Block, Pin } from '../models';
 import { handleActions } from 'redux-actions';
 import actions from '../actions';
-import colors from '../shared/color.scss';
+import colors from '../shared/vars.scss';
 
 const { blue2, white0 } = colors;
 
@@ -36,5 +36,16 @@ export default handleActions({
 		const { payload } = action;
 
 		return state.updateIn([payload], (block) => block.updateIn(['inputPins'], (pins) => pins.slice(0, Math.max(1, pins.size - 1))));
+	},
+	[actions.clearViewBlock]: (state) => {
+		return state.update(0, (block) => block.set('value', ''));
+	},
+	[actions.pushViewBlock]: (state, action) => {
+		const { payload } = action;
+
+		return state.update(0, (block) => {
+			const value = block.get('value');
+			return block.set('value', value ? `${value}\n${payload}` : payload);
+		});
 	}
 }, List([new Block({ id: 0, x: 100, y: 100, type: BlockCreator.VIEW_BLOCK })]));

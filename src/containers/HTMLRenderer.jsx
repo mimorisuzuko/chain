@@ -19,7 +19,15 @@ export default class HTMLRenderer extends Component {
 		const $doc = parser.parseFromString(html, 'text/html');
 		const $body = $doc.querySelector('body');
 		const $script = document.createElement('script');
-		$script.innerHTML = this.toEvalableString();
+		const script = _.join(_.map(this.toEvalableString(), (a) => `parent.postMessage({ type: 'chain-result', value: ${a} }, '*')`), '\n');
+		$script.innerHTML = `
+			parent.postMessage({ type: 'chain-clear' }, '*');
+			try {
+				(0, eval)(${JSON.stringify(script)});
+			} catch (err) {
+				parent.postMessage({ type: 'chain-error', value: String(err) }, '*');
+			}
+		`;
 		$body.appendChild($script);
 
 		return <iframe srcDoc={`<!doctype html>${$doc.documentElement.outerHTML}`} styleName='base' />;
@@ -42,7 +50,7 @@ export default class HTMLRenderer extends Component {
 
 		switch (block.get('type')) {
 			case BlockCreatorModel.VIEW_BLOCK:
-				return _.join(args, '\n');
+				return args;
 			case BlockCreatorModel.CREATABLE_TYPES.VALUE_BLOCK:
 				return block.get('value');
 			case BlockCreatorModel.CREATABLE_TYPES.FUNCTION_BLOCK:

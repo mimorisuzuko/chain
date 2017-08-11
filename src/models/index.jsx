@@ -1,6 +1,6 @@
 import { Record, List } from 'immutable';
 import _ from 'lodash';
-import colors from '../shared/color.scss';
+import colors from '../shared/vars.scss';
 
 const { white0, purple0, blue1, yellow0 } = colors;
 const VALUE_BLOCK = 'VALUE_BLOCK';

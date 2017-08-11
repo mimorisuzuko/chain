@@ -1,7 +1,12 @@
+@import '../shared/vars.scss';
+
 .base {
 	display: block;
 	width: 100%;
-	height: 100%;
+	height: calc(100% - #{$footer-height});
 	border: none;
 	background-color: white;
+	position: absolute;
+	left: 0;
+	top: 0;
 }

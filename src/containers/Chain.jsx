@@ -19,6 +19,7 @@ import './Chain.scss';
 )
 export default class Chain extends Component {
 	componentDidMount() {
+		window.addEventListener('message', this.onMessage);
 		window.addEventListener('contextmenu', this.onContextmenu);
 	}
 
@@ -60,5 +61,23 @@ export default class Chain extends Component {
 
 		e.preventDefault();
 		dispatch(actions.toggleBlockCreator(clientX - left, clientY - top));
+	}
+
+	/**
+	 * 
+	 * @param {MessageEvent} e 
+	 */
+	@autobind
+	onMessage(e) {
+		const { props: { dispatch } } = this;
+		const { data: { type, value } } = e;
+
+		if (type === 'chain-result') {
+			dispatch(actions.pushViewBlock(JSON.stringify(value)));
+		} else if (type === 'chain-error') {
+			console.error('chain-error', value);
+		} else if (type === 'chain-clear') {
+			dispatch(actions.clearViewBlock());
+		}
 	}
 }

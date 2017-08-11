@@ -17,10 +17,10 @@ const App = () => (
 		<HashRouter>
 			<div styleName='base'>
 				<div>
+					<HTMLRenderer />
 					<Route exact path='/' render={redirectRender} />
 					<Route path='/chain' component={Chain} />
 					<Route path='/editor' component={HTMLEditor} />
-					<Route path='/view' component={HTMLRenderer} />
 				</div>
 				<footer>
 					<NavLink to='/chain' className={styles.link} activeClassName={styles.active}>
