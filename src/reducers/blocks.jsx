@@ -14,28 +14,33 @@ export default handleActions({
 	},
 	[actions.updateBlock]: (state, action) => {
 		const { payload: { id, patch } } = action;
+		const index = state.findIndex((a) => a.get('id') === id);
 
-		return state.updateIn([id], (block) => block.merge(patch));
+		return state.update(index, (block) => block.merge(patch));
 	},
 	[actions.deleteBlock]: (state, action) => {
 		const { payload } = action;
+		const index = state.findIndex((a) => a.get('id') === payload);
 
-		return state.filter((a, i) => i !== payload);
+		return state.filter((a, i) => i !== index);
 	},
 	[actions.deltaMoveBlock]: (state, action) => {
 		const { payload: { id, dx, dy } } = action;
+		const index = state.findIndex((a) => a.get('id') === id);
 
-		return state.map((a, i) => i === id ? a.dmove(dx, dy) : a);
+		return state.update(index, (block) => block.dmove(dx, dy));
 	},
 	[actions.addPin]: (state, action) => {
 		const { payload } = action;
+		const index = state.findIndex((a) => a.get('id') === payload);
 
-		return state.updateIn([payload], (block) => block.updateIn(['inputPins'], (pins) => pins.push(new Pin({ index: pins.size, color: block.type === BlockCreator.CREATABLE_TYPES.FUNCTION_BLOCK ? blue2 : white0, type: Pin.INPUT }))));
+		return state.update(index, (block) => block.updateIn(['inputPins'], (pins) => pins.push(new Pin({ index: pins.size, color: block.type === BlockCreator.CREATABLE_TYPES.FUNCTION_BLOCK ? blue2 : white0, type: Pin.INPUT }))));
 	},
 	[actions.deletePin]: (state, action) => {
 		const { payload } = action;
+		const index = state.findIndex((a) => a.get('id') === payload);
 
-		return state.updateIn([payload], (block) => block.updateIn(['inputPins'], (pins) => pins.slice(0, Math.max(1, pins.size - 1))));
+		return state.update(index, (block) => block.updateIn(['inputPins'], (pins) => pins.slice(0, Math.max(1, pins.size - 1))));
 	},
 	[actions.clearViewBlock]: (state) => {
 		return state.update(0, (block) => block.set('value', ''));
