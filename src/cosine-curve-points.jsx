@@ -8,24 +8,18 @@ const dist = (ax, ay, bx, by) => Math.sqrt(Math.pow(ax - bx, 2) + Math.pow(ay - 
  * @returns {number[]}
  */
 const cosineCurvePoints = (ax, ay, bx, by, margin = 10) => {
-	ax += 1;
-	ay += 1;
-	let interval = dist(ax, ay, bx, by);
-	let index = 1;
-	let add = false;
+	const interval = dist(ax, ay, bx, by);
+	if (interval === 0) { return []; }
+
 	const dx = (bx - ax) / interval;
 	const dy = by - ay;
 	const points = [];
 
-	for (index; index <= interval; index += 1) {
-		const x = ax + dx * index;
-		const y = ay + dy * (-Math.cos(Math.PI / interval * index) + 1) / 2;
+	for (let i = 0; i <= interval; i += 1) {
+		const x = ax + dx * i;
+		const y = ay + dy * (-Math.cos(Math.PI / interval * i) + 1) / 2;
 
-		if (!add && margin < dist(ax, ay, x, y)) {
-			add = true;
-			interval -= index;
-			points.push(x, y);
-		} else if (add) {
+		if (margin < dist(ax, ay, x, y) && margin < dist(bx, by, x, y)) {
 			points.push(x, y);
 		}
 	}
