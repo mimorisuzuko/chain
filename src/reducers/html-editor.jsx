@@ -1,6 +1,5 @@
 import { handleActions } from 'redux-actions';
 import actions from '../actions';
-import initialValue from '../example-html.txt';
 
 export default handleActions({
 	[actions.onChangeHtml]: (state, action) => {
@@ -8,4 +7,13 @@ export default handleActions({
 
 		return payload;
 	},
-}, initialValue);
+}, `<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+</head>
+<body>
+	<h1>Hello, World!</h1>
+</body>
+</html>
+`);
