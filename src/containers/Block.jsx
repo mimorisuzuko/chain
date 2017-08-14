@@ -102,7 +102,10 @@ export default class Block extends Component {
 	deletePin() {
 		const { props: { model, dispatch } } = this;
 
-		dispatch(actions.deletePin(model.get('id')));
+		dispatch(actions.deletePin({
+			id: model.get('id'),
+			removed: model.get('inputPins').size - 1
+		}));
 	}
 
 	static convertPinType(pinType) {

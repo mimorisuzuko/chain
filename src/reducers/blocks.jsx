@@ -37,8 +37,8 @@ export default handleActions({
 		return state.update(index, (block) => block.updateIn(['inputPins'], (pins) => pins.push(block.createPin(block.type === BlockCreator.CREATABLE_TYPES.FUNCTION_BLOCK ? blue2 : white0, Pin.INPUT))).recalculateHeight());
 	},
 	[actions.deletePin]: (state, action) => {
-		const { payload } = action;
-		const index = state.findIndex((a) => a.get('id') === payload);
+		const { payload: { id } } = action;
+		const index = state.findIndex((a) => a.get('id') === id);
 
 		return state.update(index, (block) => block.updateIn(['inputPins'], (pins) => pins.slice(0, Math.max(1, pins.size - 1))).recalculateHeight());
 	},

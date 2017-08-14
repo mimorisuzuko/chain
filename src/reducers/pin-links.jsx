@@ -19,5 +19,14 @@ export default handleActions({
 		const { payload } = action;
 
 		return state.filter((link) => !link.match(payload));
-	}
+	},
+	[actions.deletePin]: (state, action) => {
+		const { payload: { id, removed } } = action;
+
+		if (removed === 0) {
+			return state;
+		}
+
+		return state.filter((link) => !link.match({ input: { block: id, pin: removed } }));
+	},
 }, List());
