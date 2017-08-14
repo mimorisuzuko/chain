@@ -39,7 +39,9 @@ class IndentTextarea extends Component {
 			this.selectionStart = selectionStart;
 		}
 
-		onKeyDown(...args);
+		if (typeof onKeyDown === 'function') {
+			onKeyDown(...args);
+		}
 	}
 }
 
