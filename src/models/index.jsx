@@ -11,7 +11,7 @@ const OPERATOR_BLCOK = 'OPERATOR_BLCOK';
 const CREATABLE_TYPES = { VALUE_BLOCK, FUNCTION_BLOCK, PROPERTY_BLOCK, OPERATOR_BLCOK };
 const CREATABLE_TYPE_KEYS = _.keys(CREATABLE_TYPES);
 
-export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: true, editable: true, type: '', color: white0, changeable: true, outputPins: List(), inputPins: List() }) {
+export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: true, editable: true, type: '', color: white0, changeable: true, outputPins: List(), inputPins: List(), height: 70 }) {
 	constructor(args) {
 		super(args);
 
@@ -22,35 +22,41 @@ export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: tru
 					deletable: false,
 					color: purple0,
 					inputPins: this._createPins([white0], Pin.INPUT)
-				});
+				}).recalculateHeight();
 			case BlockCreator.CREATABLE_TYPES.VALUE_BLOCK:
 				return this.merge({
 					changeable: false,
 					outputPins: this._createPins([purple0], Pin.OUTPUT)
-				});
+				}).recalculateHeight();
 				break;
 			case BlockCreator.CREATABLE_TYPES.FUNCTION_BLOCK:
 				return this.merge({
 					color: blue1,
 					inputPins: this._createPins([blue1], Pin.INPUT),
 					outputPins: this._createPins([purple0], Pin.OUTPUT)
-				});
+				}).recalculateHeight();
 			case BlockCreator.CREATABLE_TYPES.PROPERTY_BLOCK:
 				return this.merge({
 					changeable: false,
 					color: yellow0,
 					inputPins: this._createPins([white0], Pin.INPUT),
 					outputPins: this._createPins([white0], Pin.OUTPUT)
-				});
+				}).recalculateHeight();
 			case BlockCreator.CREATABLE_TYPES.OPERATOR_BLCOK:
 				return this.merge({
 					changeable: false,
 					inputPins: this._createPins([white0, white0], Pin.INPUT),
 					outputPins: this._createPins([white0], Pin.OUTPUT)
-				});
+				}).recalculateHeight();
 			default:
 				break;
 		}
+	}
+
+	recalculateHeight() {
+		const { inputPins: { size: size0 }, outputPins: { size: size1 } } = this;
+
+		return this.set('height', Math.max(4, size0 + 1, size1 + 1) * (Pin.RADIUS * 2 + 3) - 1);
 	}
 
 	/**
@@ -98,7 +104,7 @@ export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: tru
 	static _pinPosition(index, direction) {
 		return [
 			direction === Pin.INPUT ? -Pin.RADIUS - 2 : direction === Pin.OUTPUT ? BLOCK_WIDTH + Pin.RADIUS : 0,
-			Pin.RADIUS + (Pin.RADIUS * 2 + 3) * index
+			Pin.RADIUS + (Pin.RADIUS * 2 + 3) * index + 1
 		];
 	}
 }

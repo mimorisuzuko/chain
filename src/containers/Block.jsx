@@ -22,18 +22,16 @@ export default class Block extends Component {
 			<div styleName='base' onMouseDown={this.onMouseDown} style={{
 				position: 'absolute',
 				left: model.get('x'),
-				top: model.get('y')
+				top: model.get('y'),
+				height: model.get('height')
 			}}>
 				<div>
 					{model.get('deletable') ? <button styleName='red' onClick={this.onClickDeleteButton}>x</button> : null}
 					{model.get('changeable') ? <button onClick={this.addPin}>+</button> : null}
 					{model.get('changeable') ? <button onClick={this.deletePin}>-</button> : null}
 				</div>
-				<div style={{
-					margin: 5,
-					borderLeft: `5px solid ${color}`
-				}}>
-					<textarea readOnly={!model.get('editable')} onChange={this.onChange} value={model.get('value')} spellCheck={false} />
+				<div styleName='textarea-div'>
+					<textarea readOnly={!model.get('editable')} onChange={this.onChange} value={model.get('value')} spellCheck={false} style={{ borderLeft: `5px solid ${color}` }} />
 				</div>
 			</div>
 		);
