@@ -29,13 +29,13 @@ const App = () => (
 				</div>
 				<footer>
 					<NavLink to='/chain' className={styles.link} activeClassName={styles.active}>
-						Chain
+						<span>Chain</span>
 					</NavLink>
 					<NavLink to='/editor' className={styles.link} activeClassName={styles.active}>
-						Editor
+						<span>Editor</span>
 					</NavLink>
 					<NavLink to='/view' className={styles.link} activeClassName={styles.active}>
-						View
+						<span>View</span>
 					</NavLink>
 				</footer>
 				<Balloons />
