@@ -6,7 +6,7 @@
 	background-color: $black0;
 
 	footer {
-		background-color: $black1;
+		border-top: 1px solid $black1;
 		color: $white0;
 	}
 }
@@ -17,13 +17,23 @@
 }
 
 .link {
-	color: inherit;
-	border-bottom: 3px transparent solid;
+	font-weight: 100;
 	padding: 5px 10px;
+	color: $white1;
 	display: inline-block;
 	text-decoration: none;
+
+	> span {
+		padding: 3px 6px;
+		display: inline-block;
+		border-bottom: 1px transparent solid;
+	}
 }
 
 .active {
-	border-bottom-color: $blue0;
+	color: $white0;
+
+	> span {
+		border-bottom-color: $blue0;
+	}
 }

@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import actions from '../actions';
-import { Pin as PinModel, Block as BlockModel } from '../models';
+import { Pin as PinModel } from '../models';
 import autobind from 'autobind-decorator';
+import IndentTextarea from '../components/IndentTextarea';
 import './Block.scss';
 
 @connect()
@@ -23,18 +24,15 @@ export default class Block extends Component {
 				position: 'absolute',
 				left: model.get('x'),
 				top: model.get('y'),
-				width: BlockModel.WIDTH,
+				height: model.get('height')
 			}}>
 				<div>
 					{model.get('deletable') ? <button styleName='red' onClick={this.onClickDeleteButton}>x</button> : null}
 					{model.get('changeable') ? <button onClick={this.addPin}>+</button> : null}
 					{model.get('changeable') ? <button onClick={this.deletePin}>-</button> : null}
 				</div>
-				<div style={{
-					margin: 5,
-					borderLeft: `5px solid ${color}`
-				}}>
-					<textarea readOnly={!model.get('editable')} onChange={this.onChange} value={model.get('value')} spellCheck={false} />
+				<div styleName='textarea-div'>
+					<IndentTextarea readOnly={!model.get('editable')} onChange={this.onChange} value={model.get('value')} spellCheck={false} style={{ borderLeft: `5px solid ${color}` }} onKeyDown={this.onKeyDown} />
 				</div>
 			</div>
 		);
@@ -105,7 +103,25 @@ export default class Block extends Component {
 	deletePin() {
 		const { props: { model, dispatch } } = this;
 
-		dispatch(actions.deletePin(model.get('id')));
+		dispatch(actions.deletePin({
+			id: model.get('id'),
+			removed: model.get('inputPins').size - 1
+		}));
+	}
+
+	/**
+	 * @param {KeyboardEvent} e
+	 */
+	@autobind
+	onKeyDown(e) {
+		const { keyCode, currentTarget: { selectionStart, selectionEnd } } = e;
+		const { props: { dispatch, model } } = this;
+
+		if (keyCode === 9) {
+			e.preventDefault();
+			const v = model.get('value');
+			dispatch(actions.updateBlock(model.get('id'), { value: `${v.substring(0, selectionStart)}\t${v.substring(selectionEnd)}` }));
+		}
 	}
 
 	static convertPinType(pinType) {

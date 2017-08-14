@@ -1,6 +1,8 @@
 @import '../shared/vars.scss';
 @import '../shared/util.scss';
 
+$block-header-height: 16px;
+
 .base {
 	@extend .shadow;
 
@@ -10,6 +12,9 @@
 	background-color: $black0;
 	box-sizing: border-box;
 	font-family: $font;
+	width: $block-width;
+	display: flex;
+	flex-direction: column;
 
 	button {
 		display: inline-block;
@@ -41,6 +46,12 @@
 		display: block;
 		user-select: none;
 	}
+}
+
+.textarea-div {
+	height: calc(100% - #{$block-header-height});
+	padding: 5px;
+	box-sizing: border-box;
 }
 
 .red {

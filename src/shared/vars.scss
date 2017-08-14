@@ -1,13 +1,15 @@
 $black0: rgb(30, 30, 30);
 $black1: lighten($black0, 5%);
 $white0: rgb(212, 212, 212);
+$white1: darken($white0, 50%);
 $red0: rgb(244, 67, 54);
 $purple0: rgb(197, 134, 192);
 $blue0: rgb(0, 122, 204);
 $blue1: rgb(86, 156, 214);
 $blue2: rgb(156, 220, 254);
 $yellow0: rgb(220, 220, 170);
-$footer-height: 31px;
+$footer-height: 36px;
+$block-width: 200px;
 
 @value black0 #{$black0};
 @value black1 #{$black1};
@@ -18,3 +20,4 @@ $footer-height: 31px;
 @value blue1 #{$blue1};
 @value blue2 #{$blue2};
 @value yellow0 #{$yellow0};
+@value blockWidth #{$block-width};

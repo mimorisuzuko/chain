@@ -6,6 +6,7 @@ import actions from '../actions';
 import { BlockCreator as BlockCreatorModel } from '../models';
 import { batchActions } from 'redux-batched-actions';
 import autobind from 'autobind-decorator';
+import IndentTextarea from '../components/IndentTextarea';
 import './BlockCreator.scss';
 
 const { CREATABLE_TYPE_KEYS: OPTION_LIST } = BlockCreatorModel;
@@ -38,7 +39,7 @@ export default class BlockCreator extends Component {
 				<select value={model.get('selected')} onChange={this.onChangeSelect}>
 					{_.map(OPTION_LIST, (a, i) => <option value={a} key={i}>{PASCAL_OPTION_LIST[i]}</option>)}
 				</select>
-				<textarea onChange={this.onChangeTextarea} value={model.get('value')} spellCheck={false} />
+				<IndentTextarea onChange={this.onChangeTextarea} value={model.get('value')} spellCheck={false} onKeyDown={this.onKeyDown} />
 				<button onClick={this.onClick}>
 					ADD
 				</button>
@@ -89,6 +90,21 @@ export default class BlockCreator extends Component {
 
 		if ($e && !findDOMNode(this).contains(target)) {
 			dispatch(actions.updateBlockCreator({ visible: false }));
+		}
+	}
+
+	/**
+	 * @param {KeyboardEvent} e
+	 */
+	@autobind
+	onKeyDown(e) {
+		const { keyCode, currentTarget: { selectionStart, selectionEnd } } = e;
+		const { props: { dispatch, model } } = this;
+
+		if (keyCode === 9) {
+			e.preventDefault();
+			const v = model.get('value');
+			dispatch(actions.updateBlockCreator({ value: `${v.substring(0, selectionStart)}\t${v.substring(selectionEnd)}` }));
 		}
 	}
 }
