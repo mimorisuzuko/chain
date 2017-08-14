@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import actions from '../actions';
-import { Pin as PinModel, Block as BlockModel } from '../models';
+import { Pin as PinModel } from '../models';
 import autobind from 'autobind-decorator';
 import './Block.scss';
 
@@ -22,8 +22,7 @@ export default class Block extends Component {
 			<div styleName='base' onMouseDown={this.onMouseDown} style={{
 				position: 'absolute',
 				left: model.get('x'),
-				top: model.get('y'),
-				width: BlockModel.WIDTH,
+				top: model.get('y')
 			}}>
 				<div>
 					{model.get('deletable') ? <button styleName='red' onClick={this.onClickDeleteButton}>x</button> : null}

@@ -1,8 +1,9 @@
 import { Record, List } from 'immutable';
 import _ from 'lodash';
-import colors from '../shared/vars.scss';
+import vars from '../shared/vars.scss';
 
-const { white0, purple0, blue1, yellow0 } = colors;
+const { white0, purple0, blue1, yellow0, blockWidth: strblockWidth } = vars;
+const BLOCK_WIDTH = _.parseInt(strblockWidth);
 const VALUE_BLOCK = 'VALUE_BLOCK';
 const FUNCTION_BLOCK = 'FUNCTION_BLOCK';
 const PROPERTY_BLOCK = 'PROPERTY_BLOCK';
@@ -96,13 +97,9 @@ export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: tru
 	 */
 	static _pinPosition(index, direction) {
 		return [
-			direction === Pin.INPUT ? -Pin.RADIUS - 2 : direction === Pin.OUTPUT ? Block.WIDTH + Pin.RADIUS : 0,
+			direction === Pin.INPUT ? -Pin.RADIUS - 2 : direction === Pin.OUTPUT ? BLOCK_WIDTH + Pin.RADIUS : 0,
 			Pin.RADIUS + (Pin.RADIUS * 2 + 3) * index
 		];
-	}
-
-	static get WIDTH() {
-		return 200;
 	}
 }
 
