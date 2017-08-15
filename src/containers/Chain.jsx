@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { findDOMNode } from 'react-dom';
 import { connect } from 'react-redux';
 import Block from '../containers/Block';
 import BlockCreator from '../containers/BlockCreator';
@@ -118,19 +117,6 @@ export default class Chain extends Component {
 				[Block.convertPinType(pinType1)]: { block: block1, pin: pin1 }
 			}));
 		}
-	}
-
-	/**
-	 * @param {MouseEvent} e
-	 */
-	@autobind
-	onContextmenu(e) {
-		const { clientX, clientY } = e;
-		const { props: { dispatch } } = this;
-		const { left, top } = findDOMNode(this).getBoundingClientRect();
-
-		e.preventDefault();
-		dispatch(actions.toggleBlockCreator(clientX - left, clientY - top));
 	}
 
 	/**
