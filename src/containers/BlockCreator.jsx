@@ -12,19 +12,15 @@ import './BlockCreator.scss';
 const { CREATABLE_TYPE_KEYS: OPTION_LIST } = BlockCreatorModel;
 const PASCAL_OPTION_LIST = _.map(OPTION_LIST, (a) => _.upperFirst((_.camelCase(a))));
 
-@connect(
-	(state) => ({
-		model: state.blockCreator
-	})
-
-)
+@connect()
 export default class BlockCreator extends Component {
-	componentDidMount() {
-		document.addEventListener('mousedown', this.onMouseDownDocument);
-	}
+	componentWillUpdate(nextProps) {
+		const { model: nextModel } = nextProps;
+		const { props: { model } } = this;
 
-	componentWillUnmount() {
-		document.removeEventListener('mousedown', this.onMouseDownDocument);
+		if (!model.get('visible') && nextModel.get('visible')) {
+			document.addEventListener('mousedown', this.onMouseDownDocument);
+		}
 	}
 
 	render() {
@@ -90,6 +86,7 @@ export default class BlockCreator extends Component {
 
 		if ($e && !findDOMNode(this).contains(target)) {
 			dispatch(actions.updateBlockCreator({ visible: false }));
+			document.removeEventListener('mousedown', this.onMouseDownDocument);
 		}
 	}
 

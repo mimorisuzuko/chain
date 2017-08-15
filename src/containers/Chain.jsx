@@ -17,26 +17,22 @@ import './Chain.scss';
 	(state) => ({
 		blocks: state.blocks,
 		link: state.pointLink,
-		links: state.pinLinks
+		links: state.pinLinks,
+		blockCreator: state.blockCreator
 	})
 )
 export default class Chain extends Component {
 	componentDidMount() {
 		window.addEventListener('message', this.onMessage);
-		window.addEventListener('contextmenu', this.onContextmenu);
-	}
-
-	componentWillUnmount() {
-		window.removeEventListener('contextmenu', this.onContextmenu);
 	}
 
 	render() {
-		const { props: { link, links } } = this;
+		const { props: { link, links, blockCreator } } = this;
 		let { props: { blocks } } = this;
 
 		return (
 			<div styleName='base'>
-				<svg>
+				<svg onMouseDown={this.onMouseDown}>
 					{links.map((a, i) => {
 						_.forEach(['input', 'output'], (key) => {
 							const { block, pin } = a.get(key);
@@ -55,7 +51,7 @@ export default class Chain extends Component {
 						model.get('outputPins').map((pin) => <Pin key={pin.get('index')} model={pin} parent={id} onMouseDown={this.onConnectStart} onMouseUp={this.onConnectPin} />)
 					];
 				})}
-				<BlockCreator />
+				<BlockCreator model={blockCreator} />
 			</div>
 		);
 	}
@@ -123,7 +119,6 @@ export default class Chain extends Component {
 		}
 	}
 
-
 	/**
 	 * @param {MouseEvent} e
 	 */
@@ -138,7 +133,6 @@ export default class Chain extends Component {
 	}
 
 	/**
-	 * 
 	 * @param {MessageEvent} e 
 	 */
 	@autobind
@@ -152,6 +146,19 @@ export default class Chain extends Component {
 			dispatch(actions.addBalloon({ value }));
 		} else if (type === 'chain-clear') {
 			dispatch(actions.clearViewBlock());
+		}
+	}
+
+	/**
+	 * @param {MouseEvent} e
+	 */
+	@autobind
+	onMouseDown(e) {
+		const { clientX, clientY, target, currentTarget } = e;
+		const { props: { dispatch } } = this;
+
+		if (target === currentTarget) {
+			dispatch(actions.updateBlockCreator({ visible: true, x: clientX, y: clientY }));
 		}
 	}
 }
