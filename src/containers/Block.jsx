@@ -4,6 +4,7 @@ import actions from '../actions';
 import { Pin as PinModel } from '../models';
 import autobind from 'autobind-decorator';
 import IndentTextarea from '../components/IndentTextarea';
+import { onMouseDownOrTouchStart, getPosition, nameMouseMoveOrTouchMove, nameMouseUpOrTouchEnd } from '../util';
 import './Block.scss';
 
 @connect()
@@ -11,8 +12,8 @@ export default class Block extends Component {
 	constructor() {
 		super();
 
-		this.mouseDownX = 0;
-		this.mouseDownY = 0;
+		this.prevX = 0;
+		this.prevY = 0;
 	}
 
 	render() {
@@ -20,7 +21,7 @@ export default class Block extends Component {
 		const color = model.get('color');
 
 		return (
-			<div styleName='base' onMouseDown={this.onMouseDown} style={{
+			<div styleName='base' {...{ [onMouseDownOrTouchStart]: this.onMouseDownOrTouchStart }} style={{
 				position: 'absolute',
 				left: model.get('x'),
 				top: model.get('y'),
@@ -60,15 +61,18 @@ export default class Block extends Component {
 	 * @param {MouseEvent} e
 	 */
 	@autobind
-	onMouseDown(e) {
-		const { target: { nodeName }, pageX, pageY } = e;
+	onMouseDownOrTouchStart(e) {
+		const { target: { nodeName } } = e;
 
 		if (nodeName === 'DIV') {
-			this.mouseDownX = pageX;
-			this.mouseDownY = pageY;
+			const { pageX, pageY } = getPosition(e);
+
+			e.preventDefault();
+			this.prevX = pageX;
+			this.prevY = pageY;
 			document.body.classList.add('cursor-move');
-			document.addEventListener('mousemove', this.onMouseMoveDocument);
-			document.addEventListener('mouseup', this.onMouseUpDocument);
+			document.addEventListener(nameMouseMoveOrTouchMove, this.onMouseMoveOrTouchMoveDocument);
+			document.addEventListener(nameMouseUpOrTouchEnd, this.onMouseUpOrTouchEndDocument);
 		}
 	}
 
@@ -76,20 +80,20 @@ export default class Block extends Component {
 	 * @param {MouseEvent} e
 	 */
 	@autobind
-	onMouseMoveDocument(e) {
-		const { pageX, pageY } = e;
-		const { props: { model, dispatch }, mouseDownX, mouseDownY } = this;
+	onMouseMoveOrTouchMoveDocument(e) {
+		const { pageX, pageY } = getPosition(e);
+		const { props: { model, dispatch }, prevX, prevY } = this;
 
-		dispatch(actions.deltaMoveBlock(model.get('id'), pageX - mouseDownX, pageY - mouseDownY));
-		this.mouseDownX = pageX;
-		this.mouseDownY = pageY;
+		dispatch(actions.deltaMoveBlock(model.get('id'), pageX - prevX, pageY - prevY));
+		this.prevX = pageX;
+		this.prevY = pageY;
 	}
 
 	@autobind
-	onMouseUpDocument() {
+	onMouseUpOrTouchEndDocument() {
 		document.body.classList.remove('cursor-move');
-		document.removeEventListener('mousemove', this.onMouseMoveDocument);
-		document.removeEventListener('mouseup', this.onMouseUpDocument);
+		document.removeEventListener(nameMouseMoveOrTouchMove, this.onMouseMoveOrTouchMoveDocument);
+		document.removeEventListener(nameMouseUpOrTouchEnd, this.onMouseUpOrTouchEndDocument);
 	}
 
 	@autobind

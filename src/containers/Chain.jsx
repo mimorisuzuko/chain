@@ -11,7 +11,7 @@ import autobind from 'autobind-decorator';
 import Pin from '../components/Pin';
 import { Pin as PinModel } from '../models';
 import { batchActions } from 'redux-batched-actions';
-import { onMouseDownOrTouchStart, getClientPosition } from '../util';
+import { onMouseDownOrTouchStart, getPosition } from '../util';
 import './Chain.scss';
 
 @connect(
@@ -156,7 +156,7 @@ export default class Chain extends Component {
 	@autobind
 	onMouseDownOrTouchStart(e) {
 		const { target, currentTarget } = e;
-		const { clientX, clientY } = getClientPosition(e);
+		const { clientX, clientY } = getPosition(e);
 		const { props: { dispatch } } = this;
 
 		console.log('a');

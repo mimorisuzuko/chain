@@ -37,18 +37,17 @@ const isTouchDevice = (() => {
 })();
 
 export const nameMouseDownOrTouchStart = isTouchDevice ? 'touchstart' : 'mousedown';
+export const nameMouseMoveOrTouchMove = isTouchDevice ? 'touchmove' : 'mousemove';
+export const nameMouseUpOrTouchEnd = isTouchDevice ? 'touchend' : 'mouseup';
 export const onMouseDownOrTouchStart = isTouchDevice ? 'onTouchStart' : 'onMouseDown';
+
 /**
  * @param {MouseEvent|TouchEvent} e
- * @returns {{ clientX: number, clientY: number }}
  */
-export const getClientPosition = (e) => {
-	const { clientX, clientY, changedTouches } = e;
-
+export const getPosition = (e) => {
 	if (isTouchDevice) {
-		const { clientX, clientY } = changedTouches.item(0);
-		return { clientX, clientY };
+		return e.changedTouches.item(0);
 	}
 
-	return { clientX, clientY };
+	return e;
 };
