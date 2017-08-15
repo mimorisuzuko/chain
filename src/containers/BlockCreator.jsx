@@ -48,9 +48,11 @@ export default class BlockCreator extends Component {
 	onClick() {
 		const { props: { model, dispatch } } = this;
 
+		document.removeEventListener('mousedown', this.onMouseDownOrTouchStartDocument);
+		document.removeEventListener('touchstart', this.onMouseDownOrTouchStartDocument);
 		dispatch(batchActions([
 			actions.addBlock({ x: model.get('x'), y: model.get('y'), value: _.trim(model.get('value')), type: model.get('selected') }),
-			actions.toggleBlockCreator()
+			actions.updateBlockCreator({ visible: false })
 		]));
 	}
 

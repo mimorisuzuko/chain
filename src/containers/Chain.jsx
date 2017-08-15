@@ -150,7 +150,7 @@ export default class Chain extends Component {
 		const { props: { dispatch } } = this;
 
 		if (target === currentTarget) {
-			dispatch(actions.updateBlockCreator({ visible: true, x: clientX, y: clientY }));
+			dispatch(actions.showBlockCreator({ x: clientX, y: clientY }));
 		}
 	}
 }

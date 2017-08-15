@@ -140,13 +140,17 @@ export class Pin extends Record({ index: 0, color: white0, type: '', linked: fal
 export class BlockCreator extends Record({ x: 0, y: 0, visible: false, value: '', selected: CREATABLE_TYPE_KEYS[0] }) {
 
 	/**
-	 * @param {number} x 
-	 * @param {number} y 
+	 * @param {number} x
+	 * @param {number} y
 	 */
-	toggle(x, y) {
-		const { visible } = this;
-
-		return !visible ? this.merge({ x, y, visible: true, value: '', selected: CREATABLE_TYPE_KEYS[0] }) : this.set('visible', false);
+	show(x, y) {
+		return this.merge({
+			visible: true,
+			x,
+			y,
+			value: '',
+			selected: CREATABLE_TYPE_KEYS[0]
+		});
 	}
 
 	static get CREATABLE_TYPES() {
