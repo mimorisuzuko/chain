@@ -11,7 +11,10 @@ import autobind from 'autobind-decorator';
 import Pin from '../components/Pin';
 import { Pin as PinModel } from '../models';
 import { batchActions } from 'redux-batched-actions';
+import { onMouseDownOrTouchStart, getClientPosition } from '../is-touch-device';
 import './Chain.scss';
+
+console.log(onMouseDownOrTouchStart);
 
 @connect(
 	(state) => ({
@@ -32,7 +35,7 @@ export default class Chain extends Component {
 
 		return (
 			<div styleName='base'>
-				<svg onMouseDown={this.onMouseDown}>
+				<svg {...{ [onMouseDownOrTouchStart]: this.onMouseDownOrTouchStart }}>
 					{links.map((a, i) => {
 						_.forEach(['input', 'output'], (key) => {
 							const { block, pin } = a.get(key);
@@ -150,12 +153,15 @@ export default class Chain extends Component {
 	}
 
 	/**
-	 * @param {MouseEvent} e
+	 * @param {MouseEvent|TouchEvent} e
 	 */
 	@autobind
-	onMouseDown(e) {
-		const { clientX, clientY, target, currentTarget } = e;
+	onMouseDownOrTouchStart(e) {
+		const { target, currentTarget } = e;
+		const { clientX, clientY } = getClientPosition(e);
 		const { props: { dispatch } } = this;
+
+		console.log('a');
 
 		if (target === currentTarget) {
 			dispatch(actions.updateBlockCreator({ visible: true, x: clientX, y: clientY }));
