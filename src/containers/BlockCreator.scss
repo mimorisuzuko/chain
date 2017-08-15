@@ -22,6 +22,8 @@
 		margin-bottom: 5px;
 		font: inherit;
 		outline: none;
+		-webkit-appearance: none;
+		padding: 2px 4px;
 
 		&:focus {
 			border-color: $blue0;
@@ -40,6 +42,7 @@
 		display: block;
 		margin-bottom: 5px;
 		border: 1px solid transparent;
+		border-radius: 0;
 
 		&:focus {
 			border-color: $blue0;

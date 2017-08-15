@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { findDOMNode } from 'react-dom';
 import { connect } from 'react-redux';
 import Block from '../containers/Block';
 import BlockCreator from '../containers/BlockCreator';
@@ -11,32 +10,29 @@ import autobind from 'autobind-decorator';
 import Pin from '../components/Pin';
 import { Pin as PinModel } from '../models';
 import { batchActions } from 'redux-batched-actions';
+import { onMouseDownOrTouchStart, addMouseMoveOrTouchMoveListener, addMouseUpOrTouchEndListener, removeMouseMoveOrTouchMoveListener, removeMouseUpOrTouchEndListener, getPosition } from '../util';
 import './Chain.scss';
 
 @connect(
 	(state) => ({
 		blocks: state.blocks,
 		link: state.pointLink,
-		links: state.pinLinks
+		links: state.pinLinks,
+		blockCreator: state.blockCreator
 	})
 )
 export default class Chain extends Component {
 	componentDidMount() {
 		window.addEventListener('message', this.onMessage);
-		window.addEventListener('contextmenu', this.onContextmenu);
-	}
-
-	componentWillUnmount() {
-		window.removeEventListener('contextmenu', this.onContextmenu);
 	}
 
 	render() {
-		const { props: { link, links } } = this;
+		const { props: { link, links, blockCreator } } = this;
 		let { props: { blocks } } = this;
 
 		return (
 			<div styleName='base'>
-				<svg>
+				<svg {...{ [onMouseDownOrTouchStart]: this.onMouseDownOrTouchStart }}>
 					{links.map((a, i) => {
 						_.forEach(['input', 'output'], (key) => {
 							const { block, pin } = a.get(key);
@@ -51,11 +47,11 @@ export default class Chain extends Component {
 					const id = model.get('id');
 					return [
 						<Block key={id} model={model} />,
-						model.get('inputPins').map((pin) => <Pin key={pin.get('index')} model={pin} parent={id} onMouseDown={this.onConnectStart} onMouseUp={this.onConnectPin} />),
-						model.get('outputPins').map((pin) => <Pin key={pin.get('index')} model={pin} parent={id} onMouseDown={this.onConnectStart} onMouseUp={this.onConnectPin} />)
+						model.get('inputPins').map((pin) => <Pin key={pin.get('index')} model={pin} parent={id} {...{ [onMouseDownOrTouchStart]: this.onConnectStart }} onMouseUp={this.onConnectPin} />),
+						model.get('outputPins').map((pin) => <Pin key={pin.get('index')} model={pin} parent={id} {...{ [onMouseDownOrTouchStart]: this.onConnectStart }} onMouseUp={this.onConnectPin} />)
 					];
 				})}
-				<BlockCreator />
+				<BlockCreator model={blockCreator} />
 			</div>
 		);
 	}
@@ -72,8 +68,8 @@ export default class Chain extends Component {
 		const pin = pinModel.get('index');
 		const batch = [actions.startPointLink({ x: pinModel.get('cx'), y: pinModel.get('cy') })];
 
-		document.addEventListener('mousemove', this.onConnecting);
-		document.addEventListener('mouseup', this.onConnectEnd);
+		addMouseMoveOrTouchMoveListener(document, this.onConnecting);
+		addMouseUpOrTouchEndListener(document, this.onConnectEnd);
 		window.__connection__ = { block, pin, pinType };
 
 		if (pinType === PinModel.INPUT) {
@@ -89,8 +85,9 @@ export default class Chain extends Component {
 	@autobind
 	onConnecting(e) {
 		const { props: { dispatch } } = this;
-		const { clientX, clientY } = e;
+		const { clientX, clientY } = getPosition(e);
 
+		e.preventDefault();
 		dispatch(actions.endPointLink({ x: clientX, y: clientY }));
 	}
 
@@ -99,8 +96,8 @@ export default class Chain extends Component {
 		const { props: { dispatch } } = this;
 
 		dispatch(actions.startPointLink({ x: 0, y: 0 }));
-		document.removeEventListener('mousemove', this.onConnecting);
-		document.removeEventListener('mouseup', this.onConnectEnd);
+		removeMouseMoveOrTouchMoveListener(document, this.onConnecting);
+		removeMouseUpOrTouchEndListener(document, this.onConnectEnd);
 	}
 
 	/**
@@ -123,22 +120,7 @@ export default class Chain extends Component {
 		}
 	}
 
-
 	/**
-	 * @param {MouseEvent} e
-	 */
-	@autobind
-	onContextmenu(e) {
-		const { clientX, clientY } = e;
-		const { props: { dispatch } } = this;
-		const { left, top } = findDOMNode(this).getBoundingClientRect();
-
-		e.preventDefault();
-		dispatch(actions.toggleBlockCreator(clientX - left, clientY - top));
-	}
-
-	/**
-	 * 
 	 * @param {MessageEvent} e 
 	 */
 	@autobind
@@ -152,6 +134,20 @@ export default class Chain extends Component {
 			dispatch(actions.addBalloon({ value }));
 		} else if (type === 'chain-clear') {
 			dispatch(actions.clearViewBlock());
+		}
+	}
+
+	/**
+	 * @param {MouseEvent|TouchEvent} e
+	 */
+	@autobind
+	onMouseDownOrTouchStart(e) {
+		const { target, currentTarget } = e;
+		const { clientX, clientY } = getPosition(e);
+		const { props: { dispatch } } = this;
+
+		if (target === currentTarget) {
+			dispatch(actions.updateBlockCreator({ visible: true, x: clientX, y: clientY }));
 		}
 	}
 }

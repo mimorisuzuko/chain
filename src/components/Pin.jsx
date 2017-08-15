@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { Pin as PinModel } from '../models';
 import autobind from 'autobind-decorator';
+import { onMouseDownOrTouchStart, addMouseUpOrTouchEndListener } from '../util';
+import _ from 'lodash';
 
 const d = PinModel.RADIUS + 1;
 
@@ -18,10 +20,12 @@ export default class Pin extends Component {
 
 		return (
 			<svg
-				onMouseDown={this.onMouseDown}
+				data-pin
+				{...{ [onMouseDownOrTouchStart]: this.onMouseDownOrTouchStart }}
 				onMouseUp={this.onMouseup}
 				onMouseEnter={this.onMouseEnter}
 				onMouseLeave={this.onMouseLeave}
+				onTouchEnd={this.onTouchEnd}
 				style={{
 					position: 'absolute',
 					left: model.get('cx') - d,
@@ -40,11 +44,12 @@ export default class Pin extends Component {
 	 * @param {MouseEvent} e
 	 */
 	@autobind
-	onMouseDown(e) {
-		const { props: { model, onMouseDown, parent } } = this;
+	onMouseDownOrTouchStart(e) {
+		const { props } = this;
+		const { model, parent } = props;
 
-		onMouseDown(e, model, parent);
-		document.addEventListener('mouseup', this.onMouseUpDocument);
+		props[onMouseDownOrTouchStart](e, model, parent);
+		addMouseUpOrTouchEndListener(document, this.onMouseUpOrTouchEndDocument);
 		this.setState({ connecting: true });
 	}
 
@@ -68,9 +73,33 @@ export default class Pin extends Component {
 		this.setState({ enter: false });
 	}
 
+	/**
+	 * @param {TouchEvent} e
+	 */
 	@autobind
-	onMouseUpDocument() {
-		document.removeEventListener('mouseup', this.onMouseUpDocument);
+	onTouchEnd(e) {
+		const { pageX, pageY } = e.changedTouches.item(0);
+		_.some(document.querySelectorAll('[data-pin]'), ($e) => {
+			const { left, top, width, height } = $e.getBoundingClientRect();
+			if (left <= pageX && pageX <= left + width && top <= pageY && pageY <= top + height) {
+				_.some(_.keys($e), (key) => {
+					if (_.startsWith(key, '__reactInternalInstance$')) {
+						const { _currentElement: { _owner: { _currentElement: { props: { model, onMouseUp, parent } } } } } = $e[key];
+						onMouseUp(e, model, parent);
+						return true;
+					}
+					return false;
+				});
+				return true;
+			}
+
+			return false;
+		});
+	}
+
+	@autobind
+	onMouseUpOrTouchEndDocument() {
+		addMouseUpOrTouchEndListener(document, this.onMouseUpOrTouchEndDocument);
 		this.setState({ connecting: false });
 	}
 }
