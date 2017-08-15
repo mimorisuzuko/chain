@@ -36,9 +36,54 @@ const isTouchDevice = (() => {
 	}
 })();
 
-export const nameMouseDownOrTouchStart = isTouchDevice ? 'touchstart' : 'mousedown';
-export const nameMouseMoveOrTouchMove = isTouchDevice ? 'touchmove' : 'mousemove';
-export const nameMouseUpOrTouchEnd = isTouchDevice ? 'touchend' : 'mouseup';
+/**
+ * @param {HTMLElement} $e
+ * @param {Function} listener 
+ */
+export const addMouseDownOrTouchStartListener = ($e, listener) => {
+	$e.addEventListener(isTouchDevice ? 'touchstart' : 'mousedown', listener);
+};
+
+/**
+ * @param {HTMLElement} $e
+ * @param {Function} listener 
+ */
+export const addMouseMoveOrTouchMoveListener = ($e, listener) => {
+	$e.addEventListener(isTouchDevice ? 'touchmove' : 'mousemove', listener);
+};
+
+/**
+ * @param {HTMLElement} $e
+ * @param {Function} listener 
+ */
+export const addMouseUpOrTouchEndListener = ($e, listener) => {
+	$e.addEventListener(isTouchDevice ? 'touchend' : 'mouseup', listener);
+};
+
+/**
+ * @param {HTMLElement} $e
+ * @param {Function} listener 
+ */
+export const removeMouseDownOrTouchStartListener = ($e, listener) => {
+	$e.removeEventListener(isTouchDevice ? 'touchstart' : 'mousedown', listener);
+};
+
+/**
+ * @param {HTMLElement} $e
+ * @param {Function} listener 
+ */
+export const removeMouseMoveOrTouchMoveListener = ($e, listener) => {
+	$e.removeEventListener(isTouchDevice ? 'touchmove' : 'mousemove', listener);
+};
+
+/**
+ * @param {HTMLElement} $e
+ * @param {Function} listener 
+ */
+export const removeMouseUpOrTouchEndListener = ($e, listener) => {
+	$e.removeEventListener(isTouchDevice ? 'touchend' : 'mouseup', listener);
+};
+
 export const onMouseDownOrTouchStart = isTouchDevice ? 'onTouchStart' : 'onMouseDown';
 
 /**

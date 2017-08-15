@@ -4,7 +4,7 @@ import actions from '../actions';
 import { Pin as PinModel } from '../models';
 import autobind from 'autobind-decorator';
 import IndentTextarea from '../components/IndentTextarea';
-import { onMouseDownOrTouchStart, getPosition, nameMouseMoveOrTouchMove, nameMouseUpOrTouchEnd } from '../util';
+import { onMouseDownOrTouchStart, getPosition, addMouseMoveOrTouchMoveListener, addMouseUpOrTouchEndListener, removeMouseMoveOrTouchMoveListener, removeMouseUpOrTouchEndListener } from '../util';
 import './Block.scss';
 
 @connect()
@@ -67,12 +67,11 @@ export default class Block extends Component {
 		if (nodeName === 'DIV') {
 			const { pageX, pageY } = getPosition(e);
 
-			e.preventDefault();
 			this.prevX = pageX;
 			this.prevY = pageY;
 			document.body.classList.add('cursor-move');
-			document.addEventListener(nameMouseMoveOrTouchMove, this.onMouseMoveOrTouchMoveDocument);
-			document.addEventListener(nameMouseUpOrTouchEnd, this.onMouseUpOrTouchEndDocument);
+			addMouseMoveOrTouchMoveListener(document, this.onMouseMoveOrTouchMoveDocument);
+			addMouseUpOrTouchEndListener(document, this.onMouseUpOrTouchEndDocument);
 		}
 	}
 
@@ -84,6 +83,7 @@ export default class Block extends Component {
 		const { pageX, pageY } = getPosition(e);
 		const { props: { model, dispatch }, prevX, prevY } = this;
 
+		e.preventDefault();
 		dispatch(actions.deltaMoveBlock(model.get('id'), pageX - prevX, pageY - prevY));
 		this.prevX = pageX;
 		this.prevY = pageY;
@@ -92,8 +92,8 @@ export default class Block extends Component {
 	@autobind
 	onMouseUpOrTouchEndDocument() {
 		document.body.classList.remove('cursor-move');
-		document.removeEventListener(nameMouseMoveOrTouchMove, this.onMouseMoveOrTouchMoveDocument);
-		document.removeEventListener(nameMouseUpOrTouchEnd, this.onMouseUpOrTouchEndDocument);
+		removeMouseMoveOrTouchMoveListener(document, this.onMouseMoveOrTouchMoveDocument);
+		removeMouseUpOrTouchEndListener(document, this.onMouseUpOrTouchEndDocument);
 	}
 
 	@autobind
