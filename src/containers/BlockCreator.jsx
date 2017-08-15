@@ -7,7 +7,7 @@ import { BlockCreator as BlockCreatorModel } from '../models';
 import { batchActions } from 'redux-batched-actions';
 import autobind from 'autobind-decorator';
 import IndentTextarea from '../components/IndentTextarea';
-import { nameMouseDownOrTouchStart } from '../is-touch-device';
+import { nameMouseDownOrTouchStart } from '../util';
 import './BlockCreator.scss';
 
 const { CREATABLE_TYPE_KEYS: OPTION_LIST } = BlockCreatorModel;

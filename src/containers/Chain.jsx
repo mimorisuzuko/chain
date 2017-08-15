@@ -11,10 +11,8 @@ import autobind from 'autobind-decorator';
 import Pin from '../components/Pin';
 import { Pin as PinModel } from '../models';
 import { batchActions } from 'redux-batched-actions';
-import { onMouseDownOrTouchStart, getClientPosition } from '../is-touch-device';
+import { onMouseDownOrTouchStart, getClientPosition } from '../util';
 import './Chain.scss';
-
-console.log(onMouseDownOrTouchStart);
 
 @connect(
 	(state) => ({
