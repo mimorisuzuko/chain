@@ -27,6 +27,7 @@ $block-header-height: 16px;
 		cursor: pointer;
 		background-color: $black1;
 		user-select: none;
+		margin: 0;
 
 		&:not(:first-of-type) {
 			margin-left: 1px;
@@ -45,6 +46,7 @@ $block-header-height: 16px;
 		outline: none;
 		display: block;
 		user-select: none;
+		border-radius: 0;
 	}
 }
 
