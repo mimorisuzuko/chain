@@ -4,7 +4,7 @@ import actions from '../actions';
 import { Pin as PinModel } from '../models';
 import autobind from 'autobind-decorator';
 import IndentTextarea from '../components/IndentTextarea';
-import { onMouseDownOrTouchStart, getPosition, addMouseMoveOrTouchMoveListener, addMouseUpOrTouchEndListener, removeMouseMoveOrTouchMoveListener, removeMouseUpOrTouchEndListener } from '../util';
+import { getPosition } from '../util';
 import './Block.scss';
 
 @connect()
@@ -21,7 +21,7 @@ export default class Block extends Component {
 		const color = model.get('color');
 
 		return (
-			<div styleName='base' {...{ [onMouseDownOrTouchStart]: this.onMouseDownOrTouchStart }} style={{
+			<div styleName='base' onMouseDown={this.onMouseDownOrTouchStart} onTouchStart={this.onMouseDownOrTouchStart} style={{
 				position: 'absolute',
 				left: model.get('x'),
 				top: model.get('y'),
@@ -70,8 +70,10 @@ export default class Block extends Component {
 			this.prevX = pageX;
 			this.prevY = pageY;
 			document.body.classList.add('cursor-move');
-			addMouseMoveOrTouchMoveListener(document, this.onMouseMoveOrTouchMoveDocument);
-			addMouseUpOrTouchEndListener(document, this.onMouseUpOrTouchEndDocument);
+			document.addEventListener('mousemove', this.onMouseMoveOrTouchMoveDocument);
+			document.addEventListener('mouseup', this.onMouseUpOrTouchEndDocument);
+			document.addEventListener('touchmove', this.onMouseMoveOrTouchMoveDocument);
+			document.addEventListener('touchend', this.onMouseUpOrTouchEndDocument);
 		}
 	}
 
@@ -92,8 +94,10 @@ export default class Block extends Component {
 	@autobind
 	onMouseUpOrTouchEndDocument() {
 		document.body.classList.remove('cursor-move');
-		removeMouseMoveOrTouchMoveListener(document, this.onMouseMoveOrTouchMoveDocument);
-		removeMouseUpOrTouchEndListener(document, this.onMouseUpOrTouchEndDocument);
+		document.removeEventListener('mousemove', this.onMouseMoveOrTouchMoveDocument);
+		document.removeEventListener('mouseup', this.onMouseUpOrTouchEndDocument);
+		document.removeEventListener('touchmove', this.onMouseMoveOrTouchMoveDocument);
+		document.removeEventListener('touchend', this.onMouseUpOrTouchEndDocument);
 	}
 
 	@autobind

@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { Pin as PinModel } from '../models';
 import autobind from 'autobind-decorator';
-import { onMouseDownOrTouchStart, addMouseUpOrTouchEndListener } from '../util';
 import _ from 'lodash';
 
 const d = PinModel.RADIUS + 1;
@@ -21,7 +20,8 @@ export default class Pin extends Component {
 		return (
 			<svg
 				data-pin
-				{...{ [onMouseDownOrTouchStart]: this.onMouseDownOrTouchStart }}
+				onMouseDown={this.onMouseDownOrTouchStart}
+				onTouchStart={this.onMouseDownOrTouchStart}
 				onMouseUp={this.onMouseup}
 				onMouseEnter={this.onMouseEnter}
 				onMouseLeave={this.onMouseLeave}
@@ -41,15 +41,15 @@ export default class Pin extends Component {
 	}
 
 	/**
-	 * @param {MouseEvent} e
+	 * @param {MouseEvent|TouchEvent} e
 	 */
 	@autobind
 	onMouseDownOrTouchStart(e) {
-		const { props } = this;
-		const { model, parent } = props;
+		const { props: { model, parent, onMouseDownOrTouchStart } } = this;
 
-		props[onMouseDownOrTouchStart](e, model, parent);
-		addMouseUpOrTouchEndListener(document, this.onMouseUpOrTouchEndDocument);
+		onMouseDownOrTouchStart(e, model, parent);
+		document.addEventListener('mouseup', this.onMouseUpOrTouchEndDocument);
+		document.addEventListener('touchend', this.onMouseUpOrTouchEndDocument);
 		this.setState({ connecting: true });
 	}
 
@@ -58,9 +58,9 @@ export default class Pin extends Component {
 	 */
 	@autobind
 	onMouseup(e) {
-		const { props: { model, onMouseUp, parent } } = this;
+		const { props: { model, onMouseUpOrTouchEnd, parent } } = this;
 
-		onMouseUp(e, model, parent);
+		onMouseUpOrTouchEnd(e, model, parent);
 	}
 
 	@autobind
@@ -84,8 +84,8 @@ export default class Pin extends Component {
 			if (left <= pageX && pageX <= left + width && top <= pageY && pageY <= top + height) {
 				_.some(_.keys($e), (key) => {
 					if (_.startsWith(key, '__reactInternalInstance$')) {
-						const { _currentElement: { _owner: { _currentElement: { props: { model, onMouseUp, parent } } } } } = $e[key];
-						onMouseUp(e, model, parent);
+						const { _currentElement: { _owner: { _currentElement: { props: { model, onMouseUpOrTouchEnd, parent } } } } } = $e[key];
+						onMouseUpOrTouchEnd(e, model, parent);
 						return true;
 					}
 					return false;
@@ -99,7 +99,8 @@ export default class Pin extends Component {
 
 	@autobind
 	onMouseUpOrTouchEndDocument() {
-		addMouseUpOrTouchEndListener(document, this.onMouseUpOrTouchEndDocument);
+		document.removeEventListener('mouseup', this.onMouseUpOrTouchEndDocument);
+		document.removeEventListener('touchend', this.onMouseUpOrTouchEndDocument);
 		this.setState({ connecting: false });
 	}
 }

@@ -7,7 +7,6 @@ import { BlockCreator as BlockCreatorModel } from '../models';
 import { batchActions } from 'redux-batched-actions';
 import autobind from 'autobind-decorator';
 import IndentTextarea from '../components/IndentTextarea';
-import { addMouseDownOrTouchStartListener, removeMouseDownOrTouchStartListener } from '../util';
 import './BlockCreator.scss';
 
 const { CREATABLE_TYPE_KEYS: OPTION_LIST } = BlockCreatorModel;
@@ -20,7 +19,8 @@ export default class BlockCreator extends Component {
 		const { props: { model } } = this;
 
 		if (!model.get('visible') && nextModel.get('visible')) {
-			addMouseDownOrTouchStartListener(document, this.onMouseDownOrTouchStartDocument);
+			document.addEventListener('mousedown', this.onMouseDownOrTouchStartDocument);
+			document.addEventListener('touchstart', this.onMouseDownOrTouchStartDocument);
 		}
 	}
 
@@ -87,7 +87,8 @@ export default class BlockCreator extends Component {
 
 		if ($e && !$e.contains(target)) {
 			dispatch(actions.updateBlockCreator({ visible: false }));
-			removeMouseDownOrTouchStartListener(document, this.onMouseDownOrTouchStartDocument);
+			document.removeEventListener('mousedown', this.onMouseDownOrTouchStartDocument);
+			document.removeEventListener('touchstart', this.onMouseDownOrTouchStartDocument);
 		}
 	}
 

@@ -10,7 +10,7 @@ import autobind from 'autobind-decorator';
 import Pin from '../components/Pin';
 import { Pin as PinModel } from '../models';
 import { batchActions } from 'redux-batched-actions';
-import { onMouseDownOrTouchStart, addMouseMoveOrTouchMoveListener, addMouseUpOrTouchEndListener, removeMouseMoveOrTouchMoveListener, removeMouseUpOrTouchEndListener, getPosition } from '../util';
+import { getPosition } from '../util';
 import './Chain.scss';
 
 @connect(
@@ -32,7 +32,7 @@ export default class Chain extends Component {
 
 		return (
 			<div styleName='base'>
-				<svg {...{ [onMouseDownOrTouchStart]: this.onMouseDownOrTouchStart }}>
+				<svg onMouseDown={this.onMouseDownOrTouchStart} onTouchStart={this.onMouseDownOrTouchStart}>
 					{links.map((a, i) => {
 						_.forEach(['input', 'output'], (key) => {
 							const { block, pin } = a.get(key);
@@ -47,8 +47,8 @@ export default class Chain extends Component {
 					const id = model.get('id');
 					return [
 						<Block key={id} model={model} />,
-						model.get('inputPins').map((pin) => <Pin key={pin.get('index')} model={pin} parent={id} {...{ [onMouseDownOrTouchStart]: this.onConnectStart }} onMouseUp={this.onConnectPin} />),
-						model.get('outputPins').map((pin) => <Pin key={pin.get('index')} model={pin} parent={id} {...{ [onMouseDownOrTouchStart]: this.onConnectStart }} onMouseUp={this.onConnectPin} />)
+						model.get('inputPins').map((pin) => <Pin key={pin.get('index')} model={pin} parent={id} onMouseDownOrTouchStart={this.onConnectStart} onMouseUpOrTouchEnd={this.onConnectPin} />),
+						model.get('outputPins').map((pin) => <Pin key={pin.get('index')} model={pin} parent={id} onMouseDownOrTouchStart={this.onConnectStart} onMouseUpOrTouchEnd={this.onConnectPin} />)
 					];
 				})}
 				<BlockCreator model={blockCreator} />
@@ -57,7 +57,7 @@ export default class Chain extends Component {
 	}
 
 	/**
-	 * @param {MouseEvent} e
+	 * @param {MouseEvent|TouchEvent} e
 	 * @param {any} pinModel
 	 * @param {number} block
 	 */
@@ -68,8 +68,10 @@ export default class Chain extends Component {
 		const pin = pinModel.get('index');
 		const batch = [actions.startPointLink({ x: pinModel.get('cx'), y: pinModel.get('cy') })];
 
-		addMouseMoveOrTouchMoveListener(document, this.onConnecting);
-		addMouseUpOrTouchEndListener(document, this.onConnectEnd);
+		document.addEventListener('mousemove', this.onConnecting);
+		document.addEventListener('mouseup', this.onConnectEnd);
+		document.addEventListener('touchmove', this.onConnecting);
+		document.addEventListener('touchend', this.onConnectEnd);
 		window.__connection__ = { block, pin, pinType };
 
 		if (pinType === PinModel.INPUT) {
@@ -87,7 +89,6 @@ export default class Chain extends Component {
 		const { props: { dispatch } } = this;
 		const { clientX, clientY } = getPosition(e);
 
-		e.preventDefault();
 		dispatch(actions.endPointLink({ x: clientX, y: clientY }));
 	}
 
@@ -96,8 +97,10 @@ export default class Chain extends Component {
 		const { props: { dispatch } } = this;
 
 		dispatch(actions.startPointLink({ x: 0, y: 0 }));
-		removeMouseMoveOrTouchMoveListener(document, this.onConnecting);
-		removeMouseUpOrTouchEndListener(document, this.onConnectEnd);
+		document.removeEventListener('mousemove', this.onConnecting);
+		document.removeEventListener('mouseup', this.onConnectEnd);
+		document.removeEventListener('touchmove', this.onConnecting);
+		document.removeEventListener('touchend', this.onConnectEnd);
 	}
 
 	/**
