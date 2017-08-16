@@ -13,6 +13,8 @@ import { batchActions } from 'redux-batched-actions';
 import { getMouseOrFirstTouchPosition } from '../util';
 import './Chain.scss';
 
+window.ontouchmove = () => { };
+
 @connect(
 	(state) => ({
 		blocks: state.blocks,
@@ -89,6 +91,7 @@ export default class Chain extends Component {
 		const { props: { dispatch } } = this;
 		const { clientX, clientY } = getMouseOrFirstTouchPosition(e);
 
+		e.preventDefault();
 		dispatch(actions.endPointLink({ x: clientX, y: clientY }));
 	}
 

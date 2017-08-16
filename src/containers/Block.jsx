@@ -7,6 +7,8 @@ import IndentTextarea from '../components/IndentTextarea';
 import { getMouseOrFirstTouchPosition } from '../util';
 import './Block.scss';
 
+window.ontouchmove = () => { };
+
 @connect()
 export default class Block extends Component {
 	constructor() {
