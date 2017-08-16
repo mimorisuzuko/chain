@@ -4,7 +4,7 @@ import actions from '../actions';
 import { Pin as PinModel } from '../models';
 import autobind from 'autobind-decorator';
 import IndentTextarea from '../components/IndentTextarea';
-import { getPosition } from '../util';
+import { getMouseOrFirstTouchPosition } from '../util';
 import './Block.scss';
 
 @connect()
@@ -65,7 +65,7 @@ export default class Block extends Component {
 		const { target: { nodeName } } = e;
 
 		if (nodeName === 'DIV') {
-			const { pageX, pageY } = getPosition(e);
+			const { pageX, pageY } = getMouseOrFirstTouchPosition(e);
 
 			this.prevX = pageX;
 			this.prevY = pageY;
@@ -82,7 +82,7 @@ export default class Block extends Component {
 	 */
 	@autobind
 	onMouseMoveOrTouchMoveDocument(e) {
-		const { pageX, pageY } = getPosition(e);
+		const { pageX, pageY } = getMouseOrFirstTouchPosition(e);
 		const { props: { model, dispatch }, prevX, prevY } = this;
 
 		e.preventDefault();

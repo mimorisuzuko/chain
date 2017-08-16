@@ -10,7 +10,7 @@ import autobind from 'autobind-decorator';
 import Pin from '../components/Pin';
 import { Pin as PinModel } from '../models';
 import { batchActions } from 'redux-batched-actions';
-import { getPosition } from '../util';
+import { getMouseOrFirstTouchPosition } from '../util';
 import './Chain.scss';
 
 @connect(
@@ -87,7 +87,7 @@ export default class Chain extends Component {
 	@autobind
 	onConnecting(e) {
 		const { props: { dispatch } } = this;
-		const { clientX, clientY } = getPosition(e);
+		const { clientX, clientY } = getMouseOrFirstTouchPosition(e);
 
 		dispatch(actions.endPointLink({ x: clientX, y: clientY }));
 	}
@@ -146,7 +146,7 @@ export default class Chain extends Component {
 	@autobind
 	onMouseDownOrTouchStart(e) {
 		const { target, currentTarget } = e;
-		const { clientX, clientY } = getPosition(e);
+		const { clientX, clientY } = getMouseOrFirstTouchPosition(e);
 		const { props: { dispatch } } = this;
 
 		if (target === currentTarget) {

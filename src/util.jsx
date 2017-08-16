@@ -32,7 +32,7 @@ export const cosineCurvePoints = (ax, ay, bx, by, margin = 10) => {
 /**
  * @param {MouseEvent|TouchEvent} e
  */
-export const getPosition = (e) => {
+export const getMouseOrFirstTouchPosition = (e) => {
 	const { type, changedTouches } = e;
 
 	if (_.includes(['mousedown', 'mousemove', 'mouseup'], type)) {
