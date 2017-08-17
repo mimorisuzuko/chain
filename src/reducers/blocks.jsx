@@ -3,12 +3,19 @@ import { BlockCreator, Block, Pin } from '../models';
 import { handleActions } from 'redux-actions';
 import actions from '../actions';
 import colors from '../shared/vars.scss';
+import _ from 'lodash';
 
 const { blue2, white0 } = colors;
 
 export default handleActions({
 	[actions.addBlock]: (state, action) => {
 		const { payload } = action;
+
+		_.forEach(['inputPins', 'outputPins'], (key) => {
+			if (_.has(payload, key)) {
+				payload[key] = List(_.map(payload[key], (a) => new Pin(a)));
+			}
+		});
 
 		return state.push(new Block(payload));
 	},

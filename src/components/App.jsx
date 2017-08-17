@@ -7,14 +7,13 @@ import { enableBatching, batchActions } from 'redux-batched-actions';
 import { HashRouter, Route, NavLink, Redirect } from 'react-router-dom';
 import HTMLRenderer from '../containers/HTMLRenderer';
 import HTMLEditor from '../containers/HTMLEditor';
-import { BlockCreator, Pin } from '../models';
+import { BlockCreator } from '../models';
 import actions from '../actions';
 import Balloons from '../containers/Balloons';
 import socket from '../socket';
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
 import Arrow from 'react-icons/lib/ti/location-arrow';
-import { List } from 'immutable';
 import styles from './App.scss';
 
 const store = createStore(enableBatching(state));
@@ -24,13 +23,7 @@ fetch('http://localhost:6280/init').then((r) => r.json()).then(({ blocks, links 
 		store.dispatch(actions.addBlock({ x: 100, y: 100, type: BlockCreator.VIEW_BLOCK }));
 	} else {
 		store.dispatch(batchActions([
-			..._.map(blocks, (a) => {
-				_.forEach(['inputPins', 'outputPins'], (key) => {
-					a[key] = List(_.map(a[key], (b) => new Pin(b)));
-				});
-
-				return actions.addBlock(a);
-			}),
+			..._.map(blocks, (a) => actions.addBlock(a)),
 			..._.map(links, (a) => actions.addPinLink(a))
 		]));
 	}
