@@ -26,18 +26,29 @@ window.ontouchmove = () => { };
 	})
 )
 export default class Chain extends Component {
+	constructor() {
+		super();
+
+		this.skipSendingPatch = false;
+		socket.on('state', this.onStateBySocket);
+	}
+
 	componentWillReceiveProps(nextProps) {
-		const { props: { blocks, links } } = this;
+		const { props: { blocks, links }, skipSendingPatch } = this;
 		const { blocks: nextBlocks, links: nextLinks } = nextProps;
 		const blocksPatches = jsonpatch.compare(blocks.toJS(), nextBlocks.toJS());
 		const linksPatches = jsonpatch.compare(links.toJS(), nextLinks.toJS());
 
-		if (blocksPatches.length + linksPatches.length > 0) {
-			socket.emit('patch', {
-				blocks: blocksPatches,
-				links: linksPatches
-			});
+		if (!skipSendingPatch) {
+			if (blocksPatches.length + linksPatches.length > 0) {
+				socket.emit('patch', {
+					blocks: blocksPatches,
+					links: linksPatches
+				});
+			}
 		}
+
+		this.skipSendingPatch = false;
 	}
 
 	componentDidMount() {
@@ -174,6 +185,90 @@ export default class Chain extends Component {
 
 		if (target === currentTarget) {
 			dispatch(actions.showBlockCreator({ x: clientX, y: clientY }));
+		}
+	}
+
+	@autobind
+	onStateBySocket({ blocks: nextBlocks, links: nextLinks }) {
+		const { props: { blocks, links, dispatch } } = this;
+		const batch = [];
+
+		_.forEach(jsonpatch.compare(blocks.toJS(), nextBlocks), ({ op, path: strpath, value }) => {
+			const path = _.split(strpath.substring(1), '/');
+			const { length } = path;
+
+			if (length > 0) {
+				path[0] = _.parseInt(path[0]);
+			}
+
+			if (length > 2) {
+				path[2] = _.parseInt(path[2]);
+			}
+
+			if (op === 'add') {
+				if (length === 1) {
+					batch.push(actions.addBlock(value));
+				} else if (length === 3) {
+					const id = nextBlocks[path[0]];
+					batch.push(actions.addPin(id));
+				}
+			}
+
+			if (op === 'replace') {
+				if (length === 2) {
+					const id = nextBlocks[path[0]];
+					const key = path[1];
+					if (id !== 0 && key !== 'value') {
+						batch.push(actions.updateBlock(id, { [key]: value }));
+					}
+				} else if (length === 4) {
+					batch.push(actions.cochainSetInBlock({ path, value }));
+				}
+			}
+
+			if (op === 'remove') {
+				if (length === 3) {
+					const id = blocks[path[0]];
+					batch.push(actions.deletePin(id));
+				}
+
+				if (length === 1) {
+					const id = blocks[path[0]];
+					batch.push(actions.deleteBlock(id));
+				}
+			}
+		});
+
+		_.forEach(jsonpatch.compare(links.toJS(), nextLinks), ({ op, path: strpath, value }) => {
+			const path = _.split(strpath.substring(1), '/');
+			const { length } = path;
+
+			if (length > 0) {
+				path[0] = _.parseInt(path[0]);
+			}
+
+			console.log(op, path, value);
+
+			if (op === 'add' && value !== null) {
+				batch.push(actions.addPinLink(value));
+			}
+
+			if (op === 'remove') {
+				if (length === 1) {
+					batch.push(actions.cochainRemovePinLink(path[0]));
+				}
+			}
+
+			if (op === 'replace') {
+				if (length === 3) {
+					batch.push(actions.cochainSetInPinLink({ path, value }));
+				}
+			}
+		});
+
+		if (batch.length > 0) {
+			this.skipSendingPatch = true;
+			dispatch(batchActions(batch));
 		}
 	}
 }

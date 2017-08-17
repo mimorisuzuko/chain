@@ -44,14 +44,25 @@ io.on('connection', (socket) => {
 				if (op === 'add' || op === 'replace') {
 					stateManager.setStateFromBrowser(key, path, value);
 				} else if (op === 'remove') {
-					stateManager.setStateFromBrowser(key, path, value);
+					stateManager.deleteStateFromBrowser(key, path);
 				}
+			});
+		});
+
+		_.forEach(_.toPairs(io.sockets.connected), ([target, socket]) => {
+			if (id === target) { return; }
+			socket.emit('state', {
+				blocks: stateManager.toJS('blocks'),
+				links: stateManager.toJS('links')
 			});
 		});
 	});
 
 	socket.on('disconnect', () => {
 		stateManager.deleteMouse(id);
-		io.emit('mouse', stateManager.toJS('mouse'));
+		_.forEach(_.toPairs(io.sockets.connected), ([target, socket]) => {
+			if (id === target) { return; }
+			socket.emit('mouse', stateManager.toJS('mouse'));
+		});
 	});
 });

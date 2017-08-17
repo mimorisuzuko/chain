@@ -59,5 +59,10 @@ export default handleActions({
 			const value = block.get('value');
 			return block.set('value', value ? `${value}\n${payload}` : payload);
 		});
+	},
+	[actions.cochainSetInBlock]: (state, action) => {
+		const { payload: { path, value } } = action;
+
+		return state.setIn(path, value);
 	}
 }, List());
