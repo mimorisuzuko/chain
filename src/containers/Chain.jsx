@@ -28,6 +28,10 @@ export default class Chain extends Component {
 		window.addEventListener('message', this.onMessage);
 	}
 
+	componentWillUnmount(){
+		window.removeEventListener('message', this.onMessage);
+	}
+
 	render() {
 		const { props: { link, links, blockCreator } } = this;
 		let { props: { blocks } } = this;
