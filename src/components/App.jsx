@@ -30,7 +30,7 @@ class App extends Component {
 	}
 
 	componentDidMount() {
-		const { height } = document.querySelector('footer').getBoundingClientRect();;
+		const { height } = document.querySelector('footer').getBoundingClientRect();
 		document.body.style.paddingBottom = `${height}px`;
 		document.addEventListener('mousemove', this.onMouseMoveDocument);
 	}
