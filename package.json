@@ -1,12 +1,13 @@
 {
-  "name": "chain",
+  "name": "cochain",
   "version": "0.0.1",
-  "description": "A New Visual Programming Environment to Build JavaScript By Linking Blocks",
-  "main": "docs/index.htnl",
+  "description": "Cochain Allows Users to Coedit Chain",
+  "main": "server/index.js",
   "scripts": {
+    "start": "node .",
     "webpack": "./node_modules/.bin/webpack --config webpack.config.babel.js",
     "build": "npm-run-all build:*",
-    "build:pug": "./node_modules/.bin/pug --hierarchy -o docs/ src/",
+    "build:pug": "./node_modules/.bin/pug --hierarchy -o client/ src/",
     "build:js": "npm run webpack",
     "watch": "npm-run-all --parallel watch:*",
     "watch:pug": "npm run build:pug -- -w",

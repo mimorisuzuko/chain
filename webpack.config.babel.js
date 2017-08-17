@@ -3,7 +3,7 @@ import libpath from 'path';
 import CleanWebpackPlugin from 'clean-webpack-plugin';
 
 const { UglifyJsPlugin, AggressiveMergingPlugin } = optimize;
-const dst = 'docs';
+const dst = 'client';
 let { env: { NODE_ENV, WATCH } } = process;
 
 if (!NODE_ENV) {
