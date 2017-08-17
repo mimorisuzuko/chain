@@ -3,21 +3,38 @@ import { Provider } from 'react-redux';
 import Chain from '../containers/Chain';
 import { createStore } from 'redux';
 import state from '../reducers';
-import { enableBatching } from 'redux-batched-actions';
+import { enableBatching, batchActions } from 'redux-batched-actions';
 import { HashRouter, Route, NavLink, Redirect } from 'react-router-dom';
 import HTMLRenderer from '../containers/HTMLRenderer';
 import HTMLEditor from '../containers/HTMLEditor';
-import { BlockCreator } from '../models';
+import { BlockCreator, Pin } from '../models';
 import actions from '../actions';
 import Balloons from '../containers/Balloons';
 import socket from '../socket';
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
 import Arrow from 'react-icons/lib/ti/location-arrow';
+import { List } from 'immutable';
 import styles from './App.scss';
 
 const store = createStore(enableBatching(state));
-store.dispatch(actions.addBlock({ x: 100, y: 100, type: BlockCreator.VIEW_BLOCK }));
+
+fetch('http://localhost:6280/init').then((r) => r.json()).then(({ blocks, links }) => {
+	if (blocks.length === 0) {
+		store.dispatch(actions.addBlock({ x: 100, y: 100, type: BlockCreator.VIEW_BLOCK }));
+	} else {
+		store.dispatch(batchActions([
+			..._.map(blocks, (a) => {
+				_.forEach(['inputPins', 'outputPins'], (key) => {
+					a[key] = List(_.map(a[key], (b) => new Pin(b)));
+				});
+
+				return actions.addBlock(a);
+			}),
+			..._.map(links, (a) => actions.addPinLink(a))
+		]));
+	}
+});
 
 const redirectRender = () => <Redirect to='/chain' />;
 

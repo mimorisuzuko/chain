@@ -19,24 +19,29 @@ export default class HTMLRenderer extends Component {
 		const $doc = parser.parseFromString(html, 'text/html');
 		const $body = $doc.querySelector('body');
 		const $script = document.createElement('script');
-		const script = _.join(_.map(this.toEvalableString(), (a) => `parent.postMessage({ type: 'chain-result', value: ${a} }, '*')`), '\n');
-		$script.innerHTML = `
-			parent.postMessage({ type: 'chain-clear' }, '*');
-			try {
-				(0, eval)(${JSON.stringify(script)});
-			} catch (err) {
-				parent.postMessage({ type: 'chain-error', value: String(err) }, '*');
-			}
-		`;
-		$body.appendChild($script);
+		const code = this.toEvalableString();
+
+		if (code) {
+			const script = _.join(_.map(this.toEvalableString(), (a) => `parent.postMessage({ type: 'chain-result', value: ${a} }, '*')`), '\n');
+			$script.innerHTML = `
+				parent.postMessage({ type: 'chain-clear' }, '*');
+				try {
+					(0, eval)(${JSON.stringify(script)});
+				} catch (err) {
+					parent.postMessage({ type: 'chain-error', value: String(err) }, '*');
+				}
+			`;
+			$body.appendChild($script);
+		}
 
 		return <iframe srcDoc={`<!doctype html>${$doc.documentElement.outerHTML}`} styleName='base' />;
 	}
 
 	toEvalableString() {
 		const { props: { blocks } } = this;
+		const first = blocks.first();
 
-		return this.toEvalableStringSub(blocks.first().get('id'));
+		return first ? this.toEvalableStringSub(first.get('id')) : null;
 	}
 
 	toEvalableStringSub(id) {

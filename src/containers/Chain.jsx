@@ -11,6 +11,8 @@ import Pin from '../components/Pin';
 import { Pin as PinModel } from '../models';
 import { batchActions } from 'redux-batched-actions';
 import { getMouseOrFirstTouchPosition } from '../util';
+import jsonpatch from 'fast-json-patch';
+import socket from '../socket';
 import './Chain.scss';
 
 window.ontouchmove = () => { };
@@ -24,11 +26,51 @@ window.ontouchmove = () => { };
 	})
 )
 export default class Chain extends Component {
-	componentDidMount() {
-		window.addEventListener('message', this.onMessage);	
+	componentWillReceiveProps(nextProps) {
+		const { props } = this;
+
+		_.forEach(['blocks', 'links'], (key) => {
+			_.forEach(jsonpatch.compare(props[key].toJS(), nextProps[key].toJS()), ({ op, path: strpath, value }) => {
+				const path = _.split(strpath.substring(1), '/');
+				const { length } = path;
+
+				if (length > 0) {
+					path[0] = _.parseInt(path[0]);
+				}
+
+				if (key === 'blocks') {
+					if (length > 2) {
+						path[2] = _.parseInt(path[2]);
+					}
+				}
+
+				if (op === 'add' || op === 'replace') {
+					socket.emit('set:state', {
+						target: key,
+						query: {
+							keys: path,
+							value
+						}
+					});
+				}
+
+				if (op === 'remove') {
+					socket.emit('delete:state', {
+						target: key,
+						query: {
+							keys: path
+						}
+					});
+				}
+			});
+		});
 	}
 
-	componentWillUnmount(){
+	componentDidMount() {
+		window.addEventListener('message', this.onMessage);
+	}
+
+	componentWillUnmount() {
 		window.removeEventListener('message', this.onMessage);
 	}
 

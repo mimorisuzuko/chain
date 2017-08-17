@@ -1,9 +1,12 @@
-const { Map } = require('immutable');
+const { Map, List, fromJS } = require('immutable');
+const _ = require('lodash');
 
 class StateManager {
 	constructor() {
 		this.state = Map({
-			mouse: Map()
+			mouse: Map(),
+			blocks: List(),
+			links: List()
 		});
 	}
 
@@ -39,6 +42,25 @@ class StateManager {
 	deleteMouse(id) {
 		const { state } = this;
 		this.state = state.deleteIn(['mouse', id]);
+	}
+
+	/**
+	 * @param {string} target
+	 * @param {(number|string)[]} key
+	 * @param {any} value
+	 */
+	setStateFromBrowser(target, key, value) {
+		const { state } = this;
+		this.state = state.setIn([target, ...key], _.isObject(value) ? fromJS(value) : value);
+	}
+
+	/**
+	 * @param {string} target
+	 * @param {(number|string)[]} key
+	 */
+	deleteStateFromBrowser(target, key) {
+		const { state } = this;
+		this.state = state.deleteIn([target, ...key]);
 	}
 }
 
