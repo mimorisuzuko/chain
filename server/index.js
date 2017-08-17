@@ -2,19 +2,19 @@ const express = require('express');
 const libpath = require('path');
 const app = express();
 const io = require('socket.io').listen(app.listen(6280));
-const state = require('./state');
+const stateManager = require('./state-manager');
 
 app.use('/', express.static(libpath.join(__dirname, '../client')));
 
 io.on('connection', (socket) => {
 	const { id } = socket;
-	state.addMouse(id);
+	stateManager.addMouse(id);
 	socket.on('mouse', (args) => {
-		state.updateMouse(id, args);
-		io.emit('mouse', state.toJS('mouse'));
+		stateManager.updateMouse(id, args);
+		io.emit('mouse', stateManager.toJS('mouse'));
 	});
 	socket.on('disconnect', () => {
-		state.deleteMouse(id);
-		io.emit('mouse', state.toJS('mouse'));
+		stateManager.deleteMouse(id);
+		io.emit('mouse', stateManager.toJS('mouse'));
 	});
 });
