@@ -25,7 +25,7 @@ window.ontouchmove = () => { };
 )
 export default class Chain extends Component {
 	componentDidMount() {
-		window.addEventListener('message', this.onMessage);
+		window.addEventListener('message', this.onMessage);	
 	}
 
 	render() {
