@@ -27,43 +27,17 @@ window.ontouchmove = () => { };
 )
 export default class Chain extends Component {
 	componentWillReceiveProps(nextProps) {
-		const { props } = this;
+		const { props: { blocks, links } } = this;
+		const { blocks: nextBlocks, links: nextLinks } = nextProps;
+		const blocksPatches = jsonpatch.compare(blocks.toJS(), nextBlocks.toJS());
+		const linksPatches = jsonpatch.compare(links.toJS(), nextLinks.toJS());
 
-		_.forEach(['blocks', 'links'], (key) => {
-			_.forEach(jsonpatch.compare(props[key].toJS(), nextProps[key].toJS()), ({ op, path: strpath, value }) => {
-				const path = _.split(strpath.substring(1), '/');
-				const { length } = path;
-
-				if (length > 0) {
-					path[0] = _.parseInt(path[0]);
-				}
-
-				if (key === 'blocks') {
-					if (length > 2) {
-						path[2] = _.parseInt(path[2]);
-					}
-				}
-
-				if (op === 'add' || op === 'replace') {
-					socket.emit('set:state', {
-						target: key,
-						query: {
-							keys: path,
-							value
-						}
-					});
-				}
-
-				if (op === 'remove') {
-					socket.emit('delete:state', {
-						target: key,
-						query: {
-							keys: path
-						}
-					});
-				}
+		if (blocksPatches.length + linksPatches.length > 0) {
+			socket.emit('patch', {
+				blocks: blocksPatches,
+				links: linksPatches
 			});
-		});
+		}
 	}
 
 	componentDidMount() {
