@@ -209,16 +209,15 @@ export default class Chain extends Component {
 				if (length === 1) {
 					batch.push(actions.addBlock(value));
 				} else if (length === 3) {
-					const id = nextBlocks[path[0]];
-					batch.push(actions.addPin(id));
+					batch.push(actions.cochainSetInBlock(path, new PinModel(value)));
 				}
 			}
 
 			if (op === 'replace') {
 				if (length === 2) {
-					const id = nextBlocks[path[0]];
+					const { id } = nextBlocks[path[0]];
 					const key = path[1];
-					if (id !== 0 && key !== 'value') {
+					if (id !== 0 || key !== 'value') {
 						batch.push(actions.updateBlock(id, { [key]: value }));
 					}
 				} else if (length === 4) {
@@ -228,12 +227,12 @@ export default class Chain extends Component {
 
 			if (op === 'remove') {
 				if (length === 3) {
-					const id = blocks[path[0]];
+					const id = blocks.getIn([path[0], 'id']);
 					batch.push(actions.deletePin(id));
 				}
 
 				if (length === 1) {
-					const id = blocks[path[0]];
+					const id = blocks.getIn([path[0], 'id']);
 					batch.push(actions.deleteBlock(id));
 				}
 			}
@@ -246,8 +245,6 @@ export default class Chain extends Component {
 			if (length > 0) {
 				path[0] = _.parseInt(path[0]);
 			}
-
-			console.log(op, path, value);
 
 			if (op === 'add' && value !== null) {
 				batch.push(actions.addPinLink(value));
