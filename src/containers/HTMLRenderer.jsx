@@ -50,7 +50,7 @@ export default class HTMLRenderer extends Component {
 		}
 
 		const { props: { blocks } } = this;
-		const block = blocks.get(id);
+		const block = blocks.find((a) => a.get('id') === id);
 		const args = block.get('inputPins').map((pin) => this.toEvalableStringSub(this.findOutputBlockIdFromLinks({ input: { block: id, pin: pin.get('index') } }))).toJS();
 
 		switch (block.get('type')) {
@@ -77,7 +77,7 @@ export default class HTMLRenderer extends Component {
 
 		links.some((link) => {
 			if (link.match(query)) {
-				block = link.get('output').block;
+				block = link.getIn(['output', 'block']);
 				return true;
 			}
 

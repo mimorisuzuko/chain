@@ -8,14 +8,14 @@ import _ from 'lodash';
 		blocks: state.blocks
 	})
 )
-export default class PointLink extends Component {
+export default class PinLink extends Component {
 	render() {
 		const { props: { blocks, model } } = this;
 		const points = [];
 
 		_.forEach(['output', 'input'], (name) => {
-			const { block: blockId, pin: pinIndex } = model.get(name);
-			const pin = blocks.getIn([blockId, `${name}Pins`, pinIndex]);
+			const block = blocks.find((a) => a.get('id') === model.getIn([name, 'block']));
+			const pin = block.getIn([`${name}Pins`, model.getIn([name, 'pin'])]);
 
 			points.push(pin.get('cx'), pin.get('cy'));
 		});

@@ -13,6 +13,7 @@ import { batchActions } from 'redux-batched-actions';
 import { getMouseOrFirstTouchPosition } from '../util';
 import jsonpatch from 'fast-json-patch';
 import socket from '../socket';
+import { Map } from 'immutable';
 import './Chain.scss';
 
 window.ontouchmove = () => { };
@@ -68,8 +69,9 @@ export default class Chain extends Component {
 				<svg onMouseDown={this.onMouseDownOrTouchStart} onTouchStart={this.onMouseDownOrTouchStart}>
 					{links.map((a, i) => {
 						_.forEach(['input', 'output'], (key) => {
-							const { block, pin } = a.get(key);
-							blocks = blocks.setIn([block, `${key}Pins`, pin, 'linked'], true);
+							const index = blocks.findIndex((block) => block.get('id') === a.getIn([key, 'block']));
+
+							blocks = blocks.setIn([index, `${key}Pins`, a.getIn([key, 'pin']), 'linked'], true);
 						});
 
 						return <PinLink key={i} model={a} />;
@@ -151,8 +153,8 @@ export default class Chain extends Component {
 
 		if (block0 !== block1 && pinType0 !== pinType1) {
 			dispatch(actions.addPinLink({
-				[Block.convertPinType(pinType0)]: { block: block0, pin: pin0 },
-				[Block.convertPinType(pinType1)]: { block: block1, pin: pin1 }
+				[Block.convertPinType(pinType0)]: Map({ block: block0, pin: pin0 }),
+				[Block.convertPinType(pinType1)]: Map({ block: block1, pin: pin1 })
 			}));
 		}
 	}
@@ -209,7 +211,7 @@ export default class Chain extends Component {
 				if (length === 1) {
 					batch.push(actions.addBlock(value));
 				} else if (length === 3) {
-					batch.push(actions.cochainSetInBlock(path, new PinModel(value)));
+					batch.push(actions.cochainSetInBlock({ path, value: new PinModel(value) }));
 				}
 			}
 
@@ -247,7 +249,7 @@ export default class Chain extends Component {
 			}
 
 			if (op === 'add' && value !== null) {
-				batch.push(actions.addPinLink(value));
+				batch.push(actions.addPinLink(_.fromPairs(_.map(_.toPairs(value), ([k, v]) => [k, Map(v)]))));
 			}
 
 			if (op === 'remove') {
