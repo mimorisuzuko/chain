@@ -11,7 +11,6 @@ import Pin from '../components/Pin';
 import { Pin as PinModel } from '../models';
 import { batchActions } from 'redux-batched-actions';
 import { getMouseOrFirstTouchPosition } from '../util';
-import { Map } from 'immutable';
 import './Chain.scss';
 
 window.ontouchmove = () => { };
@@ -42,8 +41,8 @@ export default class Chain extends Component {
 				<svg onMouseDown={this.onMouseDownOrTouchStart} onTouchStart={this.onMouseDownOrTouchStart}>
 					{links.map((a, i) => {
 						_.forEach(['input', 'output'], (key) => {
-							const index = blocks.findIndex((block) => block.get('id') === a.getIn([key, 'block']));							
-							
+							const index = blocks.findIndex((block) => block.get('id') === a.getIn([key, 'block']));
+
 							blocks = blocks.setIn([index, `${key}Pins`, a.getIn([key, 'pin']), 'linked'], true);
 						});
 
@@ -126,8 +125,8 @@ export default class Chain extends Component {
 
 		if (block0 !== block1 && pinType0 !== pinType1) {
 			dispatch(actions.addPinLink({
-				[Block.convertPinType(pinType0)]: Map({ block: block0, pin: pin0 }),
-				[Block.convertPinType(pinType1)]: Map({ block: block1, pin: pin1 })
+				[Block.convertPinType(pinType0)]: { block: block0, pin: pin0 },
+				[Block.convertPinType(pinType1)]: { block: block1, pin: pin1 }
 			}));
 		}
 	}
