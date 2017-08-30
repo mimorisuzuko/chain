@@ -8,7 +8,7 @@ import PinLink from '../containers/PinLink';
 import _ from 'lodash';
 import autobind from 'autobind-decorator';
 import Pin from '../components/Pin';
-import { Pin as PinModel, Block as BlockModel } from '../models';
+import { Pin as PinModel } from '../models';
 import { batchActions } from 'redux-batched-actions';
 import { getMouseOrFirstTouchPosition } from '../util';
 import './Chain.scss';
@@ -134,8 +134,8 @@ export default class Chain extends Component {
 
 		if (block0 !== block1 && pinType0 !== pinType1) {
 			dispatch(actions.addPinLink({
-				[BlockModel.convertPinTypeToPinKey(pinType0)]: { block: block0, pin: pin0 },
-				[BlockModel.convertPinTypeToPinKey(pinType1)]: { block: block1, pin: pin1 }
+				[Chain.convertPinTypeToPinLinkKey(pinType0)]: { block: block0, pin: pin0 },
+				[Chain.convertPinTypeToPinLinkKey(pinType1)]: { block: block1, pin: pin1 }
 			}));
 		}
 	}
@@ -168,6 +168,20 @@ export default class Chain extends Component {
 
 		if (target === currentTarget) {
 			dispatch(actions.showBlockCreator({ x: clientX, y: clientY }));
+		}
+	}
+
+	/**
+	 * @param {string} type
+	 */
+	static convertPinTypeToPinLinkKey(type) {
+		switch (type) {
+			case PinModel.OUTPUT:
+				return 'output';
+			case PinModel.INPUT:
+				return 'input';
+			default:
+				throw new Error('Unknown pin type');
 		}
 	}
 }
