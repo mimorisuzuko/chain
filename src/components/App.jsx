@@ -3,18 +3,36 @@ import { Provider } from 'react-redux';
 import Chain from '../containers/Chain';
 import { createStore } from 'redux';
 import state from '../reducers';
-import { enableBatching } from 'redux-batched-actions';
+import { enableBatching, batchActions } from 'redux-batched-actions';
 import { HashRouter, Route, NavLink, Redirect } from 'react-router-dom';
 import HTMLRenderer from '../containers/HTMLRenderer';
 import HTMLEditor from '../containers/HTMLEditor';
-import { BlockCreator } from '../models';
+import { BlockCreator, Pin } from '../models';
 import actions from '../actions';
 import Balloons from '../containers/Balloons';
+import _ from 'lodash';
+import { List } from 'immutable';
 import styles from './App.scss';
 
 const store = createStore(enableBatching(state));
-store.dispatch(actions.addBlock({ x: 100, y: 100, type: BlockCreator.VIEW_BLOCK }));
+const { blocks: storedBlocks, links: storedLinks } = JSON.parse(localStorage.getItem('storedState'));
 
+if (storedBlocks.length > 0) {
+	store.dispatch(batchActions([
+		..._.map(storedBlocks, (block) => {
+			_.forEach(['inputPins', 'outputPins'], (key) => {
+				if (_.has(block, key)) {
+					block[key] = List(_.map(block[key], (b) => new Pin(b)));
+				}
+			});
+
+			return actions.addBlock(block);
+		}),
+		..._.map(storedLinks, (link) => actions.addPinLink(link))
+	]));
+} else {
+	store.dispatch(actions.addBlock({ x: 100, y: 100, type: BlockCreator.VIEW_BLOCK }));
+}
 const redirectRender = () => <Redirect to='/chain' />;
 
 class App extends Component {

@@ -15,41 +15,43 @@ export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: tru
 	constructor(args) {
 		super(args);
 
-		switch (this.type) {
-			case BlockCreator.VIEW_BLOCK:
-				return this.merge({
-					editable: false,
-					deletable: false,
-					color: purple0,
-					inputPins: this._createPins([white0], Pin.INPUT)
-				}).recalculateHeight();
-			case BlockCreator.CREATABLE_TYPES.VALUE_BLOCK:
-				return this.merge({
-					changeable: false,
-					outputPins: this._createPins([purple0], Pin.OUTPUT)
-				}).recalculateHeight();
-				break;
-			case BlockCreator.CREATABLE_TYPES.FUNCTION_BLOCK:
-				return this.merge({
-					color: blue1,
-					inputPins: this._createPins([blue1], Pin.INPUT),
-					outputPins: this._createPins([purple0], Pin.OUTPUT)
-				}).recalculateHeight();
-			case BlockCreator.CREATABLE_TYPES.PROPERTY_BLOCK:
-				return this.merge({
-					changeable: false,
-					color: yellow0,
-					inputPins: this._createPins([white0], Pin.INPUT),
-					outputPins: this._createPins([white0], Pin.OUTPUT)
-				}).recalculateHeight();
-			case BlockCreator.CREATABLE_TYPES.OPERATOR_BLCOK:
-				return this.merge({
-					changeable: false,
-					inputPins: this._createPins([white0, white0], Pin.INPUT),
-					outputPins: this._createPins([white0], Pin.OUTPUT)
-				}).recalculateHeight();
-			default:
-				break;
+		if (!_.every(['inputPins', 'outputPins'], (key) => _.has(args, key))) {
+			switch (this.type) {
+				case BlockCreator.VIEW_BLOCK:
+					return this.merge({
+						editable: false,
+						deletable: false,
+						color: purple0,
+						inputPins: this._createPins([white0], Pin.INPUT)
+					}).recalculateHeight();
+				case BlockCreator.CREATABLE_TYPES.VALUE_BLOCK:
+					return this.merge({
+						changeable: false,
+						outputPins: this._createPins([purple0], Pin.OUTPUT)
+					}).recalculateHeight();
+					break;
+				case BlockCreator.CREATABLE_TYPES.FUNCTION_BLOCK:
+					return this.merge({
+						color: blue1,
+						inputPins: this._createPins([blue1], Pin.INPUT),
+						outputPins: this._createPins([purple0], Pin.OUTPUT)
+					}).recalculateHeight();
+				case BlockCreator.CREATABLE_TYPES.PROPERTY_BLOCK:
+					return this.merge({
+						changeable: false,
+						color: yellow0,
+						inputPins: this._createPins([white0], Pin.INPUT),
+						outputPins: this._createPins([white0], Pin.OUTPUT)
+					}).recalculateHeight();
+				case BlockCreator.CREATABLE_TYPES.OPERATOR_BLCOK:
+					return this.merge({
+						changeable: false,
+						inputPins: this._createPins([white0, white0], Pin.INPUT),
+						outputPins: this._createPins([white0], Pin.OUTPUT)
+					}).recalculateHeight();
+				default:
+					break;
+			}
 		}
 	}
 

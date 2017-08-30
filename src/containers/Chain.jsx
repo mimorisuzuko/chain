@@ -24,6 +24,15 @@ window.ontouchmove = () => { };
 	})
 )
 export default class Chain extends Component {
+	componentWillReceiveProps(nextProps) {
+		const { blocks, links } = nextProps;
+
+		localStorage.setItem('storedState', JSON.stringify({
+			blocks: blocks.toJS(),
+			links: links.toJS()
+		}));
+	}
+
 	componentDidMount() {
 		window.addEventListener('message', this.onMessage);
 	}
