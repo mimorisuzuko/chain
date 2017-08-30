@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import actions from '../actions';
-import { Pin as PinModel } from '../models';
 import autobind from 'autobind-decorator';
 import IndentTextarea from '../components/IndentTextarea';
 import { getMouseOrFirstTouchPosition } from '../util';
