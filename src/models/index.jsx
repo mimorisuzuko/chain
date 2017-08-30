@@ -185,6 +185,15 @@ export class PointLink extends Record({ ax: 0, ay: 0, bx: 0, by: 0 }) {
 }
 
 export class PinLink extends Record({ output: Map({ block: 0, pin: 0 }), input: Map({ block: 0, pin: 0 }) }) {
+	constructor(args) {
+		_.forEach(['output', 'input'], (key) => {
+			if (!_.has(args, key)) { return; }
+			args[key] = Map(args[key]);
+		});
+
+		super(args);
+	}
+
 	hasBlock(id) {
 		return _.some(['output', 'input'], (key) => this.getIn([key, 'block']) === id);
 	}
@@ -194,10 +203,6 @@ export class PinLink extends Record({ output: Map({ block: 0, pin: 0 }), input: 
 	}
 
 	static _matcher(target, query) {
-		if (Map.isMap(query)) {
-			return !query.some((v, k) => !PinLink._matcher(target.get(k), v));
-		}
-
 		if (_.isObject(query)) {
 			return !_.some(_.toPairs(query), ([k, v]) => !PinLink._matcher(target.get(k), v));
 		}
