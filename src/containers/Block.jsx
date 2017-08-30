@@ -133,14 +133,4 @@ export default class Block extends Component {
 			dispatch(actions.updateBlock(model.get('id'), { value: `${v.substring(0, selectionStart)}\t${v.substring(selectionEnd)}` }));
 		}
 	}
-
-	static convertPinType(pinType) {
-		if (pinType === PinModel.OUTPUT) {
-			return 'output';
-		} else if (pinType === PinModel.INPUT) {
-			return 'input';
-		}
-
-		return 'unknown';
-	}
 }
