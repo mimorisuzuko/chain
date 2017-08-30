@@ -8,7 +8,7 @@ import PinLink from '../containers/PinLink';
 import _ from 'lodash';
 import autobind from 'autobind-decorator';
 import Pin from '../components/Pin';
-import { Pin as PinModel } from '../models';
+import { Pin as PinModel, Block as BlockModel } from '../models';
 import { batchActions } from 'redux-batched-actions';
 import { getMouseOrFirstTouchPosition } from '../util';
 import jsonpatch from 'fast-json-patch';
@@ -153,8 +153,8 @@ export default class Chain extends Component {
 
 		if (block0 !== block1 && pinType0 !== pinType1) {
 			dispatch(actions.addPinLink({
-				[Block.convertPinType(pinType0)]: { block: block0, pin: pin0 },
-				[Block.convertPinType(pinType1)]: { block: block1, pin: pin1 }
+				[BlockModel.convertPinTypeToPinKey(pinType0)]: { block: block0, pin: pin0 },
+				[BlockModel.convertPinTypeToPinKey(pinType1)]: { block: block1, pin: pin1 }
 			}));
 		}
 	}
