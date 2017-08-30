@@ -1,12 +1,12 @@
 import _ from 'lodash';
 import { createActions } from 'redux-actions';
+import { generator } from '../util';
 
-let blockId = -1;
 let balloonId = -1;
 
 export default createActions(
 	{
-		ADD_BLOCK: (block) => _.merge({ id: blockId += 1 }, block),
+		ADD_BLOCK: (block) => _.merge({ id: generator.id() }, block),
 		UPDATE_BLOCK: (id, patch) => ({ id, patch }),
 		DELTA_MOVE_BLOCK: (id, dx, dy) => ({ id, dx, dy }),
 		TOGGLE_BLOCK_CREATOR: (x, y) => ({ x, y }),
