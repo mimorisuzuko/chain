@@ -14,6 +14,7 @@ import _ from 'lodash';
 import { List } from 'immutable';
 import styles from './App.scss';
 
+const { link, active } = styles;
 const store = createStore(enableBatching(state));
 const stored = JSON.parse(localStorage.getItem('storedState'));
 
@@ -44,11 +45,6 @@ if (stored) {
 const redirectRender = () => <Redirect to='/chain' />;
 
 class App extends Component {
-	componentDidMount() {
-		const { height } = document.querySelector('footer').getBoundingClientRect();
-		document.body.style.paddingBottom = `${height}px`;
-	}
-
 	render() {
 		return (
 			<Provider store={store}>
@@ -61,13 +57,13 @@ class App extends Component {
 							<Route path='/editor' component={HTMLEditor} />
 						</div>
 						<footer>
-							<NavLink to='/chain' className={styles.link} activeClassName={styles.active}>
+							<NavLink to='/chain' className={link} activeClassName={active}>
 								<span>Chain</span>
 							</NavLink>
-							<NavLink to='/editor' className={styles.link} activeClassName={styles.active}>
+							<NavLink to='/editor' className={link} activeClassName={active}>
 								<span>Editor</span>
 							</NavLink>
-							<NavLink to='/view' className={styles.link} activeClassName={styles.active}>
+							<NavLink to='/view' className={link} activeClassName={active}>
 								<span>View</span>
 							</NavLink>
 						</footer>

@@ -3,7 +3,7 @@ import { Pin as PinModel } from '../models';
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
 
-const d = PinModel.RADIUS + 1;
+const deltaPosition = PinModel.RADIUS + 1;
 
 export default class Pin extends Component {
 	constructor() {
@@ -94,21 +94,29 @@ export default class Pin extends Component {
 				onTouchEnd={this.onTouchEnd}
 				style={{
 					position: 'absolute',
-					left: model.get('cx') - d,
-					top: model.get('cy') - d,
+					left: model.get('cx') - deltaPosition,
+					top: model.get('cy') - deltaPosition,
 					width: PinModel.RADIUS * 2 + 2,
 					height: PinModel.RADIUS * 2 + 2,
 					cursor: 'pointer'
 				}}
 			>
 				<circle
-					cx={d}
-					cy={d}
+					cx={deltaPosition}
+					cy={deltaPosition}
 					r={PinModel.S_RADIUS}
 					fill={type === PinModel.INPUT ? 'none' : type === PinModel.OUTPUT ? color : 'red'}
 					stroke={color}
 				/>
-				{enter || connecting || model.get('linked') ? <circle cx={d} cy={d} r={PinModel.RADIUS} fill={'none'} stroke={color} /> : null}
+				{enter || connecting || model.get('linked') ? (
+					<circle
+						cx={deltaPosition}
+						cy={deltaPosition}
+						r={PinModel.RADIUS}
+						fill={'none'}
+						stroke={color}
+					/>
+				) : null}
 			</svg>
 		);
 	}
