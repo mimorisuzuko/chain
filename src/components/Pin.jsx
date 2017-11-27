@@ -12,34 +12,6 @@ export default class Pin extends Component {
 		this.state = { enter: false, connecting: false };
 	}
 
-	render() {
-		const { props: { model }, state: { enter, connecting } } = this;
-		const color = model.get('color');
-		const type = model.get('type');
-
-		return (
-			<svg
-				data-pin
-				onMouseDown={this.onMouseDownOrTouchStart}
-				onTouchStart={this.onMouseDownOrTouchStart}
-				onMouseUp={this.onMouseup}
-				onMouseEnter={this.onMouseEnter}
-				onMouseLeave={this.onMouseLeave}
-				onTouchEnd={this.onTouchEnd}
-				style={{
-					position: 'absolute',
-					left: model.get('cx') - d,
-					top: model.get('cy') - d,
-					width: PinModel.RADIUS * 2 + 2,
-					height: PinModel.RADIUS * 2 + 2,
-					cursor: 'pointer'
-				}}>
-				<circle cx={d} cy={d} r={PinModel.S_RADIUS} fill={type === PinModel.INPUT ? 'none' : type === PinModel.OUTPUT ? color : 'red'} stroke={color} />
-				{enter || connecting || model.get('linked') ? <circle cx={d} cy={d} r={PinModel.RADIUS} fill={'none'} stroke={color} /> : null}
-			</svg>
-		);
-	}
-
 	/**
 	 * @param {MouseEvent|TouchEvent} e
 	 */
@@ -84,7 +56,9 @@ export default class Pin extends Component {
 			if (left <= pageX && pageX <= left + width && top <= pageY && pageY <= top + height) {
 				_.some(_.keys($e), (key) => {
 					if (_.startsWith(key, '__reactInternalInstance$')) {
-						const { _currentElement: { _owner: { _currentElement: { props: { model, onMouseUpOrTouchEnd, parent } } } } } = $e[key];
+						const {
+							_currentElement: { _owner: { _currentElement: { props: { model, onMouseUpOrTouchEnd, parent } } } }
+						} = $e[key];
 						onMouseUpOrTouchEnd(e, model, parent);
 						return true;
 					}
@@ -102,5 +76,40 @@ export default class Pin extends Component {
 		document.removeEventListener('mouseup', this.onMouseUpOrTouchEndDocument);
 		document.removeEventListener('touchend', this.onMouseUpOrTouchEndDocument);
 		this.setState({ connecting: false });
+	}
+
+	render() {
+		const { props: { model }, state: { enter, connecting } } = this;
+		const color = model.get('color');
+		const type = model.get('type');
+
+		return (
+			<svg
+				data-pin
+				onMouseDown={this.onMouseDownOrTouchStart}
+				onTouchStart={this.onMouseDownOrTouchStart}
+				onMouseUp={this.onMouseup}
+				onMouseEnter={this.onMouseEnter}
+				onMouseLeave={this.onMouseLeave}
+				onTouchEnd={this.onTouchEnd}
+				style={{
+					position: 'absolute',
+					left: model.get('cx') - d,
+					top: model.get('cy') - d,
+					width: PinModel.RADIUS * 2 + 2,
+					height: PinModel.RADIUS * 2 + 2,
+					cursor: 'pointer'
+				}}
+			>
+				<circle
+					cx={d}
+					cy={d}
+					r={PinModel.S_RADIUS}
+					fill={type === PinModel.INPUT ? 'none' : type === PinModel.OUTPUT ? color : 'red'}
+					stroke={color}
+				/>
+				{enter || connecting || model.get('linked') ? <circle cx={d} cy={d} r={PinModel.RADIUS} fill={'none'} stroke={color} /> : null}
+			</svg>
+		);
 	}
 }

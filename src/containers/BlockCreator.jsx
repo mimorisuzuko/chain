@@ -24,26 +24,6 @@ export default class BlockCreator extends Component {
 		}
 	}
 
-	render() {
-		const { props: { model } } = this;
-
-		return model.get('visible') ? (
-			<div styleName='base' style={{
-				position: 'absolute',
-				left: model.get('x'),
-				top: model.get('y'),
-			}}>
-				<select value={model.get('selected')} onChange={this.onChangeSelect}>
-					{_.map(OPTION_LIST, (a, i) => <option value={a} key={i}>{PASCAL_OPTION_LIST[i]}</option>)}
-				</select>
-				<IndentTextarea onChange={this.onChangeTextarea} value={model.get('value')} spellCheck={false} onKeyDown={this.onKeyDown} />
-				<button onClick={this.onClick}>
-					ADD
-				</button>
-			</div>
-		) : null;
-	}
-
 	@autobind
 	onClick() {
 		const { props: { model, dispatch } } = this;
@@ -107,5 +87,26 @@ export default class BlockCreator extends Component {
 			const v = model.get('value');
 			dispatch(actions.updateBlockCreator({ value: `${v.substring(0, selectionStart)}\t${v.substring(selectionEnd)}` }));
 		}
+	}
+
+	render() {
+		const { props: { model } } = this;
+
+		return model.get('visible') ? (
+			<div styleName='base' style={{
+				position: 'absolute',
+				left: model.get('x'),
+				top: model.get('y'),
+			}}
+			>
+				<select value={model.get('selected')} onChange={this.onChangeSelect}>
+					{_.map(OPTION_LIST, (a, i) => <option value={a} key={i}>{PASCAL_OPTION_LIST[i]}</option>)}
+				</select>
+				<IndentTextarea onChange={this.onChangeTextarea} value={model.get('value')} spellCheck={false} onKeyDown={this.onKeyDown} />
+				<button onClick={this.onClick}>
+					ADD
+				</button>
+			</div>
+		) : null;
 	}
 }

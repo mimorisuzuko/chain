@@ -17,29 +17,6 @@ export default class Block extends Component {
 		this.prevY = 0;
 	}
 
-	render() {
-		const { props: { model } } = this;
-		const color = model.get('color');
-
-		return (
-			<div styleName='base' onMouseDown={this.onMouseDownOrTouchStart} onTouchStart={this.onMouseDownOrTouchStart} style={{
-				position: 'absolute',
-				left: model.get('x'),
-				top: model.get('y'),
-				height: model.get('height')
-			}}>
-				<div>
-					{model.get('deletable') ? <button styleName='red' onClick={this.onClickDeleteButton}>x</button> : null}
-					{model.get('changeable') ? <button onClick={this.addPin}>+</button> : null}
-					{model.get('changeable') ? <button onClick={this.deletePin}>-</button> : null}
-				</div>
-				<div styleName='textarea-div'>
-					<IndentTextarea readOnly={!model.get('editable')} onChange={this.onChange} value={model.get('value')} spellCheck={false} style={{ borderLeft: `5px solid ${color}` }} onKeyDown={this.onKeyDown} />
-				</div>
-			</div>
-		);
-	}
-
 	/**
 	 * @param {Event} e 
 	 */
@@ -131,5 +108,29 @@ export default class Block extends Component {
 			const v = model.get('value');
 			dispatch(actions.updateBlock(model.get('id'), { value: `${v.substring(0, selectionStart)}\t${v.substring(selectionEnd)}` }));
 		}
+	}
+
+	render() {
+		const { props: { model } } = this;
+		const color = model.get('color');
+
+		return (
+			<div styleName='base' onMouseDown={this.onMouseDownOrTouchStart} onTouchStart={this.onMouseDownOrTouchStart} style={{
+				position: 'absolute',
+				left: model.get('x'),
+				top: model.get('y'),
+				height: model.get('height')
+			}}
+			>
+				<div>
+					{model.get('deletable') ? <button styleName='red' onClick={this.onClickDeleteButton}>x</button> : null}
+					{model.get('changeable') ? <button onClick={this.addPin}>+</button> : null}
+					{model.get('changeable') ? <button onClick={this.deletePin}>-</button> : null}
+				</div>
+				<div styleName='textarea-div'>
+					<IndentTextarea readOnly={!model.get('editable')} onChange={this.onChange} value={model.get('value')} spellCheck={false} style={{ borderLeft: `5px solid ${color}` }} onKeyDown={this.onKeyDown} />
+				</div>
+			</div>
+		);
 	}
 }

@@ -7,32 +7,13 @@ import './HTMLRenderer.scss';
 const parser = new DOMParser();
 
 @connect(
-	(state) => ({
-		blocks: state.blocks,
-		links: state.pinLinks,
-		html: state.htmlEditor
+	({ blocks, pinLinks, htmlEditor }) => ({
+		blocks,
+		links: pinLinks,
+		html: htmlEditor
 	})
 )
 export default class HTMLRenderer extends Component {
-	render() {
-		const { props: { html } } = this;
-		const $doc = parser.parseFromString(html, 'text/html');
-		const $body = $doc.querySelector('body');
-		const $script = document.createElement('script');
-		const script = _.join(_.map(this.toEvalableString(), (a) => `parent.postMessage({ type: 'chain-result', value: ${a} }, '*')`), '\n');
-		$script.innerHTML = `
-			parent.postMessage({ type: 'chain-clear' }, '*');
-			try {
-				(0, eval)(${JSON.stringify(script)});
-			} catch (err) {
-				parent.postMessage({ type: 'chain-error', value: String(err) }, '*');
-			}
-		`;
-		$body.appendChild($script);
-
-		return <iframe srcDoc={`<!doctype html>${$doc.documentElement.outerHTML}`} styleName='base' />;
-	}
-
 	toEvalableString() {
 		const { props: { blocks } } = this;
 		const first = blocks.first();
@@ -81,5 +62,24 @@ export default class HTMLRenderer extends Component {
 		});
 
 		return block;
+	}
+
+	render() {
+		const { props: { html } } = this;
+		const $doc = parser.parseFromString(html, 'text/html');
+		const $body = $doc.querySelector('body');
+		const $script = document.createElement('script');
+		const script = _.join(_.map(this.toEvalableString(), (a) => `parent.postMessage({ type: 'chain-result', value: ${a} }, '*')`), '\n');
+		$script.innerHTML = `
+			parent.postMessage({ type: 'chain-clear' }, '*');
+			try {
+				(0, eval)(${JSON.stringify(script)});
+			} catch (err) {
+				parent.postMessage({ type: 'chain-error', value: String(err) }, '*');
+			}
+		`;
+		$body.appendChild($script);
+
+		return <iframe srcDoc={`<!doctype html>${$doc.documentElement.outerHTML}`} styleName='base' />;
 	}
 }

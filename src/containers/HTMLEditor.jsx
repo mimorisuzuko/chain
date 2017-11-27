@@ -9,26 +9,29 @@ import 'codemirror/addon/selection/active-line';
 import autobind from 'autobind-decorator';
 
 @connect(
-	(state) => ({
-		code: state.htmlEditor
+	({ htmlEditor }) => ({
+		code: htmlEditor
 	})
 )
 export default class HTMLRenderer extends Component {
-	render() {
-		const { props: { code } } = this;
-
-		return <CodeMirror value={code} onChange={this.onChange} options={{
-			mode: 'htmlmixed',
-			theme: 'monokai',
-			styleActiveLine: true,
-			lineNumbers: true
-		}} />;
-	}
-
 	@autobind
 	onChange(code) {
 		const { props: { dispatch } } = this;
 
 		dispatch(actions.onChangeHtml(code));
+	}
+
+	render() {
+		const { props: { code } } = this;
+
+		return (
+			<CodeMirror value={code} onChange={this.onChange} options={{
+				mode: 'htmlmixed',
+				theme: 'monokai',
+				styleActiveLine: true,
+				lineNumbers: true
+			}}
+			/>
+		);
 	}
 }

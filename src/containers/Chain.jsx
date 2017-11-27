@@ -17,14 +17,32 @@ import './Chain.scss';
 window.ontouchmove = () => { };
 
 @connect(
-	(state) => ({
-		blocks: state.blocks,
-		link: state.pointLink,
-		links: state.pinLinks,
-		blockCreator: state.blockCreator
+	({ blocks, pointLink, pinLinks, blockCreator }) => ({
+		blocks,
+		link: pointLink,
+		links: pinLinks,
+		blockCreator
 	})
 )
 export default class Chain extends Component {
+	/**
+	 * @param {string} type
+	 */
+	static convertPinTypeToPinLinkKey(type) {
+		switch (type) {
+			case PinModel.OUTPUT:
+				return 'output';
+			case PinModel.INPUT:
+				return 'input';
+			default:
+				throw new Error('Unknown pin type');
+		}
+	}
+
+	componentDidMount() {
+		window.addEventListener('message', this.onMessage);
+	}
+
 	componentWillReceiveProps(nextProps) {
 		const { blocks, links } = nextProps;
 
@@ -34,43 +52,8 @@ export default class Chain extends Component {
 		}));
 	}
 
-	componentDidMount() {
-		window.addEventListener('message', this.onMessage);
-	}
-
 	componentWillUnmount() {
 		window.removeEventListener('message', this.onMessage);
-	}
-
-	render() {
-		const { props: { link, links, blockCreator } } = this;
-		let { props: { blocks } } = this;
-
-		return (
-			<div styleName='base'>
-				<svg onMouseDown={this.onMouseDownOrTouchStart} onTouchStart={this.onMouseDownOrTouchStart}>
-					{links.map((a, i) => {
-						_.forEach(['input', 'output'], (key) => {
-							const index = blocks.findIndex((block) => block.get('id') === a.getIn([key, 'block']));
-
-							blocks = blocks.setIn([index, `${key}Pins`, a.getIn([key, 'pin']), 'linked'], true);
-						});
-
-						return <PinLink key={i} model={a} />;
-					})}
-					<PointLink model={link} />
-				</svg>
-				{blocks.map((model) => {
-					const id = model.get('id');
-					return [
-						<Block key={id} model={model} />,
-						model.get('inputPins').map((pin) => <Pin key={pin.get('index')} model={pin} parent={id} onMouseDownOrTouchStart={this.onConnectStart} onMouseUpOrTouchEnd={this.onConnectPin} />),
-						model.get('outputPins').map((pin) => <Pin key={pin.get('index')} model={pin} parent={id} onMouseDownOrTouchStart={this.onConnectStart} onMouseUpOrTouchEnd={this.onConnectPin} />)
-					];
-				})}
-				<BlockCreator model={blockCreator} />
-			</div>
-		);
 	}
 
 	/**
@@ -174,17 +157,34 @@ export default class Chain extends Component {
 		}
 	}
 
-	/**
-	 * @param {string} type
-	 */
-	static convertPinTypeToPinLinkKey(type) {
-		switch (type) {
-			case PinModel.OUTPUT:
-				return 'output';
-			case PinModel.INPUT:
-				return 'input';
-			default:
-				throw new Error('Unknown pin type');
-		}
+	render() {
+		const { props: { link, links, blockCreator } } = this;
+		let { props: { blocks } } = this;
+
+		return (
+			<div styleName='base'>
+				<svg onMouseDown={this.onMouseDownOrTouchStart} onTouchStart={this.onMouseDownOrTouchStart}>
+					{links.map((a, i) => {
+						_.forEach(['input', 'output'], (key) => {
+							const index = blocks.findIndex((block) => block.get('id') === a.getIn([key, 'block']));
+
+							blocks = blocks.setIn([index, `${key}Pins`, a.getIn([key, 'pin']), 'linked'], true);
+						});
+
+						return <PinLink key={i} model={a} />;
+					})}
+					<PointLink model={link} />
+				</svg>
+				{blocks.map((model) => {
+					const id = model.get('id');
+					return [
+						<Block key={id} model={model} />,
+						model.get('inputPins').map((pin) => <Pin key={pin.get('index')} model={pin} parent={id} onMouseDownOrTouchStart={this.onConnectStart} onMouseUpOrTouchEnd={this.onConnectPin} />),
+						model.get('outputPins').map((pin) => <Pin key={pin.get('index')} model={pin} parent={id} onMouseDownOrTouchStart={this.onConnectStart} onMouseUpOrTouchEnd={this.onConnectPin} />)
+					];
+				})}
+				<BlockCreator model={blockCreator} />
+			</div>
+		);
 	}
 }

@@ -11,14 +11,6 @@ class IndentTextarea extends Component {
 		this.selectionStart = -1;
 	}
 
-	render() {
-		const { props: prev } = this;
-		const props = _.cloneDeep(prev);
-		delete props.onKeyDown;
-
-		return <textarea {...props} onKeyDown={this.onKeyDown} />;
-	}
-
 	componentDidUpdate() {
 		const { selectionStart } = this;
 
@@ -42,6 +34,14 @@ class IndentTextarea extends Component {
 		if (typeof onKeyDown === 'function') {
 			onKeyDown(...args);
 		}
+	}
+
+	render() {
+		const { props: prev } = this;
+		const props = _.cloneDeep(prev);
+		delete props.onKeyDown;
+
+		return <textarea {...props} onKeyDown={this.onKeyDown} />;
 	}
 }
 

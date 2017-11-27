@@ -4,8 +4,8 @@ import Link from '../components/Link';
 import _ from 'lodash';
 
 @connect(
-	(state) => ({
-		blocks: state.blocks
+	({ blocks }) => ({
+		blocks
 	})
 )
 export default class PinLink extends Component {
