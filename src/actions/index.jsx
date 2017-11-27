@@ -2,15 +2,12 @@ import _ from 'lodash';
 import { createActions } from 'redux-actions';
 import { generator } from '../util';
 
-let balloonId = -1;
-
 export default createActions(
 	{
 		ADD_BLOCK: (block) => _.merge({ id: generator.id() }, block),
 		UPDATE_BLOCK: (id, patch) => ({ id, patch }),
 		DELTA_MOVE_BLOCK: (id, dx, dy) => ({ id, dx, dy }),
-		TOGGLE_BLOCK_CREATOR: (x, y) => ({ x, y }),
-		ADD_BALLOON: (balloon) => _.merge({ id: balloonId += 1 }, balloon)
+		TOGGLE_BLOCK_CREATOR: (x, y) => ({ x, y })
 	},
 	'DELETE_BLOCK',
 	'UPDATE_BLOCK_CREATOR',
@@ -23,6 +20,5 @@ export default createActions(
 	'ON_CHANGE_HTML',
 	'CLEAR_VIEW_BLOCK',
 	'PUSH_VIEW_BLOCK',
-	'DECREMENT_BALLOONS',
 	'SHOW_BLOCK_CREATOR'
 );

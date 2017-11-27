@@ -1,19 +1,12 @@
-import { DefinePlugin, optimize, HotModuleReplacementPlugin } from 'webpack';
+import { DefinePlugin, optimize, HotModuleReplacementPlugin, LoaderOptionsPlugin } from 'webpack';
 import libpath from 'path';
 import CleanWebpackPlugin from 'clean-webpack-plugin';
+import { WATCH, isProduction, NODE_ENV } from './env';
 
 const { UglifyJsPlugin, AggressiveMergingPlugin } = optimize;
 const dst = 'docs';
-let { env: { NODE_ENV, WATCH } } = process;
+const context = libpath.join(__dirname, 'src');
 
-if (!NODE_ENV) {
-	NODE_ENV = 'production';
-}
-
-WATCH = WATCH === 'true';
-
-const isProduction = NODE_ENV === 'production';
-const presets = ['react'];
 const plugins = [
 	new CleanWebpackPlugin([dst], {
 		root: __dirname,
@@ -25,23 +18,47 @@ const plugins = [
 		'process.env': {
 			NODE_ENV: JSON.stringify(NODE_ENV)
 		}
+	}),
+	new LoaderOptionsPlugin({
+		options: {
+			context
+		}
 	})
 ];
 
+const generateScopedName = '[name]__[local]_[hash:base64:5]';
+const babelPresets = ['react'];
+const babelPlugins = [
+	'transform-decorators-legacy',
+	['react-css-modules',
+		{
+			context,
+			generateScopedName,
+			exclude: 'node_modules',
+			filetypes: {
+				'.scss': {
+					syntax: 'postcss-scss'
+				}
+			}
+		}]
+];
+
 if (isProduction) {
-	presets.push('es2015');
+	babelPresets.push('es2015');
 	plugins.push(
 		new UglifyJsPlugin({ compress: { warnings: false }, mangle: true }),
 		new AggressiveMergingPlugin()
 	);
+} else {
+	babelPlugins.push('react-hot-loader/babel');
 }
 
-const context = libpath.join(__dirname, 'src');
+if (WATCH) {
+	plugins.push(new HotModuleReplacementPlugin());
+}
 
 const config = {
-	entry: [
-		context
-	],
+	entry: context,
 	output: {
 		path: libpath.join(__dirname, dst),
 		filename: 'index.js'
@@ -54,20 +71,8 @@ const config = {
 				use: {
 					loader: 'babel-loader',
 					options: {
-						presets,
-						plugins: [
-							'transform-decorators-legacy',
-							['react-css-modules',
-								{
-									context,
-									generateScopedName: '[name]__[local]',
-									filetypes: {
-										'.scss': {
-											syntax: 'postcss-scss'
-										}
-									}
-								}]
-						]
+						presets: babelPresets,
+						plugins: babelPlugins
 					}
 				}
 			},
@@ -75,17 +80,14 @@ const config = {
 				test: /\.scss$/,
 				use: [
 					'style-loader',
-					'css-loader?importLoader=1&modules&localIdentName=[name]__[local]',
+					`css-loader?importLoader=1&modules&localIdentName=${generateScopedName}`,
 					'postcss-loader',
 					'sass-loader'
 				]
 			},
 			{
 				test: /\.css$/,
-				use: [
-					'style-loader',
-					'css-loader'
-				]
+				use: ['style-loader', 'css-loader']
 			}
 		]
 	},
@@ -100,6 +102,7 @@ if (WATCH) {
 		entry: [
 			'webpack-dev-server/client?http://0.0.0.0:3000',
 			'webpack/hot/only-dev-server',
+			'react-hot-loader/patch',
 			libpath.join(__dirname, 'src/')
 		],
 		devServer: {
@@ -110,8 +113,6 @@ if (WATCH) {
 			inline: true
 		}
 	});
-
-	config.plugins.push(new HotModuleReplacementPlugin());
 }
 
 export default config;

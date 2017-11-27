@@ -35,8 +35,9 @@ export default class HTMLRenderer extends Component {
 
 	toEvalableString() {
 		const { props: { blocks } } = this;
+		const first = blocks.first();
 
-		return this.toEvalableStringSub(blocks.first().get('id'));
+		return first ? this.toEvalableStringSub(first.get('id')) : null;
 	}
 
 	toEvalableStringSub(id) {

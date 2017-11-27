@@ -11,6 +11,7 @@ import Pin from '../components/Pin';
 import { Pin as PinModel } from '../models';
 import { batchActions } from 'redux-batched-actions';
 import { getMouseOrFirstTouchPosition } from '../util';
+import { toast } from 'react-toastify';
 import './Chain.scss';
 
 window.ontouchmove = () => { };
@@ -151,7 +152,9 @@ export default class Chain extends Component {
 		if (type === 'chain-result') {
 			dispatch(actions.pushViewBlock(JSON.stringify(value)));
 		} else if (type === 'chain-error') {
-			dispatch(actions.addBalloon({ value }));
+			toast.error(value, {
+				position: toast.POSITION.BOTTOM_RIGHT
+			});
 		} else if (type === 'chain-clear') {
 			dispatch(actions.clearViewBlock());
 		}

@@ -231,13 +231,3 @@ export class PinLink extends Record({ output: Map({ block: 0, pin: 0 }), input: 
 		return target === query;
 	}
 }
-
-export class Balloon extends Record({ id: 0, value: '', life: 100 }) {
-	nlife() {
-		return this.life / Balloon.MAX_LIFE;
-	}
-
-	static get MAX_LIFE() {
-		return 100;
-	}
-}
