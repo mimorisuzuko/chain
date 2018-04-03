@@ -11,5 +11,5 @@ A New Visual Programming Environment to Build JavaScript By Linking Blocks.
 ### JavaScript
 
 ```javascript
-Array.from('Hello, ' + 'World!').reverse().join('')
+Array.from('Hello, ' + 'Chain!').reverse().join('')
 ```
