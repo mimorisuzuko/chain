@@ -42,7 +42,7 @@ export default class HTMLRenderer extends Component {
 			case BlockCreatorModel.CREATABLE_TYPES.PROPERTY_BLOCK:
 				return `${args[0]}[${JSON.stringify(block.get('value'))}]`;
 			case BlockCreatorModel.CREATABLE_TYPES.OPERATOR_BLCOK:
-				return `${args[0]}${block.get('value')}${args[1]}`;
+				return `(${args[0]}${block.get('value')}${args[1]})`;
 			default:
 				return '"UNKNOWN_BLOCK"';
 		}
