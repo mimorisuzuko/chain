@@ -10,6 +10,7 @@ module.exports = (env, { mode }) => {
 	const isProduction = mode === 'production';
 	const babelPlugins = [
 		'transform-decorators-legacy',
+		'lodash',
 		['react-css-modules',
 			{
 				context,
