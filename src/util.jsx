@@ -44,7 +44,15 @@ export const getMouseOrFirstTouchPosition = (e) => {
 	throw new Error('Unknown event type');
 };
 
-export const generator = new (class {
+export const generator = new (class IDGenerator {
+	static get ZEROS_42() {
+		return '000000000000000000000000000000000000000000';
+	}
+
+	static get ZEROS_12() {
+		return '000000000000';
+	}
+
 	constructor() {
 		this.sequence = 0;
 		this.ptime = 0;
@@ -62,10 +70,9 @@ export const generator = new (class {
 			this.sequence = 0;
 		}
 
-		return _.parseInt(
-			(_.repeat('0', 42) + (t - 1288834974657).toString(2)).slice(-42)
-			+ (_.repeat('0', 12) + this.sequence.toString(2)).slice(-12)
-			, 2
-		);
+		const a = (IDGenerator.ZEROS_42 + (t - 1288834974657).toString(2)).slice(-42);
+		const b = (IDGenerator.ZEROS_12 + this.sequence.toString(2)).slice(-12);
+
+		return _.parseInt(`${a}${b}`, 2);
 	}
 });
