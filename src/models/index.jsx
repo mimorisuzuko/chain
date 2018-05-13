@@ -1,6 +1,6 @@
 import { Record, List, Map } from 'immutable';
 import _ from 'lodash';
-import { BLOCK, PIN } from '../constants/index';
+import { BLOCK, PIN } from '../constants';
 import vars from '../shared/vars.scss';
 
 const { white0, purple0, blue1, yellow0 } = vars;

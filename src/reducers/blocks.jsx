@@ -2,7 +2,7 @@ import { List } from 'immutable';
 import { Block } from '../models';
 import { handleActions } from 'redux-actions';
 import actions from '../actions';
-import { BLOCK, PIN } from '../constants/index';
+import { BLOCK, PIN } from '../constants';
 import colors from '../shared/vars.scss';
 
 const { blue2, white0 } = colors;

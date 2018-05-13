@@ -8,7 +8,7 @@ import PinLink from '../containers/PinLink';
 import _ from 'lodash';
 import autobind from 'autobind-decorator';
 import Pin from '../components/Pin';
-import { PIN } from '../constants/index';
+import { PIN } from '../constants';
 import { batchActions } from 'redux-batched-actions';
 import { getMouseOrFirstTouchPosition } from '../util';
 import { toast } from 'react-toastify';

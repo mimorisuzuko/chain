@@ -12,7 +12,7 @@ import actions from '../actions';
 import { ToastContainer } from 'react-toastify';
 import _ from 'lodash';
 import { List } from 'immutable';
-import { BLOCK } from '../constants/index';
+import { BLOCK } from '../constants';
 import styles from './App.scss';
 
 const { link, active } = styles;

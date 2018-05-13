@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { PIN } from '../constants/index';
+import { PIN } from '../constants';
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
 

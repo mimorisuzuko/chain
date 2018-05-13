@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import _ from 'lodash';
-import { BLOCK } from '../constants/index';
+import { BLOCK } from '../constants';
 import './HTMLRenderer.scss';
 
 const parser = new DOMParser();

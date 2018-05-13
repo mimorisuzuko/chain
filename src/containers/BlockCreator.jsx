@@ -3,7 +3,7 @@ import { findDOMNode } from 'react-dom';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import actions from '../actions';
-import { BLOCK } from '../constants/index';
+import { BLOCK } from '../constants';
 import { batchActions } from 'redux-batched-actions';
 import autobind from 'autobind-decorator';
 import IndentTextarea from '../components/IndentTextarea';
