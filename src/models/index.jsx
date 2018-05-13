@@ -1,52 +1,46 @@
 import { Record, List, Map } from 'immutable';
 import _ from 'lodash';
+import { BLOCK, PIN } from '../constants/index';
 import vars from '../shared/vars.scss';
 
-const { white0, purple0, blue1, yellow0, blockWidth: strblockWidth } = vars;
-const BLOCK_WIDTH = _.parseInt(strblockWidth);
-const VALUE_BLOCK = 'VALUE_BLOCK';
-const FUNCTION_BLOCK = 'FUNCTION_BLOCK';
-const PROPERTY_BLOCK = 'PROPERTY_BLOCK';
-const OPERATOR_BLCOK = 'OPERATOR_BLCOK';
-const CREATABLE_TYPES = { VALUE_BLOCK, FUNCTION_BLOCK, PROPERTY_BLOCK, OPERATOR_BLCOK };
-const CREATABLE_TYPE_KEYS = _.keys(CREATABLE_TYPES);
+const { white0, purple0, blue1, yellow0 } = vars;
 
 export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: true, editable: true, type: '', color: white0, changeable: true, outputPins: List(), inputPins: List(), height: 70 }) {
 	constructor(args) {
 		super(args);
 
 		switch (this.type) {
-			case BlockCreator.VIEW_BLOCK:
+			case BLOCK.TYPE_VIEW:
 				return this.merge({
 					editable: false,
 					deletable: false,
 					color: purple0,
-					inputPins: this._createPins([white0], Pin.INPUT)
+					inputPins: this._createPins([white0], PIN.TYPE_INPUT)
 				}).recalculateHeight();
-			case BlockCreator.CREATABLE_TYPES.VALUE_BLOCK:
+			case BLOCK.TYPE_VALUE:
 				return this.merge({
 					changeable: false,
-					outputPins: this._createPins([purple0], Pin.OUTPUT)
+					outputPins: this._createPins([purple0], PIN.TYPE_OUTPUT)
 				}).recalculateHeight();
 				break;
-			case BlockCreator.CREATABLE_TYPES.FUNCTION_BLOCK:
+			case BLOCK.TYPE_FUNCTION:
 				return this.merge({
 					color: blue1,
-					inputPins: this._createPins([blue1], Pin.INPUT),
-					outputPins: this._createPins([purple0], Pin.OUTPUT)
+					inputPins: this._createPins([blue1], PIN.TYPE_INPUT),
+					outputPins: this._createPins([purple0], PIN.TYPE_OUTPUT)
 				}).recalculateHeight();
-			case BlockCreator.CREATABLE_TYPES.PROPERTY_BLOCK:
+			case BLOCK.TYPE_PROPERTY:
 				return this.merge({
 					changeable: false,
 					color: yellow0,
-					inputPins: this._createPins([white0], Pin.INPUT),
-					outputPins: this._createPins([white0], Pin.OUTPUT)
+					inputPins: this._createPins([white0], PIN.TYPE_INPUT),
+					outputPins: this._createPins([white0], PIN.TYPE_OUTPUT)
 				}).recalculateHeight();
-			case BlockCreator.CREATABLE_TYPES.OPERATOR_BLCOK:
+			case BLOCK.TYPE_OPERATOR:
 				return this.merge({
 					changeable: false,
-					inputPins: this._createPins([white0, white0], Pin.INPUT),
-					outputPins: this._createPins([white0], Pin.OUTPUT)
+					inputPins: this._createPins([white0, white0], PIN.TYPE_INPUT),
+					outputPins: this._createPins([white0], PIN.TYPE_OUTPUT)
 				}).recalculateHeight();
 			default:
 				break;
@@ -56,7 +50,7 @@ export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: tru
 	recalculateHeight() {
 		const { inputPins: { size: size0 }, outputPins: { size: size1 } } = this;
 
-		return this.set('height', Math.max(4, size0 + 1, size1 + 1) * (Pin.RADIUS * 2 + 3) - 1);
+		return this.set('height', Math.max(4, size0 + 1, size1 + 1) * (PIN.RADIUS * 2 + 3) - 1);
 	}
 
 	/**
@@ -103,9 +97,9 @@ export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: tru
 	 */
 	static convertPinTypeToPinKey(type) {
 		switch (type) {
-			case Pin.OUTPUT:
+			case PIN.TYPE_OUTPUT:
 				return 'outputPins';
-			case Pin.INPUT:
+			case PIN.TYPE_INPUT:
 				return 'inputPins';
 			default:
 				throw new Error('Unknown pin type');
@@ -118,8 +112,8 @@ export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: tru
 	 */
 	static _pinPosition(index, direction) {
 		return [
-			direction === Pin.INPUT ? -Pin.RADIUS - 2 : direction === Pin.OUTPUT ? BLOCK_WIDTH + Pin.RADIUS : 0,
-			Pin.RADIUS + (Pin.RADIUS * 2 + 3) * index + 1
+			direction === PIN.TYPE_INPUT ? -PIN.RADIUS - 2 : direction === PIN.TYPE_OUTPUT ? BLOCK.WIDTH + PIN.RADIUS : 0,
+			PIN.RADIUS + (PIN.RADIUS * 2 + 3) * index + 1
 		];
 	}
 }
@@ -134,25 +128,9 @@ export class Pin extends Record({ index: 0, color: white0, type: '', linked: fal
 
 		return this.merge({ cx: cx + dx, cy: cy + dy });
 	}
-
-	static get OUTPUT() {
-		return 'OUTPUT_PIN';
-	}
-
-	static get INPUT() {
-		return 'INPUT_PIN';
-	}
-
-	static get RADIUS() {
-		return 7;
-	}
-
-	static get S_RADIUS() {
-		return 4;
-	}
 }
 
-export class BlockCreator extends Record({ x: 0, y: 0, visible: false, value: '', selected: CREATABLE_TYPE_KEYS[0] }) {
+export class BlockCreator extends Record({ x: 0, y: 0, visible: false, value: '', selected: BLOCK.TYPE_VALUE }) {
 
 	/**
 	 * @param {number} x
@@ -164,20 +142,8 @@ export class BlockCreator extends Record({ x: 0, y: 0, visible: false, value: ''
 			x,
 			y,
 			value: '',
-			selected: CREATABLE_TYPE_KEYS[0]
+			selected: BLOCK.TYPE_VALUE
 		});
-	}
-
-	static get CREATABLE_TYPES() {
-		return CREATABLE_TYPES;
-	}
-
-	static get CREATABLE_TYPE_KEYS() {
-		return CREATABLE_TYPE_KEYS;
-	}
-
-	static get VIEW_BLOCK() {
-		return 'VIEW_BLOCK';
 	}
 }
 

@@ -3,13 +3,13 @@ import { findDOMNode } from 'react-dom';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import actions from '../actions';
-import { BlockCreator as BlockCreatorModel } from '../models';
+import { BLOCK } from '../constants/index';
 import { batchActions } from 'redux-batched-actions';
 import autobind from 'autobind-decorator';
 import IndentTextarea from '../components/IndentTextarea';
 import './BlockCreator.scss';
 
-const { CREATABLE_TYPE_KEYS: OPTION_LIST } = BlockCreatorModel;
+const OPTION_LIST = [BLOCK.TYPE_VALUE, BLOCK.TYPE_FUNCTION, BLOCK.TYPE_PROPERTY, BLOCK.TYPE_OPERATOR];
 const PASCAL_OPTION_LIST = _.map(OPTION_LIST, (a) => _.upperFirst((_.camelCase(a))));
 
 @connect()

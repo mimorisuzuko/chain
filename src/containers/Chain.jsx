@@ -8,7 +8,7 @@ import PinLink from '../containers/PinLink';
 import _ from 'lodash';
 import autobind from 'autobind-decorator';
 import Pin from '../components/Pin';
-import { Pin as PinModel } from '../models';
+import { PIN } from '../constants/index';
 import { batchActions } from 'redux-batched-actions';
 import { getMouseOrFirstTouchPosition } from '../util';
 import { toast } from 'react-toastify';
@@ -30,9 +30,9 @@ export default class Chain extends Component {
 	 */
 	static convertPinTypeToPinLinkKey(type) {
 		switch (type) {
-			case PinModel.OUTPUT:
+			case PIN.TYPE_OUTPUT:
 				return 'output';
-			case PinModel.INPUT:
+			case PIN.TYPE_INPUT:
 				return 'input';
 			default:
 				throw new Error('Unknown pin type');
@@ -74,7 +74,7 @@ export default class Chain extends Component {
 		document.addEventListener('touchend', this.onConnectEnd);
 		window.__connection__ = { block, pin, pinType };
 
-		if (pinType === PinModel.INPUT) {
+		if (pinType === PIN.TYPE_INPUT) {
 			batch.push(actions.removePinLinkByQuery({ input: { block, pin } }));
 		}
 

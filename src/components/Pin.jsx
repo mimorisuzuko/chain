@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-import { Pin as PinModel } from '../models';
+import { PIN } from '../constants/index';
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
 
-const deltaPosition = PinModel.RADIUS + 1;
+const deltaPosition = PIN.RADIUS + 1;
 
 export default class Pin extends Component {
 	constructor() {
@@ -96,23 +96,23 @@ export default class Pin extends Component {
 					position: 'absolute',
 					left: model.get('cx') - deltaPosition,
 					top: model.get('cy') - deltaPosition,
-					width: PinModel.RADIUS * 2 + 2,
-					height: PinModel.RADIUS * 2 + 2,
+					width: PIN.RADIUS * 2 + 2,
+					height: PIN.RADIUS * 2 + 2,
 					cursor: 'pointer'
 				}}
 			>
 				<circle
 					cx={deltaPosition}
 					cy={deltaPosition}
-					r={PinModel.S_RADIUS}
-					fill={type === PinModel.INPUT ? 'none' : type === PinModel.OUTPUT ? color : 'red'}
+					r={PIN.S_RADIUS}
+					fill={type === PIN.TYPE_INPUT ? 'none' : type === PIN.TYPE_OUTPUT ? color : 'red'}
 					stroke={color}
 				/>
 				{enter || connecting || model.get('linked') ? (
 					<circle
 						cx={deltaPosition}
 						cy={deltaPosition}
-						r={PinModel.RADIUS}
+						r={PIN.RADIUS}
 						fill={'none'}
 						stroke={color}
 					/>

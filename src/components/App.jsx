@@ -7,11 +7,12 @@ import { enableBatching, batchActions } from 'redux-batched-actions';
 import { HashRouter, Route, NavLink, Redirect } from 'react-router-dom';
 import HTMLRenderer from '../containers/HTMLRenderer';
 import HTMLEditor from '../containers/HTMLEditor';
-import { BlockCreator, Pin } from '../models';
+import { Pin } from '../models';
 import actions from '../actions';
 import { ToastContainer } from 'react-toastify';
 import _ from 'lodash';
 import { List } from 'immutable';
+import { BLOCK } from '../constants/index';
 import styles from './App.scss';
 
 const { link, active } = styles;
@@ -36,10 +37,10 @@ if (stored) {
 			..._.map(links, (link) => actions.addPinLink(link))
 		]));
 	} else {
-		store.dispatch(actions.addBlock({ x: 100, y: 100, type: BlockCreator.VIEW_BLOCK }));
+		store.dispatch(actions.addBlock({ x: 100, y: 100, type: BLOCK.TYPE_VIEW }));
 	}
 } else {
-	store.dispatch(actions.addBlock({ x: 100, y: 100, type: BlockCreator.VIEW_BLOCK }));
+	store.dispatch(actions.addBlock({ x: 100, y: 100, type: BLOCK.TYPE_VIEW }));
 }
 
 const redirectRender = () => <Redirect to='/chain' />;

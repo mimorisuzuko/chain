@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import _ from 'lodash';
-import { BlockCreator as BlockCreatorModel } from '../models';
+import { BLOCK } from '../constants/index';
 import './HTMLRenderer.scss';
 
 const parser = new DOMParser();
@@ -31,17 +31,17 @@ export default class HTMLRenderer extends Component {
 		const args = block.get('inputPins').map((pin) => this.toEvalableStringSub(this.findOutputBlockIdFromLinks({ input: { block: id, pin: pin.get('index') } }))).toJS();
 
 		switch (block.get('type')) {
-			case BlockCreatorModel.VIEW_BLOCK:
+			case BLOCK.TYPE_VIEW:
 				return args;
-			case BlockCreatorModel.CREATABLE_TYPES.VALUE_BLOCK:
+			case BLOCK.TYPE_VALUE:
 				return block.get('value');
-			case BlockCreatorModel.CREATABLE_TYPES.FUNCTION_BLOCK:
+			case BLOCK.TYPE_FUNCTION:
 				const [head, ...rest] = args;
 				const vals = `(${_.join(rest, ', ')})`;
 				return head ? `${head}[${JSON.stringify(block.get('value'))}]${vals}` : `${block.get('value')}${vals}`;
-			case BlockCreatorModel.CREATABLE_TYPES.PROPERTY_BLOCK:
+			case BLOCK.TYPE_PROPERTY:
 				return `${args[0]}[${JSON.stringify(block.get('value'))}]`;
-			case BlockCreatorModel.CREATABLE_TYPES.OPERATOR_BLCOK:
+			case BLOCK.TYPE_OPERATOR:
 				return `(${args[0]}${block.get('value')}${args[1]})`;
 			default:
 				return '"UNKNOWN_BLOCK"';
