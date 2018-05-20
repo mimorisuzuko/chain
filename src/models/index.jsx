@@ -9,42 +9,48 @@ export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: tru
 	constructor(args) {
 		super(args);
 
-		switch (this.type) {
+		const { type } = this;
+		let options = null;
+
+		switch (type) {
 			case BLOCK.TYPE_VIEW:
-				return this.merge({
+				options = {
 					editable: false,
 					deletable: false,
 					color: purple0,
 					inputPins: this._createPins([white0], PIN.TYPE_INPUT)
-				}).recalculateHeight();
+				};
+				break;
 			case BLOCK.TYPE_VALUE:
-				return this.merge({
+				options = {
 					changeable: false,
 					outputPins: this._createPins([purple0], PIN.TYPE_OUTPUT)
-				}).recalculateHeight();
+				};
 				break;
 			case BLOCK.TYPE_FUNCTION:
-				return this.merge({
+				options = {
 					color: blue1,
 					inputPins: this._createPins([blue1], PIN.TYPE_INPUT),
 					outputPins: this._createPins([purple0], PIN.TYPE_OUTPUT)
-				}).recalculateHeight();
+				};
 			case BLOCK.TYPE_PROPERTY:
-				return this.merge({
+				options = {
 					changeable: false,
 					color: yellow0,
 					inputPins: this._createPins([white0], PIN.TYPE_INPUT),
 					outputPins: this._createPins([white0], PIN.TYPE_OUTPUT)
-				}).recalculateHeight();
+				};
 			case BLOCK.TYPE_OPERATOR:
-				return this.merge({
+				options = {
 					changeable: false,
 					inputPins: this._createPins([white0, white0], PIN.TYPE_INPUT),
 					outputPins: this._createPins([white0], PIN.TYPE_OUTPUT)
-				}).recalculateHeight();
+				};
 			default:
-				break;
+				throw new Error(`Unknown type: ${type}.`);
 		}
+
+		return this.merge(options).recalculateHeight();
 	}
 
 	recalculateHeight() {
