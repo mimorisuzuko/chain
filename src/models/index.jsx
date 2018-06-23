@@ -33,6 +33,7 @@ export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: tru
 					inputPins: this._createPins([blue1], PIN.TYPE_INPUT),
 					outputPins: this._createPins([purple0], PIN.TYPE_OUTPUT)
 				};
+				break;
 			case BLOCK.TYPE_PROPERTY:
 				options = {
 					changeable: false,
@@ -40,12 +41,14 @@ export class Block extends Record({ id: 0, value: '', x: 0, y: 0, deletable: tru
 					inputPins: this._createPins([white0], PIN.TYPE_INPUT),
 					outputPins: this._createPins([white0], PIN.TYPE_OUTPUT)
 				};
+				break;
 			case BLOCK.TYPE_OPERATOR:
 				options = {
 					changeable: false,
 					inputPins: this._createPins([white0, white0], PIN.TYPE_INPUT),
 					outputPins: this._createPins([white0], PIN.TYPE_OUTPUT)
 				};
+				break;
 			default:
 				throw new Error(`Unknown type: ${type}.`);
 		}
