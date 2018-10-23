@@ -1,4 +1,8 @@
-const { DefinePlugin, HotModuleReplacementPlugin, LoaderOptionsPlugin } = require('webpack');
+const {
+	DefinePlugin,
+	HotModuleReplacementPlugin,
+	LoaderOptionsPlugin
+} = require('webpack');
 const libpath = require('path');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 
@@ -11,7 +15,8 @@ module.exports = (env, { mode }) => {
 	const babelPlugins = [
 		'transform-decorators-legacy',
 		'lodash',
-		['react-css-modules',
+		[
+			'react-css-modules',
 			{
 				context,
 				generateScopedName,
@@ -46,7 +51,8 @@ module.exports = (env, { mode }) => {
 	if (isProduction) {
 		presets.push(
 			[
-				'env', {
+				'env',
+				{
 					targets: {
 						chrome: 59
 					}
@@ -61,16 +67,14 @@ module.exports = (env, { mode }) => {
 
 	return {
 		context,
-		entry: isProduction ?
-			[
-				'babel-polyfill',
-				context
-			] : [
+		entry: isProduction
+			? ['babel-polyfill', context]
+			: [
 				'webpack-dev-server/client?http://0.0.0.0:3000',
 				'webpack/hot/only-dev-server',
 				'react-hot-loader/patch',
 				context
-			],
+			  ],
 		output: {
 			path: libpath.join(__dirname, dst),
 			publicPath: 'http://localhost:3000/',
@@ -116,7 +120,7 @@ module.exports = (env, { mode }) => {
 		optimization: {
 			splitChunks: {
 				name: 'vendor',
-				chunks: 'initial',
+				chunks: 'initial'
 			}
 		}
 	};
