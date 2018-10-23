@@ -5,7 +5,8 @@
       "ecmaVersion": 6,
       "sourceType": "module",
       "ecmaFeatures": {
-        "jsx": true
+        "jsx": true,
+        "legacyDecorators": true
       }
     },
     "parser": "babel-eslint",
@@ -24,6 +25,8 @@
         }
       ],
       "arrow-parens": ["error", "always"],
-      "no-mixed-spaces-and-tabs": ["error", "smart-tabs"]
+      "no-mixed-spaces-and-tabs": ["error", "smart-tabs"],
+      "react/prop-types": "off",
+      "jsx-quotes": ["error", "prefer-single"]
     }
   }
