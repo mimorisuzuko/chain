@@ -10,10 +10,11 @@ module.exports = (env, { mode }) => {
 	const dst = 'docs';
 	const generateScopedName = '[name]__[local]_[hash:base64:5]';
 	const context = libpath.join(__dirname, 'src/');
-	const presets = ['react'];
+	const presets = ['@babel/react'];
 	const isProduction = mode === 'production';
 	const babelPlugins = [
-		'transform-decorators-legacy',
+		['@babel/plugin-proposal-decorators', { legacy: true }],
+		['@babel/plugin-proposal-class-properties', { loose: false }],
 		'lodash',
 		[
 			'react-css-modules',
@@ -49,16 +50,18 @@ module.exports = (env, { mode }) => {
 	];
 
 	if (isProduction) {
-		presets.push(
-			[
-				'env',
-				{
-					targets: {
-						chrome: 59
-					}
+		presets.push([
+			'@babel/env',
+			{
+				targets: {
+					chrome: 59
 				}
-			],
-			'stage-3'
+			}
+		]);
+		babelPlugins.push(
+			'@babel/plugin-syntax-dynamic-import',
+			'@babel/plugin-syntax-import-meta',
+			'@babel/plugin-proposal-json-strings'
 		);
 	} else {
 		babelPlugins.push('react-hot-loader/babel');
@@ -68,7 +71,7 @@ module.exports = (env, { mode }) => {
 	return {
 		context,
 		entry: isProduction
-			? ['babel-polyfill', context]
+			? ['@babel/polyfill', context]
 			: [
 				'webpack-dev-server/client?http://0.0.0.0:3000',
 				'webpack/hot/only-dev-server',
